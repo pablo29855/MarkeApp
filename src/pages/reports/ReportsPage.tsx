@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { PageHeader } from '@/components/ui/page-header'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { formatCurrency } from '@/lib/utils'
+import { BarChart3 } from 'lucide-react'
 import type { ExpensesByCategory } from '@/lib/types'
 
 export default function ReportsPage() {
@@ -131,8 +132,6 @@ export default function ReportsPage() {
       <PageHeader
         title="Reportes"
         description="Analiza tus gastos y compara períodos"
-        showBackButton
-        backHref="/dashboard"
       />
 
       <ReportFilters />
@@ -140,31 +139,49 @@ export default function ReportsPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg">
           <CardContent className="p-6">
-            <p className="text-sm opacity-90">Total de Gastos</p>
-            <p className="text-3xl font-bold mt-1">{formatCurrency(totalExpenses)}</p>
-            <p className="text-sm opacity-90 mt-2">{periodLabel}</p>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm opacity-90 mb-2">Total de Gastos</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-bold">{formatCurrency(totalExpenses)}</span>
+                </div>
+                <p className="text-sm opacity-90 mt-2">{periodLabel}</p>
+              </div>
+              <div className="ml-4">
+                <BarChart3 className="h-12 w-12 opacity-20" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         {isComparing && (
           <Card className="bg-gradient-to-br from-secondary to-secondary/80 text-secondary-foreground border-0 shadow-lg">
             <CardContent className="p-6">
-              <p className="text-sm opacity-90">Total de Gastos</p>
-              <p className="text-3xl font-bold mt-1">{formatCurrency(compareTotalExpenses)}</p>
-              <p className="text-sm opacity-90 mt-2">{comparePeriodLabel}</p>
-              <p className="text-sm mt-2">
-                Diferencia:{' '}
-                <span
-                  className={
-                    totalExpenses > compareTotalExpenses
-                      ? 'text-red-600 dark:text-red-400'
-                      : 'text-green-600 dark:text-green-400'
-                  }
-                >
-                  {totalExpenses > compareTotalExpenses ? '+' : ''}
-                  {formatCurrency(totalExpenses - compareTotalExpenses)}
-                </span>
-              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm opacity-90 mb-2">Total de Gastos</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-bold">{formatCurrency(compareTotalExpenses)}</span>
+                  </div>
+                  <p className="text-sm opacity-90 mt-2">{comparePeriodLabel}</p>
+                  <p className="text-sm mt-2">
+                    Diferencia:{' '}
+                    <span
+                      className={
+                        totalExpenses > compareTotalExpenses
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-green-600 dark:text-green-400'
+                      }
+                    >
+                      {totalExpenses > compareTotalExpenses ? '+' : ''}
+                      {formatCurrency(totalExpenses - compareTotalExpenses)}
+                    </span>
+                  </p>
+                </div>
+                <div className="ml-4">
+                  <BarChart3 className="h-12 w-12 opacity-20" />
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}

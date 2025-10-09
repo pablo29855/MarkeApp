@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { SkeletonDebtList, SkeletonDebtStats } from '@/components/ui/skeleton-debt'
 import { formatCurrency } from '@/lib/utils'
-import { CreditCard } from 'lucide-react'
+import { CreditCard, CircleCheck, AlertCircle } from 'lucide-react'
 import type { Debt, DebtPayment } from '@/lib/types'
 import { DebtFormWrapper } from '@/components/debts/debt-form-wrapper'
 
@@ -146,8 +146,6 @@ export default function DebtsPage() {
         <PageHeader
           title="Deudas"
           description="Gestiona tus deudas y pagos parciales"
-          showBackButton
-          backHref="/dashboard"
           action={<DebtFormWrapper userId={userId} onSuccess={handleRefresh} />}
         />
 
@@ -161,20 +159,48 @@ export default function DebtsPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg">
                 <CardContent className="p-6">
-                  <p className="text-sm opacity-90">Total de Deudas</p>
-                  <p className="text-3xl font-bold mt-1">{formatCurrency(totalDebt)}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm opacity-90 mb-2">Total de Deudas</p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-bold">{formatCurrency(totalDebt)}</span>
+                      </div>
+                      <p className="text-sm opacity-90 mt-2">{debts.length} deudas</p>
+                    </div>
+                    <div className="ml-4">
+                      <CreditCard className="h-12 w-12 opacity-20" />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
               <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-lg">
                 <CardContent className="p-6">
-                  <p className="text-sm opacity-90">Total Pagado</p>
-                  <p className="text-3xl font-bold mt-1">{formatCurrency(totalPaid)}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm opacity-90 mb-2">Total Pagado</p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-bold">{formatCurrency(totalPaid)}</span>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <CircleCheck className="h-12 w-12 opacity-20" />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
               <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0 shadow-lg">
                 <CardContent className="p-6">
-                  <p className="text-sm opacity-90">Saldo Pendiente</p>
-                  <p className="text-3xl font-bold mt-1">{formatCurrency(totalRemaining)}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm opacity-90 mb-2">Saldo Pendiente</p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-bold">{formatCurrency(totalRemaining)}</span>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <AlertCircle className="h-12 w-12 opacity-20" />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>

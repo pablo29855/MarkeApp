@@ -5,8 +5,7 @@ import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import {
   AlertDialog,
@@ -19,7 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Trash2, MapPin } from "lucide-react"
+import { Trash2, MapPin, ShoppingBag } from "lucide-react"
 import type { ShoppingItem } from "@/lib/types"
 import { formatCurrency } from "@/lib/utils"
 
@@ -33,6 +32,7 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
   const [showPriceDialog, setShowPriceDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [unitPrice, setUnitPrice] = useState("")
+  const [quantity, setQuantity] = useState(item.quantity.toString())
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
@@ -40,10 +40,9 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
   const [isGettingLocation, setIsGettingLocation] = useState(false)
   const { showSuccess, showError, showDeleted } = useNotification()
 
-  const handleCheckboxChange = async (checked: boolean) => {
-    if (checked) {
-      setShowPriceDialog(true)
-    }
+  const handlePurchaseClick = () => {
+    setQuantity(item.quantity.toString()) // Resetear a la cantidad original
+    setShowPriceDialog(true)
   }
 
   const getLocation = () => {
@@ -84,7 +83,8 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
     setError(null)
 
     const supabase = createClient()
-    const totalPrice = Number.parseFloat(unitPrice) * item.quantity
+    const purchasedQuantity = Number.parseFloat(quantity)
+    const totalPrice = Number.parseFloat(unitPrice) * purchasedQuantity
 
     try {
       // Update shopping item
@@ -108,7 +108,7 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
         category_id: marketCategoryId,
         purchase_date: new Date().toISOString().split("T")[0],
         location: locationName || null,
-        notes: `Compra de mercado - ${item.quantity} unidades${location ? ` - Ubicación: ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : ""}`,
+        notes: `Compra de mercado - ${purchasedQuantity} unidades${location ? ` - Ubicación: ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : ""}`,
       })
 
       if (expenseError) throw expenseError
@@ -151,27 +151,43 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
 
   return (
     <>
-      <Card className="hover:shadow-md transition-shadow">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <Checkbox checked={false} onCheckedChange={handleCheckboxChange} className="mt-1" />
+      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
+        <div className="p-4 bg-card">
+          <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-balance">{item.product_name}</p>
-              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-1">
-                <span className="font-medium">Cantidad: {item.quantity}</span>
+              <h3 className="font-bold text-4xl leading-tight mb-2">
+                {item.product_name}
+              </h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center px-2.5 py-0.5 bg-primary/10 text-primary rounded-md text-sm font-semibold">
+                  Cantidad: {item.quantity}
+                </span>
                 {item.category && (
-                  <>
-                    <span>•</span>
-                    <span className="truncate">{item.category}</span>
-                  </>
+                  <span className="inline-flex items-center px-2.5 py-0.5 bg-muted text-muted-foreground rounded-md text-xs">
+                    {item.category}
+                  </span>
                 )}
               </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={confirmDelete} className="shrink-0">
-              <Trash2 className="h-4 w-4 text-destructive" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={confirmDelete} 
+              className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
-        </CardContent>
+          
+          <Button 
+            onClick={handlePurchaseClick}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+            size="sm"
+          >
+            <ShoppingBag className="h-4 w-4 mr-2" />
+            Comprado
+          </Button>
+        </div>
       </Card>
 
       <Dialog open={showPriceDialog} onOpenChange={setShowPriceDialog}>
@@ -189,8 +205,21 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
             </div>
 
             <div className="space-y-2">
-              <Label>Cantidad</Label>
-              <p className="text-sm font-medium">{item.quantity}</p>
+              <Label htmlFor="quantity">Cantidad Comprada</Label>
+              <Input
+                id="quantity"
+                type="number"
+                step="1"
+                min="1"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                placeholder="0"
+                required
+                disabled={isLoading}
+              />
+              <p className="text-xs text-muted-foreground">
+                Cantidad original en la lista: {item.quantity}
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -253,10 +282,13 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
               )}
             </div>
 
-            {unitPrice && (
+            {unitPrice && quantity && (
               <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
                 <p className="text-sm text-muted-foreground">Total a pagar</p>
-                <p className="text-2xl font-bold">{formatCurrency(Number.parseFloat(unitPrice) * item.quantity)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(Number.parseFloat(unitPrice) * Number.parseFloat(quantity))}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {quantity} × {formatCurrency(Number.parseFloat(unitPrice))}
+                </p>
               </div>
             )}
 
@@ -275,13 +307,14 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
                   setLocation(null)
                   setLocationName("")
                   setUnitPrice("")
+                  setQuantity(item.quantity.toString())
                 }}
                 className="flex-1"
                 disabled={isLoading}
               >
                 Cancelar
               </Button>
-              <Button onClick={handleMarkAsPurchased} className="flex-1" disabled={isLoading || !unitPrice}>
+              <Button onClick={handleMarkAsPurchased} className="flex-1" disabled={isLoading || !unitPrice || !quantity}>
                 {isLoading ? "Procesando..." : "Confirmar Compra"}
               </Button>
             </div>

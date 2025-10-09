@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/client'
 import { StatsCard } from '@/components/dashboard/stats-card'
 import { ExpenseChart } from '@/components/dashboard/expense-chart'
 import { RecentExpenses } from '@/components/dashboard/recent-expenses'
+import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { formatCurrency } from '@/lib/utils'
 import { DollarSign, TrendingUp, ShoppingCart, CreditCard } from 'lucide-react'
 import type { Expense, ExpensesByCategory } from '@/lib/types'
@@ -100,11 +101,7 @@ export default function DashboardPage() {
   }, [])
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg">Cargando...</div>
-      </div>
-    )
+    return <LoadingCheckOverlay message="Cargando dashboard..." />
   }
 
   return (

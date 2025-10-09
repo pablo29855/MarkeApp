@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { SkeletonGrid } from '@/components/ui/skeleton-card'
 import type { ShoppingItem, Category } from '@/lib/types'
-import { ShoppingCart } from 'lucide-react'
+import { ShoppingCart, List } from 'lucide-react'
 
 export default function ShoppingPage() {
   const [loading, setLoading] = useState(true)
@@ -114,23 +114,21 @@ export default function ShoppingPage() {
       <PageHeader
         title="Lista de Mercado"
         description="Organiza tus compras y conviértelas en gastos"
-        showBackButton
-        backHref="/dashboard"
         action={<ShoppingFormWrapper userId={userId} categories={categories} onSuccess={handleRefresh} />}
       />
 
       <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-90">Items Pendientes</p>
-              <p className="text-3xl font-bold mt-1">{shoppingList.length}</p>
+            <div className="flex-1">
+              <p className="text-sm opacity-90 mb-2">Lista de Mercado</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-bold">{shoppingList.length}</span>
+                <span className="text-xl opacity-90">productos</span>
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-sm opacity-90">Total de Items</p>
-              <p className="text-3xl font-bold mt-1">
-                {shoppingList.reduce((sum, item) => sum + item.quantity, 0).toFixed(1)}
-              </p>
+            <div className="ml-4">
+              <List className="h-16 w-16 opacity-20" />
             </div>
           </div>
         </CardContent>

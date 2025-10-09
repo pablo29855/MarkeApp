@@ -10,6 +10,7 @@ import { formatCurrency } from '@/lib/utils'
 import type { Expense, Category } from '@/lib/types'
 import { ExpenseListWrapper } from '@/components/expenses/expense-list-wrapper'
 import { ExportButton } from '@/components/expenses/export-button'
+import { Receipt } from 'lucide-react'
 
 export default function ExpensesPage() {
   const [searchParams] = useSearchParams()
@@ -126,8 +127,6 @@ export default function ExpensesPage() {
         <PageHeader
           title="Gastos"
           description="Gestiona y controla tus gastos"
-          showBackButton
-          backHref="/dashboard"
           action={
             <div className="flex gap-2">
               <ExportButton expenses={expenses} />
@@ -140,13 +139,15 @@ export default function ExpensesPage() {
       <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-90">Total de Gastos</p>
-              <p className="text-3xl font-bold mt-1">{formatCurrency(totalAmount)}</p>
+            <div className="flex-1">
+              <p className="text-sm opacity-90 mb-2">Total de Gastos</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-bold">{formatCurrency(totalAmount)}</span>
+              </div>
+              <p className="text-sm opacity-90 mt-2">{expenses.length} registros</p>
             </div>
-            <div className="text-right">
-              <p className="text-sm opacity-90">Cantidad de Gastos</p>
-              <p className="text-3xl font-bold mt-1">{expenses.length}</p>
+            <div className="ml-4">
+              <Receipt className="h-16 w-16 opacity-20" />
             </div>
           </div>
         </CardContent>
