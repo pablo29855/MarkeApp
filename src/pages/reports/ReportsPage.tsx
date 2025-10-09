@@ -7,6 +7,7 @@ import { ComparisonBarChart } from '@/components/reports/comparison-bar-chart'
 import { CategoryTable } from '@/components/reports/category-table'
 import { Card, CardContent } from '@/components/ui/card'
 import { PageHeader } from '@/components/ui/page-header'
+import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { formatCurrency } from '@/lib/utils'
 import type { ExpensesByCategory } from '@/lib/types'
 
@@ -94,11 +95,7 @@ export default function ReportsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg">Cargando...</div>
-      </div>
-    )
+    return <LoadingCheckOverlay message="Cargando reportes..." />
   }
 
   const currentDate = new Date()

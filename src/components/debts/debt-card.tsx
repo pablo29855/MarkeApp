@@ -1,6 +1,5 @@
 
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
 import { createClient } from "@/lib/supabase/client"
 import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
@@ -34,7 +33,6 @@ export function DebtCard({ debt, payments, onUpdate }: DebtCardProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showPayments, setShowPayments] = useState(false)
-  const navigate = useNavigate()
   const { showDeleted, showError } = useNotification()
 
   const remainingAmount = Number(debt.total_amount) - Number(debt.paid_amount)

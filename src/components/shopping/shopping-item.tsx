@@ -1,6 +1,5 @@
 
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
 import { createClient } from "@/lib/supabase/client"
 import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
@@ -39,7 +38,6 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [locationName, setLocationName] = useState<string>("")
   const [isGettingLocation, setIsGettingLocation] = useState(false)
-  const navigate = useNavigate()
   const { showSuccess, showError, showDeleted } = useNotification()
 
   const handleCheckboxChange = async (checked: boolean) => {

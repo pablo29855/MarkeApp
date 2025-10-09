@@ -2,7 +2,6 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
 import { createClient } from "@/lib/supabase/client"
 import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
@@ -23,7 +22,6 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const navigate = useNavigate()
   const { showSaved, showError: showErrorNotif, showWarning } = useNotification()
 
   const [formData, setFormData] = useState({
