@@ -4,13 +4,15 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Loader2 } from "lucide-react"
 import type { Expense, Category } from "@/lib/types"
 
 interface ExpenseEditDialogProps {
@@ -24,6 +26,7 @@ interface ExpenseEditDialogProps {
 export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onSuccess }: ExpenseEditDialogProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { showUpdated, showError } = useNotification()
 
   const [formData, setFormData] = useState({
     name: expense.name,
@@ -67,9 +70,12 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
 
       if (error) throw error
 
+      showUpdated("Gasto")
       onSuccess?.()
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Error al actualizar el gasto")
+      const errorMessage = error instanceof Error ? error.message : "Error al actualizar el gasto"
+      setError(errorMessage)
+      showError("Error al actualizar", errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -80,6 +86,9 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Editar Gasto</DialogTitle>
+          <DialogDescription>
+            Modifica los detalles de tu gasto registrado
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -183,6 +192,7 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
               Cancelar
             </Button>
             <Button type="submit" className="flex-1" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLoading ? "Guardando..." : "Guardar Cambios"}
             </Button>
           </div>

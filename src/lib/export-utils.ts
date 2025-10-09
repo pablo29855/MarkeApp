@@ -2,18 +2,33 @@ import type { Expense } from "./types"
 import { format } from "date-fns"
 
 export function exportExpensesToCSV(expenses: Expense[]) {
+  if (!expenses || expenses.length === 0) {
+    console.warn("No expenses to export")
+    return
+  }
+
   // Define CSV headers
   const headers = ["Fecha", "Nombre", "Categoría", "Monto", "Ubicación", "Notas"]
 
   // Convert expenses to CSV rows
   const rows = expenses.map((expense) => {
+    // Validar que expense tenga los datos necesarios
+    const purchaseDate = expense.purchase_date 
+      ? format(new Date(expense.purchase_date), "yyyy-MM-dd")
+      : ""
+    
+    const categoryName = expense.category?.name || "Sin categoría"
+    const amount = expense.amount?.toString() || "0"
+    const location = expense.location || ""
+    const notes = expense.notes || ""
+    
     return [
-      format(new Date(expense.purchase_date), "yyyy-MM-dd"),
-      expense.name,
-      expense.category?.name || "Sin categoría",
-      expense.amount.toString(),
-      expense.location || "",
-      expense.notes || "",
+      purchaseDate,
+      expense.name || "",
+      categoryName,
+      amount,
+      location,
+      notes,
     ]
   })
 
@@ -45,4 +60,7 @@ export function exportExpensesToCSV(expenses: Expense[]) {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+  
+  // Limpiar el URL objeto
+  URL.revokeObjectURL(url)
 }

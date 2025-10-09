@@ -1,9 +1,11 @@
 
-import { useNavigate } from "react-router-dom"
 import { DebtForm } from "./debt-form"
 
-export function DebtFormWrapper({ userId }: { userId: string }) {
-  const navigate = useNavigate()
+interface DebtFormWrapperProps {
+  userId: string
+  onSuccess?: () => void
+}
 
-  return <DebtForm userId={userId} onSuccess={() => navigate(0)} />
+export function DebtFormWrapper({ userId, onSuccess }: DebtFormWrapperProps) {
+  return <DebtForm userId={userId} onSuccess={onSuccess} />
 }

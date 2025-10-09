@@ -4,13 +4,14 @@ import type React from "react"
 
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Plus } from "lucide-react"
+import { Plus, Loader2 } from "lucide-react"
 import type { Category } from "@/lib/types"
 
 interface ShoppingFormProps {
@@ -23,6 +24,7 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { showCreated, showError } = useNotification()
 
   const [formData, setFormData] = useState({
     product_name: "",
@@ -42,11 +44,16 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
         user_id: userId,
         product_name: formData.product_name,
         quantity: Number.parseFloat(formData.quantity),
-        category_id: formData.category_id || null,
+        category: formData.category_id || null,
+        is_purchased: false,
+        unit_price: null,
+        total_price: null,
       })
 
       if (error) throw error
 
+      showCreated("Producto")
+      
       setFormData({
         product_name: "",
         quantity: "1",
@@ -55,7 +62,9 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
       setOpen(false)
       onSuccess?.()
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Error al agregar el item")
+      const errorMessage = error instanceof Error ? error.message : "Error al agregar el item"
+      setError(errorMessage)
+      showError("Error al guardar", errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -72,6 +81,9 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Nuevo Item</DialogTitle>
+          <DialogDescription>
+            Agrega un producto a tu lista de mercado
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -145,6 +157,7 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
               Cancelar
             </Button>
             <Button type="submit" className="flex-1" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLoading ? "Guardando..." : "Guardar"}
             </Button>
           </div>

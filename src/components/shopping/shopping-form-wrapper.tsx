@@ -1,10 +1,13 @@
 
-import { useNavigate } from "react-router-dom"
 import { ShoppingForm } from "./shopping-form"
 import type { Category } from "@/lib/types"
 
-export function ShoppingFormWrapper({ userId, categories }: { userId: string; categories: Category[] }) {
-  const navigate = useNavigate()
+interface ShoppingFormWrapperProps {
+  userId: string
+  categories: Category[]
+  onSuccess?: () => void
+}
 
-  return <ShoppingForm userId={userId} categories={categories} onSuccess={() => navigate(0)} />
+export function ShoppingFormWrapper({ userId, categories, onSuccess }: ShoppingFormWrapperProps) {
+  return <ShoppingForm userId={userId} categories={categories} onSuccess={onSuccess} />
 }

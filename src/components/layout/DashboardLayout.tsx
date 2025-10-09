@@ -8,6 +8,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [userName, setUserName] = useState('Usuario')
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   useEffect(() => {
     async function getUser() {
@@ -22,8 +23,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar userName={userName} />
-      <main className="lg:ml-64 transition-all duration-300">
+      <Sidebar userName={userName} onCollapse={setIsCollapsed} />
+      <main className={`transition-all duration-300 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
         <div className="p-6 lg:p-8">{children}</div>
       </main>
     </div>

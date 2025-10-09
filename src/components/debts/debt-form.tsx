@@ -4,13 +4,14 @@ import type React from "react"
 
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Plus } from "lucide-react"
+import { Plus, Loader2 } from "lucide-react"
 
 interface DebtFormProps {
   userId: string
@@ -21,6 +22,7 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { showCreated, showError } = useNotification()
 
   const [formData, setFormData] = useState({
     creditor_name: "",
@@ -37,24 +39,26 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
     const supabase = createClient()
 
     try {
+      const currentDate = new Date().toISOString().split('T')[0]
+      
       console.log("[v0] Creating debt with data:", {
         user_id: userId,
-        creditor_name: formData.creditor_name,
+        name: formData.creditor_name,
+        creditor: formData.creditor_name,
         total_amount: Number.parseFloat(formData.total_amount),
         paid_amount: 0,
-        due_date: formData.due_date || null,
-        description: formData.description || null,
+        debt_date: formData.due_date || currentDate,
       })
 
       const { data, error } = await supabase
         .from("debts")
         .insert({
           user_id: userId,
-          creditor_name: formData.creditor_name,
+          name: formData.creditor_name,
+          creditor: formData.creditor_name,
           total_amount: Number.parseFloat(formData.total_amount),
           paid_amount: 0,
-          due_date: formData.due_date || null,
-          description: formData.description || null,
+          debt_date: formData.due_date || currentDate,
         })
         .select()
 
@@ -62,6 +66,8 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
 
       if (error) throw error
 
+      showCreated("Deuda")
+      
       setFormData({
         creditor_name: "",
         total_amount: "",
@@ -72,7 +78,9 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
       onSuccess?.()
     } catch (error: unknown) {
       console.error("[v0] Error creating debt:", error)
-      setError(error instanceof Error ? error.message : "Error al crear la deuda")
+      const errorMessage = error instanceof Error ? error.message : "Error al crear la deuda"
+      setError(errorMessage)
+      showError("Error al guardar", errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -89,6 +97,9 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Nueva Deuda</DialogTitle>
+          <DialogDescription>
+            Registra una nueva deuda para llevar un control de tus pagos pendientes
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -160,6 +171,7 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
               Cancelar
             </Button>
             <Button type="submit" className="flex-1" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLoading ? "Guardando..." : "Guardar"}
             </Button>
           </div>

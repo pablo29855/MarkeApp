@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/sonner'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 
 // Pages
@@ -48,6 +49,7 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="markeapp-theme">
+      <Toaster />
       <Routes>
         {/* Public routes */}
         <Route path="/auth/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" />} />

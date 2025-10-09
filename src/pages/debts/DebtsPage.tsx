@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { DebtCard } from '@/components/debts/debt-card'
 import { Card, CardContent } from '@/components/ui/card'
 import { PageHeader } from '@/components/ui/page-header'
+import { LoadingCheckOverlay } from '@/components/ui/loading-check'
+import { SkeletonDebtList, SkeletonDebtStats } from '@/components/ui/skeleton-debt'
 import { formatCurrency } from '@/lib/utils'
 import { CreditCard } from 'lucide-react'
 import type { Debt, DebtPayment } from '@/lib/types'
@@ -10,8 +12,51 @@ import { DebtFormWrapper } from '@/components/debts/debt-form-wrapper'
 
 export default function DebtsPage() {
   const [loading, setLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [debtsWithPayments, setDebtsWithPayments] = useState<{ debt: Debt; payments: DebtPayment[] }[]>([])
   const [userId, setUserId] = useState<string>('')
+
+  const fetchDebtsWithPayments = useCallback(async () => {
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) return
+
+      const { data: debts } = await supabase
+        .from('debts')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      const debtsData = (debts || []) as Debt[]
+
+      const debtsWithPaymentsData = await Promise.all(
+        debtsData.map(async (debt) => {
+          const { data: payments } = await supabase
+            .from('debt_payments')
+            .select('*')
+            .eq('debt_id', debt.id)
+            .order('payment_date', { ascending: false })
+
+          return {
+            debt,
+            payments: (payments || []) as DebtPayment[],
+          }
+        })
+      )
+
+      setDebtsWithPayments(debtsWithPaymentsData)
+    } catch (error) {
+      console.error('[Debts] Error fetching data:', error)
+    }
+  }, [])
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true)
+    await fetchDebtsWithPayments()
+    setTimeout(() => setIsRefreshing(false), 300)
+  }, [fetchDebtsWithPayments])
 
   useEffect(() => {
     async function fetchData() {
@@ -22,31 +67,7 @@ export default function DebtsPage() {
         if (!user) return
 
         setUserId(user.id)
-
-        const { data: debts } = await supabase
-          .from('debts')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-
-        const debtsData = (debts || []) as Debt[]
-
-        const debtsWithPaymentsData = await Promise.all(
-          debtsData.map(async (debt) => {
-            const { data: payments } = await supabase
-              .from('debt_payments')
-              .select('*')
-              .eq('debt_id', debt.id)
-              .order('payment_date', { ascending: false })
-
-            return {
-              debt,
-              payments: (payments || []) as DebtPayment[],
-            }
-          })
-        )
-
-        setDebtsWithPayments(debtsWithPaymentsData)
+        await fetchDebtsWithPayments()
       } catch (error) {
         console.error('[Debts] Error fetching data:', error)
       } finally {
@@ -55,14 +76,63 @@ export default function DebtsPage() {
     }
 
     fetchData()
-  }, [])
+  }, [fetchDebtsWithPayments])
+
+  // Suscripción en tiempo real para debts
+  useEffect(() => {
+    if (!userId) return
+
+    const supabase = createClient()
+    
+    const channel = supabase
+      .channel('debts-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'debts',
+          filter: `user_id=eq.${userId}`
+        },
+        () => {
+          handleRefresh()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId, handleRefresh])
+
+  // Suscripción en tiempo real para debt_payments
+  useEffect(() => {
+    if (!userId) return
+
+    const supabase = createClient()
+    
+    const channel = supabase
+      .channel('debt-payments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'debt_payments',
+        },
+        () => {
+          handleRefresh()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId, handleRefresh])
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg">Cargando...</div>
-      </div>
-    )
+    return <LoadingCheckOverlay message="Cargando deudas..." />
   }
 
   const debts = debtsWithPayments.map((d) => d.debt)
@@ -78,48 +148,57 @@ export default function DebtsPage() {
           description="Gestiona tus deudas y pagos parciales"
           showBackButton
           backHref="/dashboard"
-          action={<DebtFormWrapper userId={userId} />}
+          action={<DebtFormWrapper userId={userId} onSuccess={handleRefresh} />}
         />
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg">
-            <CardContent className="p-6">
-              <p className="text-sm opacity-90">Total de Deudas</p>
-              <p className="text-3xl font-bold mt-1">{formatCurrency(totalDebt)}</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6">
-              <p className="text-sm opacity-90">Total Pagado</p>
-              <p className="text-3xl font-bold mt-1">{formatCurrency(totalPaid)}</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6">
-              <p className="text-sm opacity-90">Saldo Pendiente</p>
-              <p className="text-3xl font-bold mt-1">{formatCurrency(totalRemaining)}</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {debtsWithPayments.length > 0 ? (
-          <div className="space-y-4">
-            {debtsWithPayments.map(({ debt, payments }) => (
-              <DebtCard key={debt.id} debt={debt} payments={payments} />
-            ))}
-          </div>
+        {isRefreshing ? (
+          <>
+            <SkeletonDebtStats />
+            <SkeletonDebtList count={debtsWithPayments.length || 3} />
+          </>
         ) : (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                <CreditCard className="h-8 w-8 text-muted-foreground" />
+          <>
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <p className="text-sm opacity-90">Total de Deudas</p>
+                  <p className="text-3xl font-bold mt-1">{formatCurrency(totalDebt)}</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <p className="text-sm opacity-90">Total Pagado</p>
+                  <p className="text-3xl font-bold mt-1">{formatCurrency(totalPaid)}</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <p className="text-sm opacity-90">Saldo Pendiente</p>
+                  <p className="text-3xl font-bold mt-1">{formatCurrency(totalRemaining)}</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {debtsWithPayments.length > 0 ? (
+              <div className="space-y-4">
+                {debtsWithPayments.map(({ debt, payments }) => (
+                  <DebtCard key={debt.id} debt={debt} payments={payments} onUpdate={handleRefresh} />
+                ))}
               </div>
-              <p className="text-lg font-medium text-center">No tienes deudas registradas</p>
-              <p className="text-sm text-muted-foreground text-center mt-2">
-                Agrega una deuda para comenzar a hacer seguimiento
-              </p>
-            </CardContent>
-          </Card>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <CreditCard className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-lg font-medium text-center">No tienes deudas registradas</p>
+                  <p className="text-sm text-muted-foreground text-center mt-2">
+                    Agrega una deuda para comenzar a hacer seguimiento
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </div>
     </div>

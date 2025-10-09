@@ -29,15 +29,38 @@ const navigation = [
 
 interface SidebarProps {
   userName: string
+  onCollapse?: (collapsed: boolean) => void
 }
 
-export function Sidebar({ userName }: SidebarProps) {
+export function Sidebar({ userName, onCollapse }: SidebarProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const pathname = location.pathname
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
+
+  // Notificar al layout cuando cambia el estado de colapso
+  useEffect(() => {
+    onCollapse?.(isCollapsed)
+  }, [isCollapsed, onCollapse])
+
+  // Cerrar menú móvil cuando cambia el tamaño de pantalla a escritorio
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsMobileMenuOpen(false)
+      }
+    }
+    
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Cerrar menú móvil cuando cambia la ruta
+  useEffect(() => {
+    setIsMobileMenuOpen(false)
+  }, [pathname])
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme")
@@ -74,7 +97,7 @@ export function Sidebar({ userName }: SidebarProps) {
           variant="outline"
           size="icon"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="bg-background"
+          className="bg-background shadow-lg hover:shadow-xl transition-smooth"
         >
           {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
@@ -83,37 +106,44 @@ export function Sidebar({ userName }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 bg-card border-r border-border transform transition-all duration-300 ease-in-out",
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          "fixed inset-y-0 left-0 bg-card border-r border-border transform transition-all duration-300 ease-in-out shadow-xl",
+          isMobileMenuOpen ? "translate-x-0 z-40" : "-translate-x-full lg:translate-x-0 lg:z-40",
           isCollapsed ? "w-20" : "w-64",
         )}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full relative overflow-visible">
+          {/* Gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
+          
           {/* Logo and User Info */}
-          <div className="px-6 py-6 border-b border-border">
+          <div className="px-4 py-4 border-b border-border relative z-10">
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground font-bold text-xl shrink-0">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-bold text-xl shrink-0 shadow-lg transition-transform hover:scale-110">
                 M
               </div>
               {!isCollapsed && (
                 <div className="min-w-0 flex-1">
-                  <h1 className="font-bold text-lg truncate">MarketApp</h1>
-                  <p className="text-xs text-muted-foreground truncate">Control de Gastos</p>
+                  <h1 className="font-bold text-lg bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                    MarketApp
+                  </h1>
+                  <p className="text-xs text-muted-foreground">Control de Gastos</p>
                 </div>
               )}
             </div>
 
             {!isCollapsed && (
-              <div className="mt-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50">
-                <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-sm font-medium truncate">{userName}</span>
+              <div className="mt-3 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 transition-smooth hover:shadow-md">
+                <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <User className="h-3.5 w-3.5 text-primary" />
+                </div>
+                <span className="text-xs font-medium truncate">{userName}</span>
               </div>
             )}
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {navigation.map((item) => {
+          <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto relative z-10">
+            {navigation.map((item, index) => {
               const isActive = pathname === item.href
               return (
                 <Link
@@ -121,59 +151,96 @@ export function Sidebar({ userName }: SidebarProps) {
                   to={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
+                    "flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group relative overflow-hidden",
                     isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                    isCollapsed && "justify-center",
+                      ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-md"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-sm",
+                    isCollapsed && "justify-center px-2",
+                    "animate-fade-in"
                   )}
+                  style={{ animationDelay: `${index * 50}ms` }}
                   title={isCollapsed ? item.name : undefined}
                 >
-                  <item.icon className="h-5 w-5 shrink-0" />
-                  {!isCollapsed && <span className="truncate">{item.name}</span>}
+                  {isActive && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  )}
+                  <item.icon className={cn(
+                    "h-4.5 w-4.5 shrink-0 transition-transform group-hover:scale-110",
+                    isActive && "drop-shadow-sm"
+                  )} />
+                  {!isCollapsed && (
+                    <span className="truncate relative z-10">{item.name}</span>
+                  )}
+                  {isActive && !isCollapsed && (
+                    <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary-foreground animate-pulse" />
+                  )}
                 </Link>
               )
             })}
           </nav>
 
           {/* Bottom actions */}
-          <div className="p-4 border-t border-border space-y-2">
+          <div className="p-3 border-t border-border space-y-1.5 relative z-10">
             <Button
               variant="outline"
-              className={cn("w-full gap-3 bg-transparent", isCollapsed ? "justify-center px-0" : "justify-start")}
+              size="sm"
+              className={cn(
+                "w-full gap-2 transition-smooth hover:bg-primary/10 hover:border-primary/50",
+                isCollapsed ? "justify-center px-0" : "justify-start"
+              )}
               onClick={toggleTheme}
               title={isCollapsed ? (isDarkMode ? "Modo Claro" : "Modo Oscuro") : undefined}
             >
-              {isDarkMode ? <Sun className="h-5 w-5 shrink-0" /> : <Moon className="h-5 w-5 shrink-0" />}
-              {!isCollapsed && <span>{isDarkMode ? "Modo Claro" : "Modo Oscuro"}</span>}
+              {isDarkMode ? (
+                <>
+                  <Sun className="h-4 w-4 shrink-0 text-yellow-500" />
+                  {!isCollapsed && <span className="text-xs">Modo Claro</span>}
+                </>
+              ) : (
+                <>
+                  <Moon className="h-4 w-4 shrink-0 text-blue-500" />
+                  {!isCollapsed && <span className="text-xs">Modo Oscuro</span>}
+                </>
+              )}
             </Button>
 
             <Button
               variant="outline"
-              className={cn("w-full gap-3 bg-transparent", isCollapsed ? "justify-center px-0" : "justify-start")}
+              size="sm"
+              className={cn(
+                "w-full gap-2 transition-smooth hover:bg-destructive/10 hover:border-destructive/50 hover:text-destructive",
+                isCollapsed ? "justify-center px-0" : "justify-start"
+              )}
               onClick={handleLogout}
               title={isCollapsed ? "Cerrar Sesión" : undefined}
             >
-              <LogOut className="h-5 w-5 shrink-0" />
-              {!isCollapsed && <span>Cerrar Sesión</span>}
+              <LogOut className="h-4 w-4 shrink-0" />
+              {!isCollapsed && <span className="text-xs">Cerrar Sesión</span>}
             </Button>
           </div>
 
+          {/* Botón de colapsar/expandir */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden lg:flex absolute -right-3 top-20 w-6 h-6 items-center justify-center rounded-full bg-primary text-primary-foreground border-2 border-background shadow-md hover:scale-110 transition-transform z-50"
+            className="hidden lg:flex absolute -right-3.5 top-20 w-8 h-8 items-center justify-center rounded-full bg-primary text-primary-foreground border-4 border-background shadow-xl hover:scale-110 transition-all duration-200 hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            style={{ zIndex: 100 }}
             aria-label={isCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
           >
-            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            {isCollapsed ? (
+              <ChevronRight className="h-5 w-5 flex-shrink-0" />
+            ) : (
+              <ChevronLeft className="h-5 w-5 flex-shrink-0" />
+            )}
           </button>
         </div>
       </aside>
 
-      {/* Overlay for mobile */}
+      {/* Overlay for mobile - solo renderizar en móvil Y cuando está abierto */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden animate-fade-in"
           onClick={() => setIsMobileMenuOpen(false)}
+          aria-hidden="true"
         />
       )}
     </>

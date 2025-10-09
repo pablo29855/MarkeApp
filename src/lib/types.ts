@@ -42,11 +42,13 @@ export interface ShoppingItem {
 export interface Debt {
   id: string
   user_id: string
-  creditor_name: string
+  name: string
+  creditor: string
   total_amount: number
   paid_amount: number
-  due_date: string | null
-  description: string | null
+  debt_date: string
+  due_date?: string | null
+  description?: string | null
   created_at: string
 }
 

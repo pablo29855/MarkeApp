@@ -1,18 +1,47 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ShoppingFormWrapper } from '@/components/shopping/shopping-form-wrapper'
 import { ShoppingItemCard } from '@/components/shopping/shopping-item'
 import { Card, CardContent } from '@/components/ui/card'
 import { PageHeader } from '@/components/ui/page-header'
+import { LoadingCheckOverlay } from '@/components/ui/loading-check'
+import { SkeletonGrid } from '@/components/ui/skeleton-card'
 import type { ShoppingItem, Category } from '@/lib/types'
 import { ShoppingCart } from 'lucide-react'
 
 export default function ShoppingPage() {
   const [loading, setLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([])
   const [marketCategoryId, setMarketCategoryId] = useState<string>('')
   const [categories, setCategories] = useState<Category[]>([])
   const [userId, setUserId] = useState<string>('')
+
+  const fetchShoppingList = useCallback(async () => {
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) return
+
+      const { data: shoppingData } = await supabase
+        .from('shopping_list')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_purchased', false)
+        .order('created_at', { ascending: false })
+
+      setShoppingList((shoppingData || []) as ShoppingItem[])
+    } catch (error) {
+      console.error('[Shopping] Error fetching shopping list:', error)
+    }
+  }, [])
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true)
+    await fetchShoppingList()
+    setTimeout(() => setIsRefreshing(false), 300)
+  }, [fetchShoppingList])
 
   useEffect(() => {
     async function fetchData() {
@@ -48,12 +77,36 @@ export default function ShoppingPage() {
     fetchData()
   }, [])
 
+  // Suscripción en tiempo real
+  useEffect(() => {
+    if (!userId) return
+
+    const supabase = createClient()
+    
+    const channel = supabase
+      .channel('shopping-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'shopping_list',
+          filter: `user_id=eq.${userId}`
+        },
+        () => {
+          // Usar handleRefresh para mostrar el skeleton durante la actualización
+          handleRefresh()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId, handleRefresh])
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg">Cargando...</div>
-      </div>
-    )
+    return <LoadingCheckOverlay message="Cargando lista de mercado..." />
   }
 
   return (
@@ -63,7 +116,7 @@ export default function ShoppingPage() {
         description="Organiza tus compras y conviértelas en gastos"
         showBackButton
         backHref="/dashboard"
-        action={<ShoppingFormWrapper userId={userId} categories={categories} />}
+        action={<ShoppingFormWrapper userId={userId} categories={categories} onSuccess={handleRefresh} />}
       />
 
       <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg">
@@ -83,10 +136,12 @@ export default function ShoppingPage() {
         </CardContent>
       </Card>
 
-      {shoppingList.length > 0 ? (
+      {isRefreshing ? (
+        <SkeletonGrid count={shoppingList.length || 3} />
+      ) : shoppingList.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {shoppingList.map((item) => (
-            <ShoppingItemCard key={item.id} item={item} marketCategoryId={marketCategoryId} />
+            <ShoppingItemCard key={item.id} item={item} marketCategoryId={marketCategoryId} onUpdate={handleRefresh} />
           ))}
         </div>
       ) : (

@@ -4,26 +4,29 @@ import type React from "react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { createClient } from "@/lib/supabase/client"
+import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogClose } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Plus } from "lucide-react"
+import { Plus, Loader2 } from "lucide-react"
 import type { Category } from "@/lib/types"
 
 interface ExpenseFormProps {
   categories: Category[]
   userId: string
+  onSuccess?: () => void
 }
 
-export function ExpenseForm({ categories, userId }: ExpenseFormProps) {
+export function ExpenseForm({ categories, userId, onSuccess }: ExpenseFormProps) {
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
+  const { showCreated, showError } = useNotification()
 
   const [formData, setFormData] = useState({
     name: "",
@@ -34,8 +37,27 @@ export function ExpenseForm({ categories, userId }: ExpenseFormProps) {
     notes: "",
   })
 
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      amount: "",
+      category_id: "",
+      purchase_date: new Date().toISOString().split("T")[0],
+      location: "",
+      notes: "",
+    })
+    setError(null)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validación manual de categoría
+    if (!formData.category_id) {
+      setError("Por favor selecciona una categoría")
+      return
+    }
+    
     setIsLoading(true)
     setError(null)
 
@@ -54,18 +76,23 @@ export function ExpenseForm({ categories, userId }: ExpenseFormProps) {
 
       if (error) throw error
 
-      setFormData({
-        name: "",
-        amount: "",
-        category_id: "",
-        purchase_date: new Date().toISOString().split("T")[0],
-        location: "",
-        notes: "",
-      })
+      showCreated("Gasto")
+      
+      // Reset del formulario
+      resetForm()
+      
+      // Cerrar el dialog INMEDIATAMENTE
       setOpen(false)
       
+      // Llamar callback después de cerrar
+      setTimeout(() => {
+        onSuccess?.()
+      }, 50)
+      
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Error al crear el gasto")
+      const errorMessage = error instanceof Error ? error.message : "Error al crear el gasto"
+      setError(errorMessage)
+      showError("Error al guardar", errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -82,6 +109,9 @@ export function ExpenseForm({ categories, userId }: ExpenseFormProps) {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Nuevo Gasto</DialogTitle>
+          <DialogDescription>
+            Completa el formulario para registrar un nuevo gasto
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -125,12 +155,11 @@ export function ExpenseForm({ categories, userId }: ExpenseFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Categoría</Label>
+            <Label htmlFor="category">Categoría *</Label>
             <Select
               value={formData.category_id}
               onValueChange={(value) => setFormData({ ...formData, category_id: value })}
               disabled={isLoading}
-              required
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona una categoría" />
@@ -175,16 +204,18 @@ export function ExpenseForm({ categories, userId }: ExpenseFormProps) {
           )}
 
           <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              className="flex-1"
-              disabled={isLoading}
-            >
-              Cancelar
-            </Button>
+            <DialogClose asChild>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                disabled={isLoading}
+              >
+                Cancelar
+              </Button>
+            </DialogClose>
             <Button type="submit" className="flex-1" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLoading ? "Guardando..." : "Guardar"}
             </Button>
           </div>

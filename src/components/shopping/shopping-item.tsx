@@ -2,12 +2,23 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { createClient } from "@/lib/supabase/client"
+import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Trash2, MapPin } from "lucide-react"
 import type { ShoppingItem } from "@/lib/types"
@@ -16,10 +27,12 @@ import { formatCurrency } from "@/lib/utils"
 interface ShoppingItemProps {
   item: ShoppingItem
   marketCategoryId: string
+  onUpdate?: () => void
 }
 
-export function ShoppingItemCard({ item, marketCategoryId }: ShoppingItemProps) {
+export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingItemProps) {
   const [showPriceDialog, setShowPriceDialog] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [unitPrice, setUnitPrice] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -27,6 +40,7 @@ export function ShoppingItemCard({ item, marketCategoryId }: ShoppingItemProps) 
   const [locationName, setLocationName] = useState<string>("")
   const [isGettingLocation, setIsGettingLocation] = useState(false)
   const navigate = useNavigate()
+  const { showSuccess, showError, showDeleted } = useNotification()
 
   const handleCheckboxChange = async (checked: boolean) => {
     if (checked) {
@@ -107,18 +121,34 @@ export function ShoppingItemCard({ item, marketCategoryId }: ShoppingItemProps) 
       if (deleteError) throw deleteError
 
       setShowPriceDialog(false)
+      showSuccess("Producto comprado y agregado a gastos")
+      onUpdate?.()
       
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Error al marcar como comprado")
+      showError(error instanceof Error ? error.message : "Error al marcar como comprado")
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleDelete = async () => {
-    const supabase = createClient()
-    await supabase.from("shopping_list").delete().eq("id", item.id)
-    
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from("shopping_list").delete().eq("id", item.id)
+      
+      if (error) throw error
+      
+      showDeleted("Producto")
+      setShowDeleteDialog(false)
+      onUpdate?.()
+    } catch (error: unknown) {
+      showError(error instanceof Error ? error.message : "Error al eliminar el producto")
+    }
+  }
+
+  const confirmDelete = () => {
+    setShowDeleteDialog(true)
   }
 
   return (
@@ -139,7 +169,7 @@ export function ShoppingItemCard({ item, marketCategoryId }: ShoppingItemProps) 
                 )}
               </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={handleDelete} className="shrink-0">
+            <Button variant="ghost" size="icon" onClick={confirmDelete} className="shrink-0">
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
           </div>
@@ -150,6 +180,9 @@ export function ShoppingItemCard({ item, marketCategoryId }: ShoppingItemProps) 
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Marcar como Comprado</DialogTitle>
+            <DialogDescription>
+              Ingresa el precio unitario para registrar esta compra
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -257,6 +290,23 @@ export function ShoppingItemCard({ item, marketCategoryId }: ShoppingItemProps) 
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción eliminará "{item.product_name}" de tu lista de mercado. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

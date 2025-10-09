@@ -4,24 +4,27 @@ import type React from "react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { createClient } from "@/lib/supabase/client"
+import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { DollarSign } from "lucide-react"
+import { DollarSign, Loader2 } from "lucide-react"
 
 interface PaymentFormProps {
   debtId: string
   remainingAmount: number
+  onUpdate?: () => void
 }
 
-export function PaymentForm({ debtId, remainingAmount }: PaymentFormProps) {
+export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormProps) {
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
+  const { showSaved, showError: showErrorNotif, showWarning } = useNotification()
 
   const [formData, setFormData] = useState({
     amount: "",
@@ -37,7 +40,9 @@ export function PaymentForm({ debtId, remainingAmount }: PaymentFormProps) {
     const paymentAmount = Number.parseFloat(formData.amount)
 
     if (paymentAmount > remainingAmount) {
-      setError("El monto del pago no puede ser mayor al saldo pendiente")
+      const errorMsg = "El monto del pago no puede ser mayor al saldo pendiente"
+      setError(errorMsg)
+      showWarning("Monto inválido", errorMsg)
       setIsLoading(false)
       return
     }
@@ -69,6 +74,8 @@ export function PaymentForm({ debtId, remainingAmount }: PaymentFormProps) {
 
       if (updateError) throw updateError
 
+      showSaved("Pago")
+      
       setFormData({
         amount: "",
         payment_date: new Date().toISOString().split("T")[0],
@@ -76,8 +83,15 @@ export function PaymentForm({ debtId, remainingAmount }: PaymentFormProps) {
       })
       setOpen(false)
       
+      // Trigger update callback to refresh parent component
+      if (onUpdate) {
+        onUpdate()
+      }
+      
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Error al registrar el pago")
+      const errorMessage = error instanceof Error ? error.message : "Error al registrar el pago"
+      setError(errorMessage)
+      showErrorNotif("Error al guardar", errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -94,6 +108,9 @@ export function PaymentForm({ debtId, remainingAmount }: PaymentFormProps) {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Registrar Pago</DialogTitle>
+          <DialogDescription>
+            Ingresa el monto del pago para reducir el saldo de la deuda
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="p-4 bg-muted rounded-lg">
@@ -108,7 +125,7 @@ export function PaymentForm({ debtId, remainingAmount }: PaymentFormProps) {
               type="number"
               step="0.01"
               value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, amount: e.target.value })}
               placeholder="0.00"
               required
               disabled={isLoading}
@@ -122,7 +139,7 @@ export function PaymentForm({ debtId, remainingAmount }: PaymentFormProps) {
               id="payment_date"
               type="date"
               value={formData.payment_date}
-              onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, payment_date: e.target.value })}
               required
               disabled={isLoading}
             />
@@ -133,7 +150,7 @@ export function PaymentForm({ debtId, remainingAmount }: PaymentFormProps) {
             <Textarea
               id="notes"
               value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="Agrega notas sobre el pago..."
               rows={3}
               disabled={isLoading}
@@ -157,6 +174,7 @@ export function PaymentForm({ debtId, remainingAmount }: PaymentFormProps) {
               Cancelar
             </Button>
             <Button type="submit" className="flex-1" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLoading ? "Guardando..." : "Registrar Pago"}
             </Button>
           </div>
