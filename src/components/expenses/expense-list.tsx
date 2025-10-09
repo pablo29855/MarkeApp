@@ -66,52 +66,74 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="space-y-2 sm:space-y-3 lg:space-y-4">
         {expenses.map((expense) => (
-          <Card key={expense.id}>
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="font-semibold text-lg">{expense.name}</h3>
+          <Card key={expense.id} className="overflow-hidden">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
+              {/* Layout móvil y desktop */}
+              <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+                {/* Contenido principal */}
+                <div className="flex-1 min-w-0">
+                  {/* Título y categoría */}
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <h3 className="font-semibold text-base sm:text-lg truncate">{expense.name}</h3>
                     {expense.category && (
-                      <Badge variant="secondary" style={{ backgroundColor: expense.category.color + "20" }}>
-                        {expense.category.icon} {expense.category.name}
+                      <Badge 
+                        variant="secondary" 
+                        className="text-[10px] sm:text-xs shrink-0"
+                        style={{ backgroundColor: expense.category.color + "20" }}
+                      >
+                        <span className="hidden sm:inline">{expense.category.icon} </span>
+                        {expense.category.name}
                       </Badge>
                     )}
                   </div>
 
-                  <div className="space-y-1 text-sm text-muted-foreground">
-                    <p>
+                  {/* Información adicional - Compacta en móvil */}
+                  <div className="space-y-0.5 sm:space-y-1 text-xs sm:text-sm text-muted-foreground">
+                    <p className="truncate">
                       {format(new Date(expense.purchase_date), "PPP", {
                         locale: es,
                       })}
                     </p>
                     {expense.location && (
-                      <p className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {expense.location}
+                      <p className="flex items-center gap-1 truncate">
+                        <MapPin className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{expense.location}</span>
                       </p>
                     )}
                     {expense.notes && (
-                      <p className="flex items-center gap-1">
-                        <FileText className="h-3 w-3" />
-                        {expense.notes}
+                      <p className="flex items-center gap-1 truncate">
+                        <FileText className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{expense.notes}</span>
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <div className="text-right">
-                    <p className="text-2xl font-bold">{formatCurrency(Number(expense.amount))}</p>
+                {/* Monto y acciones */}
+                <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3">
+                  <div className="text-left sm:text-right">
+                    <p className="text-xl sm:text-2xl font-bold">{formatCurrency(Number(expense.amount))}</p>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => setEditExpense(expense)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => setDeleteId(expense.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 sm:h-9 sm:w-9"
+                      onClick={() => setEditExpense(expense)}
+                    >
+                      <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 sm:h-9 sm:w-9"
+                      onClick={() => setDeleteId(expense.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>

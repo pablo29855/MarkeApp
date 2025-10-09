@@ -83,16 +83,16 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Editar Gasto</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-lg sm:text-xl">Editar Gasto</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">
             Modifica los detalles de tu gasto registrado
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="edit_name">Nombre del Gasto</Label>
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="edit_name" className="text-xs sm:text-sm">Nombre del Gasto</Label>
             <Input
               id="edit_name"
               value={formData.name}
@@ -100,12 +100,13 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
               placeholder="Ej: Compra de supermercado"
               required
               disabled={isLoading}
+              className="text-sm sm:text-base h-9 sm:h-10"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit_amount">Monto</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="edit_amount" className="text-xs sm:text-sm">Monto</Label>
               <Input
                 id="edit_amount"
                 type="number"
@@ -115,22 +116,23 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
                 placeholder="0.00"
                 required
                 disabled={isLoading}
+                className="text-sm sm:text-base h-9 sm:h-10"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="edit_category_id">Categoría</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="edit_category_id" className="text-xs sm:text-sm">Categoría</Label>
               <Select
                 value={formData.category_id}
                 onValueChange={(value) => setFormData({ ...formData, category_id: value })}
                 disabled={isLoading}
               >
-                <SelectTrigger id="edit_category_id">
+                <SelectTrigger id="edit_category_id" className="h-9 sm:h-10 text-sm sm:text-base">
                   <SelectValue placeholder="Seleccionar" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
+                    <SelectItem key={category.id} value={category.id} className="text-sm sm:text-base">
                       {category.icon} {category.name}
                     </SelectItem>
                   ))}
@@ -139,8 +141,8 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="edit_purchase_date">Fecha de Compra</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="edit_purchase_date" className="text-xs sm:text-sm">Fecha de Compra</Label>
             <Input
               id="edit_purchase_date"
               type="date"
@@ -148,23 +150,24 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
               onChange={(e) => setFormData({ ...formData, purchase_date: e.target.value })}
               required
               disabled={isLoading}
-              className="dark:[color-scheme:dark]"
+              className="dark:[color-scheme:dark] text-sm sm:text-base h-9 sm:h-10"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="edit_location">Ubicación (opcional)</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="edit_location" className="text-xs sm:text-sm">Ubicación (opcional)</Label>
             <Input
               id="edit_location"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               placeholder="Ej: Supermercado XYZ"
               disabled={isLoading}
+              className="text-sm sm:text-base h-9 sm:h-10"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="edit_notes">Notas (opcional)</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="edit_notes" className="text-xs sm:text-sm">Notas (opcional)</Label>
             <Textarea
               id="edit_notes"
               value={formData.notes}
@@ -172,28 +175,29 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
               placeholder="Agrega detalles adicionales..."
               rows={3}
               disabled={isLoading}
+              className="text-sm sm:text-base resize-none"
             />
           </div>
 
           {error && (
             <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
             </Alert>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="flex-1"
+              className="flex-1 h-9 sm:h-10 text-sm sm:text-base"
               disabled={isLoading}
             >
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? "Guardando..." : "Guardar Cambios"}
+            <Button type="submit" className="flex-1 h-9 sm:h-10 text-sm sm:text-base" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />}
+              {isLoading ? "Guardando..." : "Guardar"}
             </Button>
           </div>
         </form>

@@ -105,13 +105,17 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-balance">Dashboard</h1>
-        <p className="text-muted-foreground text-pretty">Resumen de tus finanzas personales</p>
+    <div className="space-y-3 sm:space-y-4 lg:space-y-6 pb-4">
+      {/* Header - Mejorado y protagonista */}
+      <div className="sticky top-16 lg:top-0 z-20 bg-background pb-2 -mt-2 pt-2">
+        <div>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Resumen de tus finanzas personales</p>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Stats Cards Grid - Responsivo: 1 col en móvil, 2 en tablet, 4 en desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
         <StatsCard
           title="Gastos del Mes"
           value={formatCurrency(dashboardData.totalExpenses)}
@@ -138,7 +142,8 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* Charts Grid - Stack en móvil, lado a lado en desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
         <ExpenseChart data={dashboardData.expensesByCategoryData} />
         <RecentExpenses expenses={dashboardData.recentExpenses} />
       </div>

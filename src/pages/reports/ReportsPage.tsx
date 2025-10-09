@@ -6,7 +6,6 @@ import { CategoryPieChart } from '@/components/reports/category-pie-chart'
 import { ComparisonBarChart } from '@/components/reports/comparison-bar-chart'
 import { CategoryTable } from '@/components/reports/category-table'
 import { Card, CardContent } from '@/components/ui/card'
-import { PageHeader } from '@/components/ui/page-header'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { formatCurrency } from '@/lib/utils'
 import { BarChart3 } from 'lucide-react'
@@ -128,27 +127,30 @@ export default function ReportsPage() {
       : ''
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-      <PageHeader
-        title="Reportes"
-        description="Analiza tus gastos y compara períodos"
-      />
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 space-y-3 sm:space-y-4 lg:space-y-6">
+      {/* Header */}
+      <div className="sticky top-16 lg:top-0 z-20 bg-background pb-3 sm:pb-4 lg:pb-6 pt-3 sm:pt-4 lg:pt-6">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-1 sm:mb-2">
+          Reportes
+        </h1>
+        <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">
+          Analiza tus gastos y compara períodos
+        </p>
+      </div>
 
-      <ReportFilters />
-
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-2 sm:gap-3 lg:gap-4 grid-cols-1 md:grid-cols-2">
         <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg">
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm opacity-90 mb-2">Total de Gastos</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">{formatCurrency(totalExpenses)}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 mb-1 sm:mb-2">Total de Gastos</p>
+                <div className="flex items-baseline gap-1 sm:gap-2">
+                  <span className="text-2xl sm:text-3xl lg:text-4xl font-bold truncate">{formatCurrency(totalExpenses)}</span>
                 </div>
-                <p className="text-sm opacity-90 mt-2">{periodLabel}</p>
+                <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 mt-1 sm:mt-2 truncate">{periodLabel}</p>
               </div>
-              <div className="ml-4">
-                <BarChart3 className="h-12 w-12 opacity-20" />
+              <div className="ml-2 sm:ml-4 shrink-0">
+                <BarChart3 className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 opacity-20" />
               </div>
             </div>
           </CardContent>
@@ -156,15 +158,15 @@ export default function ReportsPage() {
 
         {isComparing && (
           <Card className="bg-gradient-to-br from-secondary to-secondary/80 text-secondary-foreground border-0 shadow-lg">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
               <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm opacity-90 mb-2">Total de Gastos</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold">{formatCurrency(compareTotalExpenses)}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 mb-1 sm:mb-2">Total de Gastos</p>
+                  <div className="flex items-baseline gap-1 sm:gap-2">
+                    <span className="text-2xl sm:text-3xl lg:text-4xl font-bold truncate">{formatCurrency(compareTotalExpenses)}</span>
                   </div>
-                  <p className="text-sm opacity-90 mt-2">{comparePeriodLabel}</p>
-                  <p className="text-sm mt-2">
+                  <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 mt-1 sm:mt-2 truncate">{comparePeriodLabel}</p>
+                  <p className="text-[10px] sm:text-xs lg:text-sm mt-1 sm:mt-2">
                     Diferencia:{' '}
                     <span
                       className={
@@ -178,8 +180,8 @@ export default function ReportsPage() {
                     </span>
                   </p>
                 </div>
-                <div className="ml-4">
-                  <BarChart3 className="h-12 w-12 opacity-20" />
+                <div className="ml-2 sm:ml-4 shrink-0">
+                  <BarChart3 className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 opacity-20" />
                 </div>
               </div>
             </CardContent>
@@ -187,21 +189,23 @@ export default function ReportsPage() {
         )}
       </div>
 
+      <ReportFilters />
+
       {isComparing ? (
-        <div className="space-y-6">
+        <div className="space-y-3 sm:space-y-4 lg:space-y-6">
           <ComparisonBarChart
             data1={expensesByCategory}
             data2={compareExpensesByCategory}
             label1={periodLabel}
             label2={comparePeriodLabel}
           />
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2">
             <CategoryPieChart data={expensesByCategory} title={`Distribución - ${periodLabel}`} />
             <CategoryPieChart data={compareExpensesByCategory} title={`Distribución - ${comparePeriodLabel}`} />
           </div>
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2">
           <CategoryPieChart data={expensesByCategory} title={`Distribución - ${periodLabel}`} />
           <CategoryTable data={expensesByCategory} title="Detalle por Categoría" />
         </div>

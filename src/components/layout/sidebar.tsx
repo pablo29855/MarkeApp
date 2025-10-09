@@ -91,29 +91,47 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
+      {/* Mobile Header Bar - Fijo en la parte superior */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background/95 backdrop-blur-sm border-b border-border z-50 flex items-center justify-between px-4 shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-bold text-sm shadow-md">
+            M
+          </div>
+          <h1 className="font-bold text-base bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            MarketApp
+          </h1>
+        </div>
         <Button
           variant="outline"
           size="icon"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="bg-background shadow-lg hover:shadow-xl transition-smooth"
+          className="bg-background shadow-md hover:shadow-lg transition-all"
         >
           {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
       </div>
 
+      {/* Overlay para cerrar el menú en móvil */}
+      {isMobileMenuOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/30 backdrop-blur-[2px] z-30 animate-in fade-in duration-200"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 bg-card border-r border-border transform transition-all duration-300 ease-in-out shadow-xl",
-          isMobileMenuOpen ? "translate-x-0 z-40" : "-translate-x-full lg:translate-x-0 lg:z-40",
+          "fixed inset-y-0 left-0 bg-card border-r border-border shadow-2xl transition-transform duration-300 ease-out z-50 lg:z-40 lg:bg-card",
+          isMobileMenuOpen 
+            ? "translate-x-0" 
+            : "-translate-x-full lg:translate-x-0",
           isCollapsed ? "w-20" : "w-64",
         )}
       >
         <div className="flex flex-col h-full relative overflow-visible">
-          {/* Gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
+          {/* Gradient background - Solo en desktop */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none lg:block hidden" />
           
           {/* Logo and User Info */}
           <div className="px-4 py-4 border-b border-border relative z-10">
@@ -234,15 +252,6 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
           </button>
         </div>
       </aside>
-
-      {/* Overlay for mobile - solo renderizar en móvil Y cuando está abierto */}
-      {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden animate-fade-in"
-          onClick={() => setIsMobileMenuOpen(false)}
-          aria-hidden="true"
-        />
-      )}
     </>
   )
 }

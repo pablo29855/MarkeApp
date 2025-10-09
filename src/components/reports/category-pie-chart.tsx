@@ -31,12 +31,12 @@ export function CategoryPieChart({ data, title }: CategoryPieChartProps) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
+      <CardHeader className="p-3 sm:p-4 lg:p-6 pb-2 sm:pb-3">
+        <CardTitle className="text-sm sm:text-base lg:text-lg truncate">{title}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3 sm:p-4 lg:p-6 pt-2 sm:pt-3">
         {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
             <PieChart>
               <Pie
                 data={chartData}
@@ -56,11 +56,11 @@ export function CategoryPieChart({ data, title }: CategoryPieChartProps) {
                 ))}
               </Pie>
               <Tooltip formatter={(value: number) => `$${value.toLocaleString()}`} />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: '12px' }} />
             </PieChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+          <div className="flex items-center justify-center h-[250px] sm:h-[300px] text-xs sm:text-sm text-muted-foreground">
             No hay datos para este período
           </div>
         )}

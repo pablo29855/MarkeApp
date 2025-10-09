@@ -152,18 +152,18 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
   return (
     <>
       <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
-        <div className="p-4 bg-card">
-          <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="p-2 sm:p-3 lg:p-4 bg-card">
+          <div className="flex items-start justify-between gap-1 sm:gap-2 mb-2">
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-4xl leading-tight mb-2">
+              <h3 className="font-bold text-sm sm:text-lg lg:text-2xl leading-tight mb-1 line-clamp-2">
                 {item.product_name}
               </h3>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center px-2.5 py-0.5 bg-primary/10 text-primary rounded-md text-sm font-semibold">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-1">
+                <span className="inline-flex items-center px-1.5 py-0.5 sm:px-2 bg-primary/10 text-primary rounded text-[10px] sm:text-xs font-semibold">
                   Cantidad: {item.quantity}
                 </span>
                 {item.category && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 bg-muted text-muted-foreground rounded-md text-xs">
+                  <span className="inline-flex items-center px-1.5 py-0.5 sm:px-2 bg-muted text-muted-foreground rounded text-[9px] sm:text-[10px] truncate max-w-full sm:max-w-[120px]">
                     {item.category}
                   </span>
                 )}
@@ -173,39 +173,39 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
               variant="ghost" 
               size="icon" 
               onClick={confirmDelete} 
-              className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              className="shrink-0 h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             </Button>
           </div>
           
           <Button 
             onClick={handlePurchaseClick}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] sm:text-xs lg:text-sm h-7 sm:h-8 lg:h-9"
             size="sm"
           >
-            <ShoppingBag className="h-4 w-4 mr-2" />
+            <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" />
             Comprado
           </Button>
         </div>
       </Card>
 
       <Dialog open={showPriceDialog} onOpenChange={setShowPriceDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Marcar como Comprado</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg sm:text-xl">Marcar como Comprado</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
               Ingresa el precio unitario para registrar esta compra
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Producto</Label>
-              <p className="text-sm font-medium">{item.product_name}</p>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label className="text-xs sm:text-sm">Producto</Label>
+              <p className="text-sm font-medium truncate">{item.product_name}</p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Cantidad Comprada</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="quantity" className="text-xs sm:text-sm">Cantidad Comprada</Label>
               <Input
                 id="quantity"
                 type="number"
@@ -216,14 +216,15 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
                 placeholder="0"
                 required
                 disabled={isLoading}
+                className="text-sm sm:text-base h-9 sm:h-10"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
                 Cantidad original en la lista: {item.quantity}
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="unitPrice">Precio Unitario (COP)</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="unitPrice" className="text-xs sm:text-sm">Precio Unitario (COP)</Label>
               <Input
                 id="unitPrice"
                 type="number"
@@ -234,20 +235,21 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
                 required
                 disabled={isLoading}
                 autoFocus
+                className="text-sm sm:text-base h-9 sm:h-10"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Ubicación del Supermercado</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label className="text-xs sm:text-sm">Ubicación del Supermercado</Label>
               {!location ? (
                 <Button
                   type="button"
                   variant="outline"
                   onClick={getLocation}
                   disabled={isGettingLocation}
-                  className="w-full bg-transparent"
+                  className="w-full bg-transparent text-sm sm:text-base h-9 sm:h-10"
                 >
-                  <MapPin className="h-4 w-4 mr-2" />
+                  <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
                   {isGettingLocation ? "Obteniendo ubicación..." : "Obtener Ubicación Actual"}
                 </Button>
               ) : (
@@ -283,10 +285,10 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
             </div>
 
             {unitPrice && quantity && (
-              <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
-                <p className="text-sm text-muted-foreground">Total a pagar</p>
-                <p className="text-2xl font-bold">{formatCurrency(Number.parseFloat(unitPrice) * Number.parseFloat(quantity))}</p>
-                <p className="text-xs text-muted-foreground mt-1">
+              <div className="p-3 sm:p-4 bg-primary/10 rounded-lg border border-primary/20">
+                <p className="text-xs sm:text-sm text-muted-foreground">Total a pagar</p>
+                <p className="text-xl sm:text-2xl font-bold">{formatCurrency(Number.parseFloat(unitPrice) * Number.parseFloat(quantity))}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                   {quantity} × {formatCurrency(Number.parseFloat(unitPrice))}
                 </p>
               </div>
@@ -294,11 +296,11 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
 
             {error && (
               <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
               </Alert>
             )}
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-2">
               <Button
                 type="button"
                 variant="outline"
@@ -309,13 +311,13 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
                   setUnitPrice("")
                   setQuantity(item.quantity.toString())
                 }}
-                className="flex-1"
+                className="flex-1 text-sm sm:text-base h-9 sm:h-10"
                 disabled={isLoading}
               >
                 Cancelar
               </Button>
-              <Button onClick={handleMarkAsPurchased} className="flex-1" disabled={isLoading || !unitPrice || !quantity}>
-                {isLoading ? "Procesando..." : "Confirmar Compra"}
+              <Button onClick={handleMarkAsPurchased} className="flex-1 text-sm sm:text-base h-9 sm:h-10" disabled={isLoading || !unitPrice || !quantity}>
+                {isLoading ? "Procesando..." : "Confirmar"}
               </Button>
             </div>
           </div>
@@ -323,16 +325,16 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
       </Dialog>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[calc(100%-2rem)] sm:w-full">
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-base sm:text-lg">¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs sm:text-sm">
               Esta acción eliminará "{item.product_name}" de tu lista de mercado. Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogCancel className="text-sm sm:text-base h-9 sm:h-10">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-sm sm:text-base h-9 sm:h-10">
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>

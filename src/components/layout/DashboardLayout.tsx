@@ -25,7 +25,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="min-h-screen bg-background">
       <Sidebar userName={userName} onCollapse={setIsCollapsed} />
       <main className={`transition-all duration-300 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
-        <div className="p-6 lg:p-8">{children}</div>
+        {/* Espacio para el header móvil (16 = h-16) */}
+        <div className="pt-16 lg:pt-0">
+          <div className="p-3 sm:p-4 md:p-6 lg:p-8">{children}</div>
+        </div>
       </main>
     </div>
   )

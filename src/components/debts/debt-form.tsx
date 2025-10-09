@@ -89,21 +89,22 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Agregar Deuda
+        <Button className="text-xs sm:text-sm">
+          <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+          <span className="hidden xs:inline">Agregar Deuda</span>
+          <span className="xs:hidden">Nueva</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md w-[calc(100%-2rem)] sm:w-full">
         <DialogHeader>
-          <DialogTitle>Nueva Deuda</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-lg sm:text-xl">Nueva Deuda</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">
             Registra una nueva deuda para llevar un control de tus pagos pendientes
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="creditor_name">Acreedor</Label>
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="creditor_name" className="text-xs sm:text-sm">Acreedor</Label>
             <Input
               id="creditor_name"
               value={formData.creditor_name}
@@ -111,12 +112,13 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
               placeholder="Ej: Banco XYZ"
               required
               disabled={isLoading}
+              className="text-sm"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="total_amount">Monto Total</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="total_amount" className="text-xs sm:text-sm">Monto Total</Label>
               <Input
                 id="total_amount"
                 type="number"
@@ -126,24 +128,25 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
                 placeholder="0.00"
                 required
                 disabled={isLoading}
+                className="text-sm"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="due_date">Fecha de Vencimiento</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="due_date" className="text-xs sm:text-sm">Fecha de Vencimiento</Label>
               <Input
                 id="due_date"
                 type="date"
                 value={formData.due_date}
                 onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                 disabled={isLoading}
-                className="dark:[color-scheme:dark]"
+                className="dark:[color-scheme:dark] text-sm"
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Descripción (opcional)</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="description" className="text-xs sm:text-sm">Descripción (opcional)</Label>
             <Textarea
               id="description"
               value={formData.description}
@@ -151,27 +154,28 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
               placeholder="Agrega detalles sobre la deuda..."
               rows={3}
               disabled={isLoading}
+              className="text-sm resize-none"
             />
           </div>
 
           {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+            <Alert variant="destructive" className="py-2">
+              <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
             </Alert>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="flex-1"
+              className="flex-1 text-xs sm:text-sm"
               disabled={isLoading}
             >
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" className="flex-1 text-xs sm:text-sm" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />}
               {isLoading ? "Guardando..." : "Guardar"}
             </Button>
           </div>

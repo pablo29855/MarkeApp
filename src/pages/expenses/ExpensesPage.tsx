@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom'
 import { createClient } from '@/lib/supabase/client'
 import { ExpenseForm } from '@/components/expenses/expense-form'
 import { ExpenseFilters } from '@/components/expenses/expense-filters'
-import { PageHeader } from '@/components/ui/page-header'
 import { Card, CardContent } from '@/components/ui/card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { formatCurrency } from '@/lib/utils'
@@ -122,32 +121,34 @@ export default function ExpensesPage() {
   const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0)
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-      <div className="sticky top-0 z-20 bg-background pb-2 -mt-2 pt-2">
-        <PageHeader
-          title="Gastos"
-          description="Gestiona y controla tus gastos"
-          action={
-            <div className="flex gap-2">
-              <ExportButton expenses={expenses} />
-              <ExpenseForm categories={categories} userId={userId} onSuccess={handleRefresh} />
-            </div>
-          }
-        />
+    <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6">
+      {/* Header - Más compacto en móvil */}
+      <div className="sticky top-16 lg:top-0 z-20 bg-background pb-2 -mt-2 pt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">Gastos</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Gestiona y controla tus gastos</p>
+          </div>
+          <div className="flex gap-2 self-end sm:self-auto">
+            <ExportButton expenses={expenses} />
+            <ExpenseForm categories={categories} userId={userId} onSuccess={handleRefresh} />
+          </div>
+        </div>
       </div>
 
-      <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg">
-        <CardContent className="p-6">
+      {/* Card de Total - Compacto en móvil */}
+      <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg overflow-hidden">
+        <CardContent className="p-3 sm:p-4 lg:p-6">
           <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="text-sm opacity-90 mb-2">Total de Gastos</p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold">{formatCurrency(totalAmount)}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 mb-1">Total de Gastos</p>
+              <div className="flex items-baseline gap-1 sm:gap-2">
+                <span className="text-2xl sm:text-3xl lg:text-5xl font-bold truncate">{formatCurrency(totalAmount)}</span>
               </div>
-              <p className="text-sm opacity-90 mt-2">{expenses.length} registros</p>
+              <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 mt-1">{expenses.length} registro{expenses.length !== 1 ? 's' : ''}</p>
             </div>
-            <div className="ml-4">
-              <Receipt className="h-16 w-16 opacity-20" />
+            <div className="ml-2 sm:ml-4 flex-shrink-0">
+              <Receipt className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 opacity-20" />
             </div>
           </div>
         </CardContent>

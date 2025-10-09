@@ -97,27 +97,36 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">
-          <DollarSign className="h-4 w-4 mr-2" />
-          Registrar Pago
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <div onClick={(e) => e.stopPropagation()} className="contents">
+        <DialogTrigger asChild>
+          <Button 
+            size="sm" 
+            className="text-xs sm:text-sm flex-1 xs:flex-none"
+            variant="default"
+            onClick={(e) => {
+              e.stopPropagation()
+            }}
+          >
+            <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <span>Abonar</span>
+          </Button>
+        </DialogTrigger>
+      </div>
+      <DialogContent className="max-w-md w-[calc(100%-2rem)] sm:w-full">
         <DialogHeader>
-          <DialogTitle>Registrar Pago</DialogTitle>
-          <DialogDescription>
-            Ingresa el monto del pago para reducir el saldo de la deuda
+          <DialogTitle className="text-lg sm:text-xl">Abonar a Deuda</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">
+            Registra un pago para reducir el saldo pendiente de esta deuda
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="p-4 bg-muted rounded-lg">
-            <p className="text-sm text-muted-foreground">Saldo Pendiente</p>
-            <p className="text-2xl font-bold">${remainingAmount.toLocaleString()}</p>
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+          <div className="p-3 sm:p-4 bg-muted rounded-lg">
+            <p className="text-xs sm:text-sm text-muted-foreground">Saldo Pendiente</p>
+            <p className="text-xl sm:text-2xl font-bold">${remainingAmount.toLocaleString()}</p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="amount">Monto del Pago</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="amount" className="text-xs sm:text-sm">Monto a Abonar</Label>
             <Input
               id="amount"
               type="number"
@@ -128,11 +137,12 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
               required
               disabled={isLoading}
               max={remainingAmount}
+              className="text-sm"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="payment_date">Fecha de Pago</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="payment_date" className="text-xs sm:text-sm">Fecha del Abono</Label>
             <Input
               id="payment_date"
               type="date"
@@ -140,40 +150,42 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, payment_date: e.target.value })}
               required
               disabled={isLoading}
+              className="text-sm dark:[color-scheme:dark]"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notas (opcional)</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="notes" className="text-xs sm:text-sm">Notas (opcional)</Label>
             <Textarea
               id="notes"
               value={formData.notes}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Agrega notas sobre el pago..."
+              placeholder="Agrega notas sobre este abono..."
               rows={3}
               disabled={isLoading}
+              className="text-sm resize-none"
             />
           </div>
 
           {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+            <Alert variant="destructive" className="py-2">
+              <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
             </Alert>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="flex-1"
+              className="flex-1 text-xs sm:text-sm"
               disabled={isLoading}
             >
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? "Guardando..." : "Registrar Pago"}
+            <Button type="submit" className="flex-1 text-xs sm:text-sm" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />}
+              {isLoading ? "Guardando..." : "Abonar"}
             </Button>
           </div>
         </form>

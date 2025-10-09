@@ -37,8 +37,8 @@ export function ExpenseChart({ data, isLoading }: ExpenseChartProps) {
   return (
     <Card className="col-span-full lg:col-span-2 animate-fade-in-up hover-glow transition-smooth overflow-hidden group">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      <CardHeader className="relative z-10">
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader className="relative z-10 p-4 sm:p-6">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
           <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             Gastos por Categoría
           </span>
@@ -49,9 +49,9 @@ export function ExpenseChart({ data, isLoading }: ExpenseChartProps) {
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="relative z-10">
+      <CardContent className="relative z-10 p-4 sm:p-6 pt-0">
         {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={350}>
+          <ResponsiveContainer width="100%" height={300} className="sm:!h-[350px]">
             <PieChart>
               <Pie
                 data={chartData}
@@ -60,10 +60,14 @@ export function ExpenseChart({ data, isLoading }: ExpenseChartProps) {
                 labelLine={false}
                 label={(props: any) => {
                   const { name, percent } = props
+                  // En móvil, solo mostrar porcentaje si es mayor al 10%
+                  if (typeof window !== 'undefined' && window.innerWidth < 640 && percent < 0.1) {
+                    return null
+                  }
                   return `${name} ${(percent * 100).toFixed(0)}%`
                 }}
-                outerRadius={100}
-                innerRadius={60}
+                outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 70 : 100}
+                innerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 40 : 60}
                 fill="#8884d8"
                 dataKey="value"
                 animationBegin={0}
@@ -90,15 +94,16 @@ export function ExpenseChart({ data, isLoading }: ExpenseChartProps) {
                 verticalAlign="bottom"
                 height={36}
                 iconType="circle"
+                wrapperStyle={{ fontSize: '12px' }}
               />
             </PieChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex flex-col items-center justify-center h-[350px] text-muted-foreground gap-3">
-            <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-3xl">📊</span>
+          <div className="flex flex-col items-center justify-center h-[300px] sm:h-[350px] text-muted-foreground gap-3">
+            <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-muted flex items-center justify-center">
+              <span className="text-2xl sm:text-3xl">📊</span>
             </div>
-            <p className="text-sm">No hay datos de gastos para mostrar</p>
+            <p className="text-xs sm:text-sm">No hay datos de gastos para mostrar</p>
           </div>
         )}
       </CardContent>

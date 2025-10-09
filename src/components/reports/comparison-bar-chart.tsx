@@ -36,30 +36,32 @@ export function ComparisonBarChart({ data1, data2, label1, label2, isLoading }: 
   return (
     <Card className="animate-fade-in-up hover-glow transition-smooth overflow-hidden group">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-      <CardHeader className="relative z-10">
-        <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-primary" />
-          <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+      <CardHeader className="relative z-10 p-3 sm:p-4 lg:p-6 pb-2 sm:pb-3">
+        <CardTitle className="flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base lg:text-lg">
+          <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent truncate">
             Comparación por Categoría
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="relative z-10">
+      <CardContent className="relative z-10 p-3 sm:p-4 lg:p-6 pt-2 sm:pt-3">
         {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={450}>
+          <ResponsiveContainer width="100%" height={300} className="sm:h-[400px] lg:h-[450px]">
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
               <XAxis 
                 dataKey="category" 
                 angle={-45} 
                 textAnchor="end" 
-                height={100}
+                height={80}
                 stroke="hsl(var(--muted-foreground))"
-                style={{ fontSize: '12px' }}
+                style={{ fontSize: '10px' }}
+                className="sm:text-xs"
               />
               <YAxis 
                 stroke="hsl(var(--muted-foreground))"
-                style={{ fontSize: '12px' }}
+                style={{ fontSize: '10px' }}
+                className="sm:text-xs"
               />
               <Tooltip 
                 formatter={(value: number) => `$${value.toLocaleString()}`}
@@ -68,11 +70,12 @@ export function ComparisonBarChart({ data1, data2, label1, label2, isLoading }: 
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '0.5rem',
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                  fontSize: '12px',
                 }}
                 labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 'bold' }}
               />
               <Legend 
-                wrapperStyle={{ paddingTop: '20px' }}
+                wrapperStyle={{ paddingTop: '12px', fontSize: '11px' }}
                 iconType="circle"
               />
               <Bar 
@@ -92,11 +95,11 @@ export function ComparisonBarChart({ data1, data2, label1, label2, isLoading }: 
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex flex-col items-center justify-center h-[450px] text-muted-foreground gap-3">
-            <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-3xl">📊</span>
+          <div className="flex flex-col items-center justify-center h-[300px] sm:h-[400px] lg:h-[450px] text-muted-foreground gap-2 sm:gap-3">
+            <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-muted flex items-center justify-center">
+              <span className="text-2xl sm:text-3xl">📊</span>
             </div>
-            <p className="text-sm">No hay datos para comparar</p>
+            <p className="text-xs sm:text-sm">No hay datos para comparar</p>
           </div>
         )}
       </CardContent>
