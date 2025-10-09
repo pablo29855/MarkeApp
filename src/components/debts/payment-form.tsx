@@ -24,6 +24,22 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
   const [error, setError] = useState<string | null>(null)
   const { showSaved, showError: showErrorNotif, showWarning } = useNotification()
 
+  // Función para formatear el monto con puntos de mil (formato colombiano)
+  const formatAmount = (value: string) => {
+    // Remover todo excepto números
+    const cleanValue = value.replace(/\D/g, '')
+    
+    // Si está vacío, retornar vacío
+    if (!cleanValue) return ''
+    
+    // Formatear con puntos de mil
+    return cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  }
+
+  const getNumericValue = (formattedValue: string) => {
+    return formattedValue.replace(/\./g, '')
+  }
+
   const [formData, setFormData] = useState({
     amount: "",
     payment_date: new Date().toISOString().split("T")[0],
@@ -35,7 +51,7 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
     setIsLoading(true)
     setError(null)
 
-    const paymentAmount = Number.parseFloat(formData.amount)
+    const paymentAmount = Number.parseInt(getNumericValue(formData.amount))
 
     if (paymentAmount > remainingAmount) {
       const errorMsg = "El monto del pago no puede ser mayor al saldo pendiente"
@@ -129,14 +145,12 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
             <Label htmlFor="amount" className="text-xs sm:text-sm">Monto a Abonar</Label>
             <Input
               id="amount"
-              type="number"
-              step="0.01"
+              type="text"
               value={formData.amount}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, amount: e.target.value })}
-              placeholder="0.00"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, amount: formatAmount(e.target.value) })}
+              placeholder="0"
               required
               disabled={isLoading}
-              max={remainingAmount}
               className="text-sm"
             />
           </div>

@@ -3,8 +3,6 @@ import type { Expense } from "@/lib/types"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import { ListSkeleton } from "@/components/ui/skeleton-loader"
-import { Badge } from "@/components/ui/badge"
-import { ArrowUpRight } from "lucide-react"
 
 interface RecentExpensesProps {
   expenses: Expense[]
@@ -26,43 +24,43 @@ export function RecentExpenses({ expenses, isLoading }: RecentExpensesProps) {
   }
 
   return (
-    <Card className="col-span-full lg:col-span-1 animate-fade-in-up hover-glow transition-smooth overflow-hidden group">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      <CardHeader className="relative z-10 p-4 sm:p-6">
-        <CardTitle className="flex items-center justify-between text-base sm:text-lg">
-          <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+    <Card className="col-span-full lg:col-span-1 border-muted/40">
+      <CardHeader className="p-3 sm:p-4 lg:p-6 pb-2 sm:pb-3 border-b">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base sm:text-lg lg:text-xl font-semibold">
             Últimos Gastos
-          </span>
+          </CardTitle>
           {expenses.length > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              {expenses.length}
-            </Badge>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50">
+              <span className="text-xs sm:text-sm font-medium text-muted-foreground">
+                {expenses.length}
+              </span>
+            </div>
           )}
-        </CardTitle>
+        </div>
       </CardHeader>
-      <CardContent className="relative z-10 p-4 sm:p-6 pt-0">
+      <CardContent className="p-3 sm:p-4 lg:p-6 pt-3 sm:pt-4">
         {expenses.length > 0 ? (
-          <div className="space-y-2 sm:space-y-3">
-            {expenses.map((expense, index) => (
+          <div className="space-y-2.5">
+            {expenses.map((expense) => (
               <div 
                 key={expense.id} 
-                className="flex items-center justify-between p-2 sm:p-3 rounded-lg border bg-card/50 hover:bg-card hover:shadow-md transition-all duration-200 group/item animate-fade-in"
-                style={{ animationDelay: `${index * 50}ms` }}
+                className="flex items-center justify-between p-3 sm:p-3.5 rounded-lg border border-muted/50 bg-muted/20 hover:bg-muted/30 transition-colors"
               >
-                <div className="flex-1 min-w-0 pr-2 sm:pr-4">
-                  <div className="flex items-start justify-between gap-1 sm:gap-2">
-                    <p className="font-medium text-xs sm:text-sm truncate group-hover/item:text-primary transition-colors">
-                      {expense.name}
-                    </p>
-                    <ArrowUpRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover/item:opacity-100 transition-opacity flex-shrink-0" />
-                  </div>
-                  <div className="flex items-center gap-1.5 sm:gap-2 mt-1 flex-wrap">
+                <div className="flex-1 min-w-0 pr-3">
+                  <p className="font-semibold text-sm sm:text-base truncate mb-1">
+                    {expense.name}
+                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
                     {expense.category?.name && (
-                      <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0">
-                        {expense.category.name}
-                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+                        <span className="text-xs sm:text-sm text-muted-foreground font-medium">
+                          {expense.category.name}
+                        </span>
+                      </div>
                     )}
-                    <span className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                    <span className="text-xs sm:text-sm text-muted-foreground">
                       {formatDistanceToNow(new Date(expense.purchase_date), {
                         addSuffix: true,
                         locale: es,
@@ -71,7 +69,7 @@ export function RecentExpenses({ expenses, isLoading }: RecentExpensesProps) {
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="font-bold text-base sm:text-lg bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">
+                  <p className="font-bold text-base sm:text-lg lg:text-xl text-foreground">
                     ${expense.amount.toLocaleString()}
                   </p>
                 </div>

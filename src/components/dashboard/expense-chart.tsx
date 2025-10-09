@@ -35,23 +35,24 @@ export function ExpenseChart({ data, isLoading }: ExpenseChartProps) {
   }))
 
   return (
-    <Card className="col-span-full lg:col-span-2 animate-fade-in-up hover-glow transition-smooth overflow-hidden group">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      <CardHeader className="relative z-10 p-4 sm:p-6">
-        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-          <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+    <Card className="col-span-full lg:col-span-2 border-muted/40">
+      <CardHeader className="p-3 sm:p-4 lg:p-6 pb-2 sm:pb-3 border-b">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl font-semibold">
             Gastos por Categoría
-          </span>
+          </CardTitle>
           {chartData.length > 0 && (
-            <span className="text-xs font-normal text-muted-foreground">
-              ({chartData.length} categorías)
-            </span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50">
+              <span className="text-xs sm:text-sm font-medium text-muted-foreground">
+                {chartData.length} {chartData.length === 1 ? 'categoría' : 'categorías'}
+              </span>
+            </div>
           )}
-        </CardTitle>
+        </div>
       </CardHeader>
-      <CardContent className="relative z-10 p-4 sm:p-6 pt-0">
+      <CardContent className="p-3 sm:p-4 lg:p-6 pt-3 sm:pt-4">
         {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300} className="sm:!h-[350px]">
+          <ResponsiveContainer width="100%" height={250} className="sm:!h-[300px] lg:!h-[350px]">
             <PieChart>
               <Pie
                 data={chartData}
@@ -66,8 +67,8 @@ export function ExpenseChart({ data, isLoading }: ExpenseChartProps) {
                   }
                   return `${name} ${(percent * 100).toFixed(0)}%`
                 }}
-                outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 70 : 100}
-                innerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 40 : 60}
+                outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 65 : 100}
+                innerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 35 : 60}
                 fill="#8884d8"
                 dataKey="value"
                 animationBegin={0}
@@ -77,7 +78,6 @@ export function ExpenseChart({ data, isLoading }: ExpenseChartProps) {
                   <Cell 
                     key={`cell-${index}`} 
                     fill={entry.color}
-                    className="hover:opacity-80 transition-opacity cursor-pointer"
                   />
                 ))}
               </Pie>
@@ -88,13 +88,14 @@ export function ExpenseChart({ data, isLoading }: ExpenseChartProps) {
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '0.5rem',
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                  fontSize: '12px',
                 }}
               />
               <Legend 
                 verticalAlign="bottom"
                 height={36}
                 iconType="circle"
-                wrapperStyle={{ fontSize: '12px' }}
+                wrapperStyle={{ fontSize: '11px' }}
               />
             </PieChart>
           </ResponsiveContainer>

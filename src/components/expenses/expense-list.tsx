@@ -57,8 +57,8 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
-          <p className="text-muted-foreground text-center">No se encontraron gastos</p>
-          <p className="text-sm text-muted-foreground text-center mt-2">Agrega tu primer gasto para comenzar</p>
+          <p className="text-muted-foreground text-center text-base sm:text-lg">No se encontraron gastos</p>
+          <p className="text-sm sm:text-base text-muted-foreground text-center mt-2">Agrega tu primer gasto para comenzar</p>
         </CardContent>
       </Card>
     )
@@ -76,11 +76,11 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
                 <div className="flex-1 min-w-0">
                   {/* Título y categoría */}
                   <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <h3 className="font-semibold text-base sm:text-lg truncate">{expense.name}</h3>
+                    <h3 className="font-semibold text-lg sm:text-xl lg:text-2xl truncate">{expense.name}</h3>
                     {expense.category && (
                       <Badge 
                         variant="secondary" 
-                        className="text-[10px] sm:text-xs shrink-0"
+                        className="text-xs sm:text-sm shrink-0"
                         style={{ backgroundColor: expense.category.color + "20" }}
                       >
                         <span className="hidden sm:inline">{expense.category.icon} </span>
@@ -90,7 +90,7 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
                   </div>
 
                   {/* Información adicional - Compacta en móvil */}
-                  <div className="space-y-0.5 sm:space-y-1 text-xs sm:text-sm text-muted-foreground">
+                  <div className="space-y-0.5 sm:space-y-1 text-sm sm:text-base text-muted-foreground">
                     <p className="truncate">
                       {format(new Date(expense.purchase_date), "PPP", {
                         locale: es,
@@ -98,13 +98,13 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
                     </p>
                     {expense.location && (
                       <p className="flex items-center gap-1 truncate">
-                        <MapPin className="h-3 w-3 shrink-0" />
+                        <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
                         <span className="truncate">{expense.location}</span>
                       </p>
                     )}
                     {expense.notes && (
                       <p className="flex items-center gap-1 truncate">
-                        <FileText className="h-3 w-3 shrink-0" />
+                        <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
                         <span className="truncate">{expense.notes}</span>
                       </p>
                     )}
@@ -114,24 +114,24 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
                 {/* Monto y acciones */}
                 <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3">
                   <div className="text-left sm:text-right">
-                    <p className="text-xl sm:text-2xl font-bold">{formatCurrency(Number(expense.amount))}</p>
+                    <p className="text-2xl sm:text-3xl lg:text-4xl font-bold">{formatCurrency(Number(expense.amount))}</p>
                   </div>
                   <div className="flex items-center gap-1">
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 sm:h-9 sm:w-9"
+                      className="h-9 w-9 sm:h-10 sm:w-10"
                       onClick={() => setEditExpense(expense)}
                     >
-                      <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <Pencil className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 sm:h-9 sm:w-9"
+                      className="h-9 w-9 sm:h-10 sm:w-10"
                       onClick={() => setDeleteId(expense.id)}
                     >
-                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive" />
+                      <Trash2 className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-destructive" />
                     </Button>
                   </div>
                 </div>

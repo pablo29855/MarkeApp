@@ -24,6 +24,22 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
   const [error, setError] = useState<string | null>(null)
   const { showCreated, showError } = useNotification()
 
+  // Función para formatear el monto con puntos de mil (formato colombiano)
+  const formatAmount = (value: string) => {
+    // Remover todo excepto números
+    const cleanValue = value.replace(/\D/g, '')
+    
+    // Si está vacío, retornar vacío
+    if (!cleanValue) return ''
+    
+    // Formatear con puntos de mil
+    return cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  }
+
+  const getNumericValue = (formattedValue: string) => {
+    return formattedValue.replace(/\./g, '')
+  }
+
   const [formData, setFormData] = useState({
     creditor_name: "",
     total_amount: "",
@@ -56,7 +72,7 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
           user_id: userId,
           name: formData.creditor_name,
           creditor: formData.creditor_name,
-          total_amount: Number.parseFloat(formData.total_amount),
+          total_amount: Number.parseInt(getNumericValue(formData.total_amount)),
           paid_amount: 0,
           debt_date: formData.due_date || currentDate,
         })
@@ -121,11 +137,10 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
               <Label htmlFor="total_amount" className="text-xs sm:text-sm">Monto Total</Label>
               <Input
                 id="total_amount"
-                type="number"
-                step="0.01"
+                type="text"
                 value={formData.total_amount}
-                onChange={(e) => setFormData({ ...formData, total_amount: e.target.value })}
-                placeholder="0.00"
+                onChange={(e) => setFormData({ ...formData, total_amount: formatAmount(e.target.value) })}
+                placeholder="0"
                 required
                 disabled={isLoading}
                 className="text-sm"

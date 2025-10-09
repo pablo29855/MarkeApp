@@ -42,13 +42,13 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
-          <Filter className="h-4 w-4 mr-2" />
+        <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="text-sm sm:text-base">
+          <Filter className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
           Filtros
         </Button>
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters}>
-            <X className="h-4 w-4 mr-2" />
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="text-sm sm:text-base">
+            <X className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
             Limpiar filtros
           </Button>
         )}
@@ -59,15 +59,15 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
           <CardContent className="pt-6">
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="category">Categoría</Label>
+                <Label htmlFor="category" className="text-sm sm:text-base">Categoría</Label>
                 <Select value={filters.category} onValueChange={(value) => setFilters({ ...filters, category: value })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="text-sm sm:text-base">
                     <SelectValue placeholder="Todas las categorías" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas las categorías</SelectItem>
+                    <SelectItem value="all" className="text-sm sm:text-base">Todas las categorías</SelectItem>
                     {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
+                      <SelectItem key={category.id} value={category.id} className="text-sm sm:text-base">
                         {category.icon} {category.name}
                       </SelectItem>
                     ))}
@@ -76,28 +76,30 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="startDate">Fecha Inicio</Label>
+                <Label htmlFor="startDate" className="text-sm sm:text-base">Fecha Inicio</Label>
                 <Input
                   id="startDate"
                   type="date"
                   value={filters.startDate}
                   onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                  className="text-sm sm:text-base"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="endDate">Fecha Fin</Label>
+                <Label htmlFor="endDate" className="text-sm sm:text-base">Fecha Fin</Label>
                 <Input
                   id="endDate"
                   type="date"
                   value={filters.endDate}
                   onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                  className="text-sm sm:text-base"
                 />
               </div>
             </div>
 
             <div className="flex gap-2 mt-4">
-              <Button onClick={applyFilters} className="flex-1">
+              <Button onClick={applyFilters} className="flex-1 text-sm sm:text-base">
                 Aplicar Filtros
               </Button>
             </div>

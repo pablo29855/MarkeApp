@@ -28,9 +28,26 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
   const [error, setError] = useState<string | null>(null)
   const { showUpdated, showError } = useNotification()
 
+  // Función para formatear el monto con puntos de mil (formato colombiano)
+  const formatAmount = (value: string) => {
+    // Remover todo excepto números
+    const cleanValue = value.replace(/\D/g, '')
+    
+    // Si está vacío, retornar vacío
+    if (!cleanValue) return ''
+    
+    // Formatear con puntos de mil
+    return cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  }
+
+  // Función para obtener el valor numérico limpio
+  const getNumericValue = (formattedValue: string) => {
+    return formattedValue.replace(/\./g, '')
+  }
+
   const [formData, setFormData] = useState({
     name: expense.name,
-    amount: expense.amount.toString(),
+    amount: formatAmount(expense.amount.toString()),
     category_id: expense.category_id || "",
     purchase_date: expense.purchase_date,
     location: expense.location || "",
@@ -40,7 +57,7 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
   useEffect(() => {
     setFormData({
       name: expense.name,
-      amount: expense.amount.toString(),
+      amount: formatAmount(expense.amount.toString()),
       category_id: expense.category_id || "",
       purchase_date: expense.purchase_date,
       location: expense.location || "",
@@ -60,7 +77,7 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
         .from("expenses")
         .update({
           name: formData.name,
-          amount: Number.parseFloat(formData.amount),
+          amount: Number.parseInt(getNumericValue(formData.amount)),
           category_id: formData.category_id || null,
           purchase_date: formData.purchase_date,
           location: formData.location || null,
@@ -109,11 +126,10 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
               <Label htmlFor="edit_amount" className="text-xs sm:text-sm">Monto</Label>
               <Input
                 id="edit_amount"
-                type="number"
-                step="0.01"
+                type="text"
                 value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                placeholder="0.00"
+                onChange={(e) => setFormData({ ...formData, amount: formatAmount(e.target.value) })}
+                placeholder="0"
                 required
                 disabled={isLoading}
                 className="text-sm sm:text-base h-9 sm:h-10"

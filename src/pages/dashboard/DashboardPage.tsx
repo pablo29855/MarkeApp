@@ -114,8 +114,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Stats Cards Grid - Responsivo: 1 col en móvil, 2 en tablet, 4 en desktop */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
+      {/* Stats Cards Grid - Responsivo: 2 col en móvil, 4 en desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
         <StatsCard
           title="Gastos del Mes"
           value={formatCurrency(dashboardData.totalExpenses)}

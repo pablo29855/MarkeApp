@@ -40,8 +40,19 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
   const [isGettingLocation, setIsGettingLocation] = useState(false)
   const { showSuccess, showError, showDeleted } = useNotification()
 
+  // Función para formatear números con puntos de mil
+  const formatNumber = (value: string) => {
+    const cleanValue = value.replace(/\D/g, '')
+    if (!cleanValue) return ''
+    return cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  }
+
+  const getNumericValue = (formattedValue: string) => {
+    return formattedValue.replace(/\./g, '')
+  }
+
   const handlePurchaseClick = () => {
-    setQuantity(item.quantity.toString()) // Resetear a la cantidad original
+    setQuantity(formatNumber(item.quantity.toString()))
     setShowPriceDialog(true)
   }
 
@@ -83,8 +94,9 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
     setError(null)
 
     const supabase = createClient()
-    const purchasedQuantity = Number.parseFloat(quantity)
-    const totalPrice = Number.parseFloat(unitPrice) * purchasedQuantity
+    const purchasedQuantity = Number.parseInt(getNumericValue(quantity))
+    const priceValue = Number.parseInt(getNumericValue(unitPrice))
+    const totalPrice = priceValue * purchasedQuantity
 
     try {
       // Update shopping item
@@ -92,7 +104,7 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
         .from("shopping_list")
         .update({
           is_purchased: true,
-          unit_price: Number.parseFloat(unitPrice),
+          unit_price: priceValue,
           total_price: totalPrice,
           purchased_at: new Date().toISOString(),
         })
@@ -160,7 +172,7 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
               </h3>
               <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-1">
                 <span className="inline-flex items-center px-1.5 py-0.5 sm:px-2 bg-primary/10 text-primary rounded text-[10px] sm:text-xs font-semibold">
-                  Cantidad: {item.quantity}
+                  Cantidad: {item.quantity.toLocaleString('es-CO')}
                 </span>
                 {item.category && (
                   <span className="inline-flex items-center px-1.5 py-0.5 sm:px-2 bg-muted text-muted-foreground rounded text-[9px] sm:text-[10px] truncate max-w-full sm:max-w-[120px]">
@@ -208,18 +220,16 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
               <Label htmlFor="quantity" className="text-xs sm:text-sm">Cantidad Comprada</Label>
               <Input
                 id="quantity"
-                type="number"
-                step="1"
-                min="1"
+                type="text"
                 value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
+                onChange={(e) => setQuantity(formatNumber(e.target.value))}
                 placeholder="0"
                 required
                 disabled={isLoading}
                 className="text-sm sm:text-base h-9 sm:h-10"
               />
               <p className="text-[10px] sm:text-xs text-muted-foreground">
-                Cantidad original en la lista: {item.quantity}
+                Cantidad original en la lista: {item.quantity.toLocaleString('es-CO')}
               </p>
             </div>
 
@@ -227,10 +237,9 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
               <Label htmlFor="unitPrice" className="text-xs sm:text-sm">Precio Unitario (COP)</Label>
               <Input
                 id="unitPrice"
-                type="number"
-                step="100"
+                type="text"
                 value={unitPrice}
-                onChange={(e) => setUnitPrice(e.target.value)}
+                onChange={(e) => setUnitPrice(formatNumber(e.target.value))}
                 placeholder="0"
                 required
                 disabled={isLoading}
@@ -287,9 +296,11 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
             {unitPrice && quantity && (
               <div className="p-3 sm:p-4 bg-primary/10 rounded-lg border border-primary/20">
                 <p className="text-xs sm:text-sm text-muted-foreground">Total a pagar</p>
-                <p className="text-xl sm:text-2xl font-bold">{formatCurrency(Number.parseFloat(unitPrice) * Number.parseFloat(quantity))}</p>
+                <p className="text-xl sm:text-2xl font-bold">
+                  {formatCurrency(Number.parseInt(getNumericValue(unitPrice)) * Number.parseInt(getNumericValue(quantity)))}
+                </p>
                 <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
-                  {quantity} × {formatCurrency(Number.parseFloat(unitPrice))}
+                  {quantity} × {formatCurrency(Number.parseInt(getNumericValue(unitPrice)))}
                 </p>
               </div>
             )}
@@ -309,7 +320,7 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
                   setLocation(null)
                   setLocationName("")
                   setUnitPrice("")
-                  setQuantity(item.quantity.toString())
+                  setQuantity(formatNumber(item.quantity.toString()))
                 }}
                 className="flex-1 text-sm sm:text-base h-9 sm:h-10"
                 disabled={isLoading}

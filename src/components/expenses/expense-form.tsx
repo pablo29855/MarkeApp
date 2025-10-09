@@ -35,6 +35,23 @@ export function ExpenseForm({ categories, userId, onSuccess }: ExpenseFormProps)
     notes: "",
   })
 
+  // Función para formatear el monto con puntos de mil (formato colombiano)
+  const formatAmount = (value: string) => {
+    // Remover todo excepto números
+    const cleanValue = value.replace(/\D/g, '')
+    
+    // Si está vacío, retornar vacío
+    if (!cleanValue) return ''
+    
+    // Formatear con puntos de mil
+    return cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  }
+
+  // Función para obtener el valor numérico limpio
+  const getNumericValue = (formattedValue: string) => {
+    return formattedValue.replace(/\./g, '')
+  }
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -65,7 +82,7 @@ export function ExpenseForm({ categories, userId, onSuccess }: ExpenseFormProps)
       const { error } = await supabase.from("expenses").insert({
         user_id: userId,
         name: formData.name,
-        amount: Number.parseFloat(formData.amount),
+        amount: Number.parseInt(getNumericValue(formData.amount)),
         category_id: formData.category_id,
         purchase_date: formData.purchase_date,
         location: formData.location || null,
@@ -131,11 +148,10 @@ export function ExpenseForm({ categories, userId, onSuccess }: ExpenseFormProps)
               <Label htmlFor="amount" className="text-xs sm:text-sm">Monto</Label>
               <Input
                 id="amount"
-                type="number"
-                step="0.01"
+                type="text"
                 value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                placeholder="0.00"
+                onChange={(e) => setFormData({ ...formData, amount: formatAmount(e.target.value) })}
+                placeholder="0"
                 required
                 disabled={isLoading}
                 className="text-sm sm:text-base h-9 sm:h-10"

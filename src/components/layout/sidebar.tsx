@@ -93,14 +93,17 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
     <>
       {/* Mobile Header Bar - Fijo en la parte superior */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background/95 backdrop-blur-sm border-b border-border z-50 flex items-center justify-between px-4 shadow-sm">
-        <div className="flex items-center gap-2">
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+        >
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-bold text-sm shadow-md">
             M
           </div>
           <h1 className="font-bold text-base bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             MarketApp
           </h1>
-        </div>
+        </button>
         <Button
           variant="outline"
           size="icon"

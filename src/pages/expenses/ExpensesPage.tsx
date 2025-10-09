@@ -138,17 +138,17 @@ export default function ExpensesPage() {
 
       {/* Card de Total - Compacto en móvil */}
       <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg overflow-hidden">
-        <CardContent className="p-3 sm:p-4 lg:p-6">
+        <CardContent className="p-4 sm:p-5 lg:p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 mb-1">Total de Gastos</p>
+              <p className="text-sm sm:text-base lg:text-lg opacity-90 mb-1 sm:mb-2">Total de Gastos</p>
               <div className="flex items-baseline gap-1 sm:gap-2">
-                <span className="text-2xl sm:text-3xl lg:text-5xl font-bold truncate">{formatCurrency(totalAmount)}</span>
+                <span className="text-3xl sm:text-4xl lg:text-6xl font-bold truncate">{formatCurrency(totalAmount)}</span>
               </div>
-              <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 mt-1">{expenses.length} registro{expenses.length !== 1 ? 's' : ''}</p>
+              <p className="text-xs sm:text-sm lg:text-base opacity-90 mt-1 sm:mt-2">{expenses.length} registro{expenses.length !== 1 ? 's' : ''}</p>
             </div>
             <div className="ml-2 sm:ml-4 flex-shrink-0">
-              <Receipt className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 opacity-20" />
+              <Receipt className="h-12 w-12 sm:h-14 sm:w-14 lg:h-20 lg:w-20 opacity-20" />
             </div>
           </div>
         </CardContent>
