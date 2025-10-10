@@ -129,13 +129,14 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
         </DialogTrigger>
       </div>
       <DialogContent className="max-w-md w-[calc(100%-2rem)] sm:w-full">
-        <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Abonar a Deuda</DialogTitle>
-          <DialogDescription className="text-xs sm:text-sm">
-            Registra un pago para reducir el saldo pendiente de esta deuda
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        <div className="no-ios-zoom">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">Abonar a Deuda</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
+              Registra un pago para reducir el saldo pendiente de esta deuda
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div className="p-3 sm:p-4 bg-muted rounded-lg">
             <p className="text-xs sm:text-sm text-muted-foreground">Saldo Pendiente</p>
             <p className="text-xl sm:text-2xl font-bold">${remainingAmount.toLocaleString()}</p>
@@ -203,6 +204,7 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
             </Button>
           </div>
         </form>
+        </div>
       </DialogContent>
     </Dialog>
   )

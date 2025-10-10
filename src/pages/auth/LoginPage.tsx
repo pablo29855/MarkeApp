@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { LogIn, Mail, Lock } from 'lucide-react'
 
 export default function LoginPage() {
@@ -34,6 +35,15 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Si el login está en proceso, mostrar overlay completo para evitar pantalla en blanco
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/10 p-4">
+        <LoadingCheckOverlay message="Iniciando sesión..." />
+      </div>
+    )
   }
 
   return (

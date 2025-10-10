@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Plus, Loader2 } from "lucide-react"
+import { Plus, Loader2, MapPin } from "lucide-react"
 import type { Category } from "@/lib/types"
 
 interface ShoppingFormProps {
@@ -30,6 +30,7 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
     product_name: "",
     quantity: "1",
     category_id: "",
+    location: "",
   })
 
   // Función para formatear números con puntos de mil
@@ -69,6 +70,7 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
         product_name: "",
         quantity: "1",
         category_id: "",
+        location: "",
       })
       setOpen(false)
       onSuccess?.()
@@ -81,6 +83,46 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
     }
   }
 
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [locationName, setLocationName] = useState<string>("")
+  const [isGettingLocation, setIsGettingLocation] = useState(false)
+
+  const getLocation = () => {
+    setIsGettingLocation(true)
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude
+          const lng = position.coords.longitude
+          setLocation({ lat, lng })
+
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+            )
+            const data = await response.json()
+            const name = data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+            setLocationName(name)
+            setFormData((prev) => ({ ...prev, location: name }))
+          } catch {
+            const fallback = `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+            setLocationName(fallback)
+            setFormData((prev) => ({ ...prev, location: fallback }))
+          }
+          setIsGettingLocation(false)
+        },
+        (error) => {
+          console.error("Error getting location:", error)
+          setError("No se pudo obtener la ubicación. Verifica los permisos.")
+          setIsGettingLocation(false)
+        },
+      )
+    } else {
+      setError("Tu navegador no soporta geolocalización")
+      setIsGettingLocation(false)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -90,13 +132,14 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
         </Button>
       </DialogTrigger>
       <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Nuevo Item</DialogTitle>
-          <DialogDescription className="text-xs sm:text-sm">
-            Agrega un producto a tu lista de mercado
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        <div className="no-ios-zoom">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">Nuevo Item</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
+              Agrega un producto a tu lista de mercado
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div className="space-y-1.5 sm:space-y-2">
             <Label htmlFor="product_name" className="text-xs sm:text-sm">Nombre del Producto</Label>
             <Input
@@ -158,6 +201,60 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
             </Alert>
           )}
 
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="location" className="text-xs sm:text-sm">Ubicación (opcional)</Label>
+            <Input
+              id="location"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              placeholder="Ej: Supermercado XYZ"
+              disabled={isLoading}
+              className="text-sm sm:text-base h-9 sm:h-10"
+            />
+
+            {!location ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={getLocation}
+                disabled={isGettingLocation}
+                className="w-full mt-2 text-sm sm:text-base h-9 sm:h-10"
+              >
+                <MapPin className="h-4 w-4 mr-2" />
+                {isGettingLocation ? "Obteniendo ubicación..." : "Obtener Ubicación Actual"}
+              </Button>
+            ) : (
+              <div className="space-y-2 mt-2">
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Ubicación detectada:</p>
+                  <p className="text-sm font-medium truncate">{locationName}</p>
+                </div>
+                <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+                  <iframe
+                    title="Mapa de ubicacion"
+                    width="100%"
+                    height="100%"
+                    frameBorder="0"
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.01},${location.lat - 0.01},${location.lng + 0.01},${location.lat + 0.01}&layer=mapnik&marker=${location.lat},${location.lng}`}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setLocation(null)
+                    setLocationName("")
+                    setFormData((prev) => ({ ...prev, location: "" }))
+                  }}
+                  className="w-full"
+                >
+                  Cambiar ubicación
+                </Button>
+              </div>
+            )}
+          </div>
+
           <div className="flex gap-2 sm:gap-3 pt-2">
             <Button
               type="button"
@@ -174,6 +271,7 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
             </Button>
           </div>
         </form>
+        </div>
       </DialogContent>
     </Dialog>
   )

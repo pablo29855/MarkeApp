@@ -32,17 +32,18 @@ const AlertDialogOverlay = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => {
-  return (
-    <AlertDialogPrimitive.Overlay
-      ref={ref}
-      data-slot="alert-dialog-overlay"
-      className={cn(
-        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50',
-        className,
-      )}
-      {...props}
-    />
-  )
+    return (
+      <AlertDialogPrimitive.Overlay
+        ref={ref}
+        data-slot="alert-dialog-overlay"
+        className={cn(
+          // overlay claro por defecto; en dark lo hacemos menos opaco para no oscurecer el diálogo
+          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50 dark:bg-black/20',
+          className,
+        )}
+        {...props}
+      />
+    )
 })
 AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
 
@@ -55,8 +56,11 @@ function AlertDialogContent({
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
+        style={{ backgroundColor: '#ffffff', color: '#000000', borderColor: '#e5e7eb' }}
         className={cn(
-          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
+          // Forzar mismo aspecto en modo claro y oscuro
+          'bg-white text-black border-gray-200 dark:bg-white dark:text-black dark:border-gray-200',
+          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
           className,
         )}
         {...props}
@@ -101,6 +105,7 @@ function AlertDialogTitle({
   return (
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
+      style={{ color: '#000000' }}
       className={cn('text-lg font-semibold', className)}
       {...props}
     />
@@ -114,7 +119,8 @@ function AlertDialogDescription({
   return (
     <AlertDialogPrimitive.Description
       data-slot="alert-dialog-description"
-      className={cn('text-muted-foreground text-sm', className)}
+      style={{ color: '#6b7280' }}
+      className={cn('text-sm', className)}
       {...props}
     />
   )

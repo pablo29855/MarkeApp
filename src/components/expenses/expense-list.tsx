@@ -20,6 +20,7 @@ import type { Expense, Category } from "@/lib/types"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { formatCurrency } from "@/lib/utils"
+import { useNotification } from '@/hooks/use-notification'
 import { ExpenseEditDialog } from "./expense-edit-dialog"
 
 interface ExpenseListProps {
@@ -32,6 +33,7 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [editExpense, setEditExpense] = useState<Expense | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const { showDeleted, showError } = useNotification()
 
   const handleDelete = async () => {
     if (!deleteId) return
@@ -44,10 +46,12 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
 
       if (error) throw error
 
+        showDeleted('Gasto')
       setDeleteId(null)
       onUpdate?.()
     } catch (error) {
       console.error("Error deleting expense:", error)
+        showError('Error al eliminar gasto')
     } finally {
       setIsDeleting(false)
     }
