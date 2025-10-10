@@ -164,39 +164,32 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
   return (
     <>
       <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
-        <div className="p-2 sm:p-3 lg:p-4 bg-card">
-          <div className="flex items-start justify-between gap-1 sm:gap-2 mb-2">
+        <div className="p-3 sm:p-4 lg:p-5 bg-card">
+          <div className="flex items-start justify-between gap-2 mb-3">
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-sm sm:text-lg lg:text-2xl leading-tight mb-1 line-clamp-2">
+              <h3 className="font-bold text-base sm:text-xl lg:text-2xl leading-tight mb-2 line-clamp-2">
                 {item.product_name}
               </h3>
-              <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-1">
-                <span className="inline-flex items-center px-1.5 py-0.5 sm:px-2 bg-primary/10 text-primary rounded text-[10px] sm:text-xs font-semibold">
-                  Cantidad: {item.quantity.toLocaleString('es-CO')}
-                </span>
-                {item.category && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 sm:px-2 bg-muted text-muted-foreground rounded text-[9px] sm:text-[10px] truncate max-w-full sm:max-w-[120px]">
-                    {item.category}
-                  </span>
-                )}
-              </div>
+              <span className="inline-flex items-center px-2 py-1 sm:px-2.5 sm:py-1 bg-primary/10 text-primary rounded text-xs sm:text-sm font-semibold">
+                Cantidad: {item.quantity.toLocaleString('es-CO')}
+              </span>
             </div>
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={confirmDelete} 
-              className="shrink-0 h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             >
-              <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              <Trash2 className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
             </Button>
           </div>
           
           <Button 
             onClick={handlePurchaseClick}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] sm:text-xs lg:text-sm h-7 sm:h-8 lg:h-9"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm sm:text-base h-9 sm:h-10"
             size="sm"
           >
-            <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" />
+            <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
             Comprado
           </Button>
         </div>

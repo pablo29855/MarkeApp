@@ -140,13 +140,13 @@ export default function DebtsPage() {
   const totalRemaining = totalDebt - totalPaid
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 space-y-3 sm:space-y-4 lg:space-y-6">
+    <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6">
       {/* Header */}
       <div className="sticky top-16 lg:top-0 z-20 bg-background pb-2 -mt-2 pt-2">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">Deudas</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">Gestiona tus deudas y pagos parciales</p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">Deudas</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Gestiona tus deudas y pagos parciales</p>
           </div>
           <div className="flex gap-2 self-end sm:self-auto">
             <DebtFormWrapper userId={userId} onSuccess={handleRefresh} />
@@ -161,19 +161,19 @@ export default function DebtsPage() {
         </>
       ) : (
         <>
-          {/* Stats Cards - Ultra Compactas en Móvil */}
+          {/* Stats Cards - Mejoradas para móvil */}
           <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
               {/* Total de Deudas */}
               <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg overflow-hidden">
-                <CardContent className="p-2 sm:p-3 lg:p-4">
+                <CardContent className="p-3 sm:p-4 lg:p-5">
                   <div className="flex flex-col sm:flex-row items-center sm:gap-2 lg:gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full bg-white/20 flex items-center justify-center mb-1 sm:mb-0">
-                      <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
+                    <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full bg-white/20 flex items-center justify-center mb-1 sm:mb-0">
+                      <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
                     </div>
                     <div className="flex-1 min-w-0 text-center sm:text-left">
-                      <p className="text-[9px] sm:text-[10px] lg:text-xs opacity-90 uppercase tracking-wide mb-0.5">Total</p>
-                      <p className="text-sm sm:text-base lg:text-xl font-bold truncate">{formatCurrency(totalDebt)}</p>
-                      <p className="text-[8px] sm:text-[10px] opacity-75 truncate">{debts.length} deuda{debts.length !== 1 ? 's' : ''}</p>
+                      <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 uppercase tracking-wide mb-0.5 sm:mb-1">Total</p>
+                      <p className="text-base sm:text-xl lg:text-2xl font-bold truncate">{formatCurrency(totalDebt)}</p>
+                      <p className="text-[10px] sm:text-xs opacity-75 mt-0.5">{debts.length} deuda{debts.length !== 1 ? 's' : ''}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -181,15 +181,15 @@ export default function DebtsPage() {
 
               {/* Total Pagado */}
               <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-lg overflow-hidden">
-                <CardContent className="p-2 sm:p-3 lg:p-4">
+                <CardContent className="p-3 sm:p-4 lg:p-5">
                   <div className="flex flex-col sm:flex-row items-center sm:gap-2 lg:gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full bg-white/20 flex items-center justify-center mb-1 sm:mb-0">
-                      <CircleCheck className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
+                    <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full bg-white/20 flex items-center justify-center mb-1 sm:mb-0">
+                      <CircleCheck className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
                     </div>
                     <div className="flex-1 min-w-0 text-center sm:text-left">
-                      <p className="text-[9px] sm:text-[10px] lg:text-xs opacity-90 uppercase tracking-wide mb-0.5">Pagado</p>
-                      <p className="text-sm sm:text-base lg:text-xl font-bold truncate">{formatCurrency(totalPaid)}</p>
-                      <p className="text-[8px] sm:text-[10px] opacity-75">Acumulado</p>
+                      <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 uppercase tracking-wide mb-0.5 sm:mb-1">Pagado</p>
+                      <p className="text-base sm:text-xl lg:text-2xl font-bold truncate">{formatCurrency(totalPaid)}</p>
+                      <p className="text-[10px] sm:text-xs opacity-75 mt-0.5">Acumulado</p>
                     </div>
                   </div>
                 </CardContent>
@@ -197,15 +197,15 @@ export default function DebtsPage() {
 
               {/* Saldo Pendiente */}
               <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0 shadow-lg overflow-hidden">
-                <CardContent className="p-2 sm:p-3 lg:p-4">
+                <CardContent className="p-3 sm:p-4 lg:p-5">
                   <div className="flex flex-col sm:flex-row items-center sm:gap-2 lg:gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full bg-white/20 flex items-center justify-center mb-1 sm:mb-0">
-                      <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
+                    <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full bg-white/20 flex items-center justify-center mb-1 sm:mb-0">
+                      <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
                     </div>
                     <div className="flex-1 min-w-0 text-center sm:text-left">
-                      <p className="text-[9px] sm:text-[10px] lg:text-xs opacity-90 uppercase tracking-wide mb-0.5">Pendiente</p>
-                      <p className="text-sm sm:text-base lg:text-xl font-bold truncate">{formatCurrency(totalRemaining)}</p>
-                      <p className="text-[8px] sm:text-[10px] opacity-75">Por pagar</p>
+                      <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 uppercase tracking-wide mb-0.5 sm:mb-1">Pendiente</p>
+                      <p className="text-base sm:text-xl lg:text-2xl font-bold truncate">{formatCurrency(totalRemaining)}</p>
+                      <p className="text-[10px] sm:text-xs opacity-75 mt-0.5">Por pagar</p>
                     </div>
                   </div>
                 </CardContent>
@@ -213,19 +213,19 @@ export default function DebtsPage() {
             </div>
 
             {debtsWithPayments.length > 0 ? (
-              <div className="space-y-2 sm:space-y-3 lg:space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {debtsWithPayments.map(({ debt, payments }) => (
                   <DebtCard key={debt.id} debt={debt} payments={payments} onUpdate={handleRefresh} />
                 ))}
               </div>
             ) : (
               <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12 lg:py-16 px-4">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center mb-3 sm:mb-4">
-                    <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
+                <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 px-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <CreditCard className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
                   </div>
-                  <p className="text-sm sm:text-base lg:text-lg font-medium text-center">No tienes deudas registradas</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground text-center mt-2">
+                  <p className="text-lg sm:text-xl font-medium text-center">No tienes deudas registradas</p>
+                  <p className="text-sm sm:text-base text-muted-foreground text-center mt-2">
                     Agrega una deuda para comenzar a hacer seguimiento
                   </p>
                 </CardContent>

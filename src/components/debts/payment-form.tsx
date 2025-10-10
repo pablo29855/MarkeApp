@@ -117,13 +117,13 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
         <DialogTrigger asChild>
           <Button 
             size="sm" 
-            className="text-xs sm:text-sm flex-1 xs:flex-none"
+            className="text-xs sm:text-sm lg:text-base flex-1 xs:flex-none h-9 sm:h-10 lg:h-11"
             variant="default"
             onClick={(e) => {
               e.stopPropagation()
             }}
           >
-            <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 mr-1 sm:mr-2" />
             <span>Abonar</span>
           </Button>
         </DialogTrigger>
