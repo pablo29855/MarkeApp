@@ -112,10 +112,10 @@ export default function ShoppingPage() {
     <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6">
       {/* Header - Mejorado y protagonista */}
       <div className="sticky top-16 lg:top-0 z-20 bg-background pb-2 -mt-2 pt-2">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">Lista de Mercado</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1">Organiza tus compras y conviértelas en gastos</p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">Lista de Mercado</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">Organiza tus compras y conviértelas en gastos</p>
           </div>
           <div className="self-end sm:self-auto">
             <ShoppingFormWrapper userId={userId} categories={categories} onSuccess={handleRefresh} />
@@ -125,17 +125,17 @@ export default function ShoppingPage() {
 
       {/* Card de Total - Compacto en móvil */}
       <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg overflow-hidden">
-        <CardContent className="p-3 sm:p-4 lg:p-6">
+        <CardContent className="p-4 sm:p-5 lg:p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 mb-1">Lista de Mercado</p>
-              <div className="flex items-baseline gap-1 sm:gap-2">
-                <span className="text-2xl sm:text-3xl lg:text-5xl font-bold">{shoppingList.length}</span>
-                <span className="text-sm sm:text-base lg:text-xl opacity-90">producto{shoppingList.length !== 1 ? 's' : ''}</span>
+              <p className="text-sm sm:text-base lg:text-lg opacity-90 mb-2">Lista de Mercado</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl sm:text-5xl lg:text-6xl font-bold">{shoppingList.length}</span>
+                <span className="text-base sm:text-lg lg:text-xl opacity-90">producto{shoppingList.length !== 1 ? 's' : ''}</span>
               </div>
             </div>
-            <div className="ml-2 sm:ml-4 flex-shrink-0">
-              <List className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 opacity-20" />
+            <div className="ml-4 flex-shrink-0">
+              <List className="h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 opacity-20" />
             </div>
           </div>
         </CardContent>
@@ -144,7 +144,7 @@ export default function ShoppingPage() {
       {isRefreshing ? (
         <SkeletonGrid count={shoppingList.length || 3} />
       ) : shoppingList.length > 0 ? (
-        <div className="grid gap-2 sm:gap-3 lg:gap-4 grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {shoppingList.map((item) => (
             <ShoppingItemCard key={item.id} item={item} marketCategoryId={marketCategoryId} onUpdate={handleRefresh} />
           ))}
@@ -152,11 +152,11 @@ export default function ShoppingPage() {
       ) : (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center mb-3 sm:mb-4">
-              <ShoppingCart className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+              <ShoppingCart className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
             </div>
-            <p className="text-base sm:text-lg font-medium text-center">Tu lista de mercado está vacía</p>
-            <p className="text-xs sm:text-sm text-muted-foreground text-center mt-2">
+            <p className="text-lg sm:text-xl font-medium text-center">Tu lista de mercado está vacía</p>
+            <p className="text-sm sm:text-base text-muted-foreground text-center mt-2">
               Agrega items para comenzar a organizar tus compras
             </p>
           </CardContent>
