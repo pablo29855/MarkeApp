@@ -129,7 +129,7 @@ export default function DashboardPage() {
           description="Categorías con gastos"
         />
         <StatsCard
-          title="Lista de Mercado"
+          title="Lista de Compras"
           value={dashboardData.shoppingCount.toString()}
           icon={ShoppingCart}
           description="Items pendientes"

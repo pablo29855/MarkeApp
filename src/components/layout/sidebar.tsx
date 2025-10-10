@@ -22,7 +22,7 @@ import { useState, useEffect } from "react"
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Gastos", href: "/expenses", icon: Receipt },
-  { name: "Lista de Mercado", href: "/shopping", icon: ShoppingCart },
+  { name: "Lista de Compras", href: "/shopping", icon: ShoppingCart },
   { name: "Reportes", href: "/reports", icon: BarChart3 },
   { name: "Deudas", href: "/debts", icon: CreditCard },
 ]
@@ -138,7 +138,7 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
           
           {/* Logo and User Info */}
           <div className="px-4 py-4 border-b border-border relative z-10">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-bold text-xl shrink-0 shadow-lg transition-transform hover:scale-110">
                 M
               </div>

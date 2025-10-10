@@ -18,19 +18,23 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Trash2, MapPin, ShoppingBag } from "lucide-react"
-import type { ShoppingItem } from "@/lib/types"
+import { Trash2, MapPin, ShoppingBag, Pencil } from "lucide-react"
+import type { ShoppingItem, Category } from "@/lib/types"
 import { formatCurrency } from "@/lib/utils"
+import { ShoppingForm } from "./shopping-form"
 
 interface ShoppingItemProps {
   item: ShoppingItem
   marketCategoryId: string
   onUpdate?: () => void
+  categories: Category[]
+  userId: string
 }
 
-export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingItemProps) {
+export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories, userId }: ShoppingItemProps) {
   const [showPriceDialog, setShowPriceDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showEditDialog, setShowEditDialog] = useState(false)
   const [unitPrice, setUnitPrice] = useState("")
   const [quantity, setQuantity] = useState(item.quantity.toString())
   const [isLoading, setIsLoading] = useState(false)
@@ -181,6 +185,14 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
               className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             >
               <Trash2 className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-primary hover:bg-primary/10"
+              onClick={() => setShowEditDialog(true)}
+            >
+              <Pencil className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
             </Button>
           </div>
           
@@ -351,17 +363,29 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription className="text-xs sm:text-sm">
-              Esta acción eliminará "{item.product_name}" de tu lista de mercado. Esta acción no se puede deshacer.
+              Esta acción eliminará "{item.product_name}" de tu lista de compras. Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="text-sm sm:text-base h-9 sm:h-10">Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="text-sm sm:text-base h-9 sm:h-10 dark:shadow-[0_4px_12px_rgba(0,0,0,0.6)] dark:border dark:border-slate-700">Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-sm sm:text-base h-9 sm:h-10">
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ShoppingForm
+        item={item}
+        categories={categories}
+        userId={userId}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onSuccess={() => {
+          setShowEditDialog(false)
+          onUpdate?.()
+        }}
+      />
     </>
   )
 }

@@ -105,7 +105,7 @@ export default function ShoppingPage() {
   }, [userId, handleRefresh])
 
   if (loading) {
-    return <LoadingCheckOverlay message="Cargando lista de mercado..." />
+    return <LoadingCheckOverlay message="Cargando lista de compras..." />
   }
 
   return (
@@ -114,7 +114,7 @@ export default function ShoppingPage() {
       <div className="sticky top-16 lg:top-0 z-20 bg-background pb-2 -mt-2 pt-2">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">Lista de Mercado</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">Lista de Compras</h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-1">Organiza tus compras y conviértelas en gastos</p>
           </div>
           <div className="self-end sm:self-auto">
@@ -128,7 +128,7 @@ export default function ShoppingPage() {
         <CardContent className="p-4 sm:p-5 lg:p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <p className="text-sm sm:text-base lg:text-lg opacity-90 mb-2">Lista de Mercado</p>
+              <p className="text-sm sm:text-base lg:text-lg opacity-90 mb-2">Lista de Compras</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl sm:text-5xl lg:text-6xl font-bold">{shoppingList.length}</span>
                 <span className="text-base sm:text-lg lg:text-xl opacity-90">producto{shoppingList.length !== 1 ? 's' : ''}</span>
@@ -144,9 +144,9 @@ export default function ShoppingPage() {
       {isRefreshing ? (
         <SkeletonGrid count={shoppingList.length || 3} />
       ) : shoppingList.length > 0 ? (
-        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3">
           {shoppingList.map((item) => (
-            <ShoppingItemCard key={item.id} item={item} marketCategoryId={marketCategoryId} onUpdate={handleRefresh} />
+            <ShoppingItemCard key={item.id} item={item} marketCategoryId={marketCategoryId} onUpdate={handleRefresh} categories={categories} userId={userId} />
           ))}
         </div>
       ) : (
@@ -155,7 +155,7 @@ export default function ShoppingPage() {
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-muted flex items-center justify-center mb-4">
               <ShoppingCart className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
             </div>
-            <p className="text-lg sm:text-xl font-medium text-center">Tu lista de mercado está vacía</p>
+            <p className="text-lg sm:text-xl font-medium text-center">Tu lista de compras está vacía</p>
             <p className="text-sm sm:text-base text-muted-foreground text-center mt-2">
               Agrega items para comenzar a organizar tus compras
             </p>

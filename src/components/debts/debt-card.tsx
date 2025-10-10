@@ -280,8 +280,8 @@ export function DebtCard({ debt, payments, onUpdate }: DebtCardProps) {
               Esta acción no se puede deshacer. La deuda y todos sus pagos serán eliminados permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting} className="text-base sm:text-base h-9 sm:h-10">
+            <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting} className="text-base sm:text-base h-9 sm:h-10 dark:shadow-[0_4px_12px_rgba(0,0,0,0.6)] dark:border dark:border-slate-700">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction 

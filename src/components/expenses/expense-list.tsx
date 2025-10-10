@@ -70,7 +70,7 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
 
   return (
     <>
-      <div className="space-y-2 sm:space-y-3 lg:space-y-4">
+      <div className="grid grid-cols-2 gap-4">
         {expenses.map((expense) => (
           <Card key={expense.id} className="overflow-hidden">
             <CardContent className="p-3 sm:p-4 lg:p-6">
@@ -124,18 +124,18 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-9 w-9 sm:h-10 sm:w-10"
-                      onClick={() => setEditExpense(expense)}
+                      className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => setDeleteId(expense.id)}
                     >
-                      <Pencil className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                      <Trash2 className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-9 w-9 sm:h-10 sm:w-10"
-                      onClick={() => setDeleteId(expense.id)}
+                      className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                      onClick={() => setEditExpense(expense)}
                     >
-                      <Trash2 className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-destructive" />
+                      <Pencil className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                     </Button>
                   </div>
                 </div>
@@ -166,9 +166,9 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
               Esta acción no se puede deshacer. El gasto será eliminado permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+            <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting} className="dark:shadow-[0_4px_12px_rgba(0,0,0,0.6)] dark:border dark:border-slate-700">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive text-destructive-foreground">
               {isDeleting ? "Eliminando..." : "Eliminar"}
             </AlertDialogAction>
           </AlertDialogFooter>

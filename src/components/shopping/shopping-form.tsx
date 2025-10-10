@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
@@ -12,19 +12,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Plus, Loader2, MapPin } from "lucide-react"
-import type { Category } from "@/lib/types"
+import type { Category, ShoppingItem } from "@/lib/types"
 
 interface ShoppingFormProps {
   userId: string
   categories: Category[]
   onSuccess?: () => void
+  item?: ShoppingItem
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProps) {
-  const [open, setOpen] = useState(false)
+export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpenChange }: ShoppingFormProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { showCreated, showError } = useNotification()
+  const { showCreated, showError, showSuccess } = useNotification()
+
+  const isOpen = open !== undefined ? open : internalOpen
+  const setIsOpen = onOpenChange || setInternalOpen
+
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [isGettingLocation, setIsGettingLocation] = useState(false)
+  const [isGeocoding, setIsGeocoding] = useState(false)
 
   const [formData, setFormData] = useState({
     product_name: "",
@@ -32,6 +42,70 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
     category_id: "",
     location: "",
   })
+
+  useEffect(() => {
+    if (item) {
+      setFormData({
+        product_name: item.product_name,
+        quantity: item.quantity.toString(),
+        category_id: item.category || "",
+        location: "",
+      })
+    }
+  }, [item])
+
+  // Geocode en tiempo real cuando el usuario escribe en el input de ubicación
+  // Debounce básico: 500ms y cache en localStorage
+  useEffect(() => {
+    const query = formData.location?.trim()
+    if (!query) {
+      setLocation(null)
+      return
+    }
+
+    let aborted = false
+    const timer = setTimeout(async () => {
+      setIsGeocoding(true)
+      try {
+        const cacheKey = `geocode_cache:${query.toLowerCase()}`
+        try {
+          const cached = typeof window !== 'undefined' ? localStorage.getItem(cacheKey) : null
+          if (cached) {
+            const parsed = JSON.parse(cached)
+            if (!aborted) {
+              setLocation(parsed)
+              setIsGeocoding(false)
+              return
+            }
+          }
+        } catch {}
+
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
+        )
+        const data = await res.json()
+        if (aborted) return
+        if (data && data.length > 0) {
+          const first = data[0]
+          const coords = { lat: parseFloat(first.lat), lng: parseFloat(first.lon) }
+          setLocation(coords)
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify(coords))
+          } catch {}
+        }
+      } catch (err) {
+        console.error("Error geocoding query:", err)
+      } finally {
+        if (!aborted) setIsGeocoding(false)
+      }
+    }, 500)
+
+    return () => {
+      aborted = true
+      clearTimeout(timer)
+      setIsGeocoding(false)
+    }
+  }, [formData.location])
 
   // Función para formatear números con puntos de mil
   const formatNumber = (value: string) => {
@@ -52,19 +126,33 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
     const supabase = createClient()
 
     try {
-      const { error } = await supabase.from("shopping_list").insert({
-        user_id: userId,
-        product_name: formData.product_name,
-        quantity: Number.parseInt(getNumericValue(formData.quantity)),
-        category: formData.category_id || null,
-        is_purchased: false,
-        unit_price: null,
-        total_price: null,
-      })
+      if (item) {
+        // Update
+        const { error } = await supabase.from("shopping_list").update({
+          product_name: formData.product_name,
+          quantity: Number.parseInt(getNumericValue(formData.quantity)),
+          category: formData.category_id || null,
+        }).eq("id", item.id)
 
-      if (error) throw error
+        if (error) throw error
 
-      showCreated("Producto")
+        showSuccess("Producto actualizado")
+      } else {
+        // Insert
+        const { error } = await supabase.from("shopping_list").insert({
+          user_id: userId,
+          product_name: formData.product_name,
+          quantity: Number.parseInt(getNumericValue(formData.quantity)),
+          category: formData.category_id || null,
+          is_purchased: false,
+          unit_price: null,
+          total_price: null,
+        })
+
+        if (error) throw error
+
+        showCreated("Producto")
+      }
       
       setFormData({
         product_name: "",
@@ -72,20 +160,16 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
         category_id: "",
         location: "",
       })
-      setOpen(false)
+      setIsOpen(false)
       onSuccess?.()
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Error al agregar el item"
+      const errorMessage = error instanceof Error ? error.message : `Error al ${item ? "actualizar" : "agregar"} el item`
       setError(errorMessage)
       showError("Error al guardar", errorMessage)
     } finally {
       setIsLoading(false)
     }
   }
-
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
-  const [locationName, setLocationName] = useState<string>("")
-  const [isGettingLocation, setIsGettingLocation] = useState(false)
 
   const getLocation = () => {
     setIsGettingLocation(true)
@@ -102,11 +186,9 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
             )
             const data = await response.json()
             const name = data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
-            setLocationName(name)
             setFormData((prev) => ({ ...prev, location: name }))
           } catch {
             const fallback = `${lat.toFixed(4)}, ${lng.toFixed(4)}`
-            setLocationName(fallback)
             setFormData((prev) => ({ ...prev, location: fallback }))
           }
           setIsGettingLocation(false)
@@ -124,19 +206,21 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="text-sm sm:text-base h-9 sm:h-10">
-          <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-          Agregar Item
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      {!item && (
+        <DialogTrigger asChild>
+          <Button className="text-sm sm:text-base h-9 sm:h-10">
+            <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+            Agregar Item
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="no-ios-zoom">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">Nuevo Item</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">{item ? "Editar Item" : "Nuevo Item"}</DialogTitle>
             <DialogDescription className="text-xs sm:text-sm">
-              Agrega un producto a tu lista de mercado
+              {item ? "Edita el producto de tu lista de compras" : "Agrega un producto a tu lista de compras"}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
@@ -195,71 +279,71 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
             </div>
           </div>
 
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="location" className="text-xs sm:text-sm">Ubicación (opcional)</Label>
+            <div className="relative">
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                placeholder="Ej: Supermercado XYZ"
+                disabled={isLoading}
+                className="text-sm sm:text-base h-9 sm:h-10 pr-10"
+              />
+              {isGeocoding && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+              )}
+            </div>
+          </div>
+
+          {!location ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={getLocation}
+              disabled={isGettingLocation}
+              className="w-full mt-2 text-sm sm:text-base h-9 sm:h-10"
+            >
+              <MapPin className="h-4 w-4 mr-2" />
+              {isGettingLocation ? "Obteniendo ubicación..." : "Obtener Ubicación Actual"}
+            </Button>
+          ) : (
+            <div className="space-y-2 mt-2">
+              <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+                <iframe
+                  title="Mapa de ubicacion"
+                  width="100%"
+                  height="100%"
+                  frameBorder="0"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.01},${location.lat - 0.01},${location.lng + 0.01},${location.lat + 0.01}&layer=mapnik&marker=${location.lat},${location.lng}`}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setLocation(null)
+                  setFormData((prev) => ({ ...prev, location: "" }))
+                }}
+                className="w-full"
+              >
+                Cambiar ubicación
+              </Button>
+            </div>
+          )}
+
           {error && (
             <Alert variant="destructive">
               <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
             </Alert>
           )}
 
-          <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="location" className="text-xs sm:text-sm">Ubicación (opcional)</Label>
-            <Input
-              id="location"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="Ej: Supermercado XYZ"
-              disabled={isLoading}
-              className="text-sm sm:text-base h-9 sm:h-10"
-            />
-
-            {!location ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={getLocation}
-                disabled={isGettingLocation}
-                className="w-full mt-2 text-sm sm:text-base h-9 sm:h-10"
-              >
-                <MapPin className="h-4 w-4 mr-2" />
-                {isGettingLocation ? "Obteniendo ubicación..." : "Obtener Ubicación Actual"}
-              </Button>
-            ) : (
-              <div className="space-y-2 mt-2">
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Ubicación detectada:</p>
-                  <p className="text-sm font-medium truncate">{locationName}</p>
-                </div>
-                <div className="relative w-full h-48 rounded-lg overflow-hidden border">
-                  <iframe
-                    title="Mapa de ubicacion"
-                    width="100%"
-                    height="100%"
-                    frameBorder="0"
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.01},${location.lat - 0.01},${location.lng + 0.01},${location.lat + 0.01}&layer=mapnik&marker=${location.lat},${location.lng}`}
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setLocation(null)
-                    setLocationName("")
-                    setFormData((prev) => ({ ...prev, location: "" }))
-                  }}
-                  className="w-full"
-                >
-                  Cambiar ubicación
-                </Button>
-              </div>
-            )}
-          </div>
-
           <div className="flex gap-2 sm:gap-3 pt-2">
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
+              onClick={() => setIsOpen(false)}
               className="flex-1 text-sm sm:text-base h-9 sm:h-10"
               disabled={isLoading}
             >
@@ -267,7 +351,7 @@ export function ShoppingForm({ userId, categories, onSuccess }: ShoppingFormProp
             </Button>
             <Button type="submit" className="flex-1 text-sm sm:text-base h-9 sm:h-10" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />}
-              {isLoading ? "Guardando..." : "Guardar"}
+              {isLoading ? "Guardando..." : (item ? "Actualizar" : "Agregar")}
             </Button>
           </div>
         </form>

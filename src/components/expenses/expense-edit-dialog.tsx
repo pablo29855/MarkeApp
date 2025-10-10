@@ -27,6 +27,7 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { showUpdated, showError } = useNotification()
+  const [isGeocoding, setIsGeocoding] = useState(false)
 
   // Función para formatear el monto con puntos de mil (formato colombiano)
   const formatAmount = (value: string) => {
@@ -65,9 +66,101 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
     })
   }, [expense])
 
+  // Cuando el diálogo se abre, si existe una dirección guardada en `expense.location`
+  // intentamos geocodificarla (forward geocoding) para obtener lat/lng y mostrar el mapa.
+  useEffect(() => {
+    if (!open) return
+    const locStr = expense.location
+    if (!locStr) {
+      setLocation(null)
+      return
+    }
+
+    let aborted = false
+    ;(async () => {
+      setIsGettingLocation(true)
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locStr)}`,
+        )
+        const data = await res.json()
+        if (aborted) return
+        if (data && data.length > 0) {
+          const first = data[0]
+          setLocation({ lat: parseFloat(first.lat), lng: parseFloat(first.lon) })
+        } else {
+          // No se encontró geocodificación; dejamos solo el texto
+          setLocation(null)
+        }
+      } catch (err) {
+        console.error("Error geocoding saved location:", err)
+        if (!aborted) {
+          setLocation(null)
+        }
+      } finally {
+        if (!aborted) setIsGettingLocation(false)
+      }
+    })()
+
+    return () => {
+      aborted = true
+    }
+  }, [open, expense.location])
+
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
-  const [locationName, setLocationName] = useState<string>(expense.location || "")
   const [isGettingLocation, setIsGettingLocation] = useState(false)
+  // Geocode en tiempo real cuando el usuario escribe en el input de ubicación
+  // Debounce básico: 500ms y cache en localStorage
+  useEffect(() => {
+    const query = formData.location?.trim()
+    if (!query) {
+      setLocation(null)
+      return
+    }
+
+    let aborted = false
+    const timer = setTimeout(async () => {
+      setIsGeocoding(true)
+      try {
+        const cacheKey = `geocode_cache:${query.toLowerCase()}`
+        try {
+          const cached = typeof window !== 'undefined' ? localStorage.getItem(cacheKey) : null
+          if (cached) {
+            const parsed = JSON.parse(cached)
+            if (!aborted) {
+              setLocation(parsed)
+              setIsGeocoding(false)
+              return
+            }
+          }
+        } catch {}
+
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
+        )
+        const data = await res.json()
+        if (aborted) return
+        if (data && data.length > 0) {
+          const first = data[0]
+          const coords = { lat: parseFloat(first.lat), lng: parseFloat(first.lon) }
+          setLocation(coords)
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify(coords))
+          } catch {}
+        }
+      } catch (err) {
+        console.error("Error geocoding query:", err)
+      } finally {
+        if (!aborted) setIsGeocoding(false)
+      }
+    }, 500)
+
+    return () => {
+      aborted = true
+      clearTimeout(timer)
+      setIsGeocoding(false)
+    }
+  }, [formData.location])
 
   const getLocation = () => {
     setIsGettingLocation(true)
@@ -83,12 +176,10 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
             )
             const data = await response.json()
-            const name = data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
-            setLocationName(name)
-            setFormData((prev) => ({ ...prev, location: name }))
+              const name = data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+              setFormData((prev) => ({ ...prev, location: name }))
           } catch {
             const fallback = `${lat.toFixed(4)}, ${lng.toFixed(4)}`
-            setLocationName(fallback)
             setFormData((prev) => ({ ...prev, location: fallback }))
           }
           setIsGettingLocation(false)
@@ -213,14 +304,19 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
 
           <div className="space-y-1.5 sm:space-y-2">
             <Label htmlFor="edit_location" className="text-xs sm:text-sm">Ubicación (opcional)</Label>
-            <Input
-              id="edit_location"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="Ej: Supermercado XYZ"
-              disabled={isLoading}
-              className="text-sm sm:text-base h-9 sm:h-10"
-            />
+            <div className="relative">
+              <Input
+                id="edit_location"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                placeholder="Ej: Supermercado XYZ"
+                disabled={isLoading}
+                className="text-sm sm:text-base h-9 sm:h-10 pr-10"
+              />
+              {isGeocoding && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+              )}
+            </div>
 
             {!location ? (
               <Button
@@ -235,18 +331,18 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
               </Button>
             ) : (
               <div className="space-y-2 mt-2">
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Ubicación detectada:</p>
-                  <p className="text-sm font-medium truncate">{locationName}</p>
-                </div>
-                <div className="relative w-full h-48 rounded-lg overflow-hidden border">
-                  <iframe
+                {/* Se elimina la visualización encima del mapa; ya existe el input de ubicación */}
+                <div className="flex justify-center">
+                  <div className="relative w-full rounded-lg overflow-hidden border h-48 sm:h-56 min-h-[12rem] max-h-[40vh] min-w-0 max-w-full box-border mx-auto max-w-[28rem] sm:max-w-[32rem]">
+                    <iframe
                     title="Mapa de ubicacion"
-                    width="100%"
-                    height="100%"
+                    className="w-full h-full block min-w-0 max-w-full box-border"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
                     frameBorder="0"
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.01},${location.lat - 0.01},${location.lng + 0.01},${location.lat + 0.01}&layer=mapnik&marker=${location.lat},${location.lng}`}
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.005},${location.lat - 0.005},${location.lng + 0.005},${location.lat + 0.005}&layer=mapnik&marker=${location.lat},${location.lng}`}
                   />
+                  </div>
                 </div>
                 <Button
                   type="button"
@@ -254,7 +350,6 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
                   size="sm"
                   onClick={() => {
                     setLocation(null)
-                    setLocationName("")
                     setFormData((prev) => ({ ...prev, location: "" }))
                   }}
                   className="w-full"

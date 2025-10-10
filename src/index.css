@@ -141,24 +141,17 @@ html, body {
 
 /* Forzar apariencia del AlertDialog para que luzca igual en light/dark */
 [data-slot="alert-dialog-overlay"] {
-  background-color: rgba(0, 0, 0, 0.5) !important; /* overlay por defecto */
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
+/* Allow AlertDialog content to be themed by component tokens and dark: classes */
 [data-slot="alert-dialog-content"] {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  border-color: #e5e7eb !important;
+  /* intentionally left blank so AlertDialog component controls colors via tokens/dark classes */
 }
 
-/* En dark mode el overlay debe ser menos opaco para no oscurecer el diálogo */
+/* In dark mode reduce overlay opacity slightly */
 .dark [data-slot="alert-dialog-overlay"] {
-  background-color: rgba(0, 0, 0, 0.2) !important;
-}
-
-.dark [data-slot="alert-dialog-content"] {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  border-color: #e5e7eb !important;
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 /* Estilos exactos para la X (botón de cierre) en modo oscuro — opción 3 (verde tenue) */
