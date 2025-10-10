@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2 } from "lucide-react"
+import { Loader2, MapPin } from "lucide-react"
 import type { Expense, Category } from "@/lib/types"
 
 interface ExpenseEditDialogProps {
@@ -65,6 +65,46 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
     })
   }, [expense])
 
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [locationName, setLocationName] = useState<string>(expense.location || "")
+  const [isGettingLocation, setIsGettingLocation] = useState(false)
+
+  const getLocation = () => {
+    setIsGettingLocation(true)
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude
+          const lng = position.coords.longitude
+          setLocation({ lat, lng })
+
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+            )
+            const data = await response.json()
+            const name = data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+            setLocationName(name)
+            setFormData((prev) => ({ ...prev, location: name }))
+          } catch {
+            const fallback = `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+            setLocationName(fallback)
+            setFormData((prev) => ({ ...prev, location: fallback }))
+          }
+          setIsGettingLocation(false)
+        },
+        (error) => {
+          console.error("Error getting location:", error)
+          setError("No se pudo obtener la ubicación. Verifica los permisos.")
+          setIsGettingLocation(false)
+        },
+      )
+    } else {
+      setError("Tu navegador no soporta geolocalización")
+      setIsGettingLocation(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -101,13 +141,14 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Editar Gasto</DialogTitle>
-          <DialogDescription className="text-xs sm:text-sm">
-            Modifica los detalles de tu gasto registrado
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        <div className="no-ios-zoom">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">Editar Gasto</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
+              Modifica los detalles de tu gasto registrado
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div className="space-y-1.5 sm:space-y-2">
             <Label htmlFor="edit_name" className="text-xs sm:text-sm">Nombre del Gasto</Label>
             <Input
@@ -180,6 +221,48 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
               disabled={isLoading}
               className="text-sm sm:text-base h-9 sm:h-10"
             />
+
+            {!location ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={getLocation}
+                disabled={isGettingLocation}
+                className="w-full mt-2 text-sm sm:text-base h-9 sm:h-10"
+              >
+                <MapPin className="h-4 w-4 mr-2" />
+                {isGettingLocation ? "Obteniendo ubicación..." : "Obtener Ubicación Actual"}
+              </Button>
+            ) : (
+              <div className="space-y-2 mt-2">
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Ubicación detectada:</p>
+                  <p className="text-sm font-medium truncate">{locationName}</p>
+                </div>
+                <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+                  <iframe
+                    title="Mapa de ubicacion"
+                    width="100%"
+                    height="100%"
+                    frameBorder="0"
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.01},${location.lat - 0.01},${location.lng + 0.01},${location.lat + 0.01}&layer=mapnik&marker=${location.lat},${location.lng}`}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setLocation(null)
+                    setLocationName("")
+                    setFormData((prev) => ({ ...prev, location: "" }))
+                  }}
+                  className="w-full"
+                >
+                  Cambiar ubicación
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-1.5 sm:space-y-2">
@@ -217,6 +300,7 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
             </Button>
           </div>
         </form>
+        </div>
       </DialogContent>
     </Dialog>
   )

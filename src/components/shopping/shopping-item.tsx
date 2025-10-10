@@ -197,13 +197,14 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
 
       <Dialog open={showPriceDialog} onOpenChange={setShowPriceDialog}>
         <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">Marcar como Comprado</DialogTitle>
-            <DialogDescription className="text-xs sm:text-sm">
-              Ingresa el precio unitario para registrar esta compra
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 sm:space-y-4">
+          <div className="no-ios-zoom">
+            <DialogHeader>
+              <DialogTitle className="text-lg sm:text-xl">Marcar como Comprado</DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm">
+                Ingresa el precio unitario para registrar esta compra
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 sm:space-y-4">
             <div className="space-y-1.5 sm:space-y-2">
               <Label className="text-xs sm:text-sm">Producto</Label>
               <p className="text-sm font-medium truncate">{item.product_name}</p>
@@ -243,47 +244,63 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
 
             <div className="space-y-1.5 sm:space-y-2">
               <Label className="text-xs sm:text-sm">Ubicación del Supermercado</Label>
-              {!location ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={getLocation}
-                  disabled={isGettingLocation}
-                  className="w-full bg-transparent text-sm sm:text-base h-9 sm:h-10"
-                >
-                  <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
-                  {isGettingLocation ? "Obteniendo ubicación..." : "Obtener Ubicación Actual"}
-                </Button>
-              ) : (
-                <div className="space-y-2">
-                  <div className="p-3 bg-muted rounded-lg">
-                    <p className="text-xs text-muted-foreground mb-1">Ubicación guardada:</p>
-                    <p className="text-sm font-medium truncate">{locationName}</p>
-                  </div>
-                  {/* Mapa simple con OpenStreetMap */}
-                  <div className="relative w-full h-48 rounded-lg overflow-hidden border">
-                    <iframe
-                      title="Mapa de ubicación"
-                      width="100%"
-                      height="100%"
-                      frameBorder="0"
-                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.01},${location.lat - 0.01},${location.lng + 0.01},${location.lat + 0.01}&layer=mapnik&marker=${location.lat},${location.lng}`}
-                    />
-                  </div>
+              {/* Input manual para ingresar/editar la ubicación */}
+              <Input
+                id="purchase_location"
+                value={locationName}
+                onChange={(e) => {
+                  setLocationName(e.target.value)
+                  // Si el usuario edita manualmente, limpiamos la lat/lng para no mostrar el mapa
+                  setLocation(null)
+                }}
+                placeholder="Ej: Supermercado XYZ"
+                disabled={isLoading}
+                className="text-sm sm:text-base h-9 sm:h-10"
+              />
+
+              <div className="mt-2">
+                {!location ? (
                   <Button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setLocation(null)
-                      setLocationName("")
-                    }}
-                    className="w-full"
+                    variant="outline"
+                    onClick={getLocation}
+                    disabled={isGettingLocation}
+                    className="w-full bg-transparent text-sm sm:text-base h-9 sm:h-10"
                   >
-                    Cambiar ubicación
+                    <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
+                    {isGettingLocation ? "Obteniendo ubicación..." : "Obtener Ubicación Actual"}
                   </Button>
-                </div>
-              )}
+                ) : (
+                  <div className="space-y-2">
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Ubicación guardada:</p>
+                      <p className="text-sm font-medium truncate">{locationName}</p>
+                    </div>
+                    {/* Mapa simple con OpenStreetMap */}
+                    <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+                      <iframe
+                        title="Mapa de ubicacion"
+                        width="100%"
+                        height="100%"
+                        frameBorder="0"
+                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.01},${location.lat - 0.01},${location.lng + 0.01},${location.lat + 0.01}&layer=mapnik&marker=${location.lat},${location.lng}`}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setLocation(null)
+                        setLocationName("")
+                      }}
+                      className="w-full"
+                    >
+                      Cambiar ubicación
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {unitPrice && quantity && (
@@ -325,7 +342,8 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate }: ShoppingI
               </Button>
             </div>
           </div>
-        </DialogContent>
+        </div>
+      </DialogContent>
       </Dialog>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

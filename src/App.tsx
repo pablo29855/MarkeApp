@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 
 // Pages
 import LoginPage from '@/pages/auth/LoginPage'
@@ -40,9 +41,10 @@ function App() {
   }, [])
 
   if (loading) {
+    // Mostrar overlay de carga mientras se verifica la sesión activa
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-lg">Cargando...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <LoadingCheckOverlay message="Verificando sesión..." />
       </div>
     )
   }
