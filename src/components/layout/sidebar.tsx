@@ -18,6 +18,7 @@ import {
   User,
 } from "lucide-react"
 import { useState, useEffect } from "react"
+import { ProfileDialog } from "@/components/profile/profile-dialog"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -39,6 +40,8 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
 
   // Notificar al layout cuando cambia el estado de colapso
   useEffect(() => {
@@ -68,6 +71,59 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
     setIsDarkMode(isDark)
     if (isDark) {
       document.documentElement.classList.add("dark")
+    }
+  }, [])
+
+  // Load current user's avatar from Supabase Auth user_metadata
+  useEffect(() => {
+    let mounted = true
+    const supabase = createClient()
+
+    const load = async () => {
+      try {
+        const { data } = await supabase.auth.getUser()
+        const user = (data as any)?.user
+        if (mounted && user) {
+          setAvatarUrl(user.user_metadata?.avatar_url || null)
+        }
+      } catch (err) {
+        console.warn('Failed to load user avatar:', err)
+      }
+    }
+
+    load()
+
+    // Subscribe to auth changes so the sidebar updates when the user updates their avatar
+    const { data: { subscription } } = createClient().auth.onAuthStateChange((event, session) => {
+      if (event === 'USER_UPDATED' || event === 'SIGNED_IN') {
+        const user = session?.user
+        setAvatarUrl(user?.user_metadata?.avatar_url || null)
+      }
+    })
+
+    // Listen for preview events from ProfileDialog to show local preview immediately
+    const onPreview = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail
+      if (detail && detail.url) setAvatarUrl(detail.url)
+    }
+    window.addEventListener('avatar-preview', onPreview as EventListener)
+
+    const onUploadStart = () => setAvatarUploading(true)
+    const onUploadEnd = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail
+      setAvatarUploading(false)
+      if (detail?.url) setAvatarUrl(detail.url)
+    }
+    window.addEventListener('avatar-upload-start', onUploadStart as EventListener)
+    window.addEventListener('avatar-upload-end', onUploadEnd as EventListener)
+
+    return () => {
+      mounted = false
+      // unsubscribe the realtime subscription
+      try { subscription?.unsubscribe?.() } catch (e) {}
+      window.removeEventListener('avatar-preview', onPreview as EventListener)
+      window.removeEventListener('avatar-upload-start', onUploadStart as EventListener)
+      window.removeEventListener('avatar-upload-end', onUploadEnd as EventListener)
     }
   }, [])
 
@@ -153,12 +209,26 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
             </div>
 
             {!isCollapsed && (
-              <div className="mt-3 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 transition-smooth hover:shadow-md">
-                <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                  <User className="h-3.5 w-3.5 text-primary" />
+              <ProfileDialog userName={userName}>
+                <div className="mt-3 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 transition-smooth hover:shadow-md cursor-pointer">
+                  <div className="relative">
+                    <div className="h-7 w-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 bg-primary/20">
+                      {avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={avatarUrl} alt="avatar" className="h-full w-full object-cover" />
+                      ) : (
+                        <User className="h-3.5 w-3.5 text-primary" />
+                      )}
+                    </div>
+                    {avatarUploading && (
+                      <div className="absolute -right-1 -bottom-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-xs font-medium truncate">{userName}</span>
                 </div>
-                <span className="text-xs font-medium truncate">{userName}</span>
-              </div>
+              </ProfileDialog>
             )}
           </div>
 

@@ -1,6 +1,9 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { createClient } from '@/lib/supabase/client'
+import { z } from '@/lib/validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,39 +12,43 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { UserPlus, Mail, Lock, CheckCircle2 } from 'lucide-react'
 
+const registerSchema = z.object({
+  email: z.string().email("Correo electrónico inválido"),
+  password: z.string()
+    .min(6, "La contraseña debe tener al menos 6 caracteres")
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Debe contener mayúscula, minúscula y número"),
+  confirmPassword: z.string().min(1, "La confirmación es obligatoria"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Las contraseñas no coinciden",
+  path: ["confirmPassword"],
+})
+
+type RegisterFormData = z.infer<typeof registerSchema>
+
 export default function RegisterPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const supabase = createClient()
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+  })
+
+  const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true)
     setError(null)
     setSuccess(false)
 
-    if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden')
-      setIsLoading(false)
-      return
-    }
-
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres')
-      setIsLoading(false)
-      return
-    }
-
-    const supabase = createClient()
-
     try {
       const { error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: data.email,
+        password: data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`,
         },
@@ -84,7 +91,7 @@ export default function RegisterPage() {
         </CardHeader>
         
         <CardContent className="relative z-10">
-          <form onSubmit={handleRegister} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
                 Correo Electrónico
@@ -95,13 +102,14 @@ export default function RegisterPage() {
                   id="email"
                   type="email"
                   placeholder="tu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
+                  {...register("email")}
                   disabled={isLoading}
                   className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
                 />
               </div>
+              {errors.email && (
+                <p className="text-sm text-red-600">{errors.email.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -114,13 +122,14 @@ export default function RegisterPage() {
                   id="password"
                   type="password"
                   placeholder="Mínimo 6 caracteres"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                  {...register("password")}
                   disabled={isLoading}
                   className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
                 />
               </div>
+              {errors.password && (
+                <p className="text-sm text-red-600">{errors.password.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -133,13 +142,14 @@ export default function RegisterPage() {
                   id="confirmPassword"
                   type="password"
                   placeholder="Repite tu contraseña"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
+                  {...register("confirmPassword")}
                   disabled={isLoading}
                   className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
                 />
               </div>
+              {errors.confirmPassword && (
+                <p className="text-sm text-red-600">{errors.confirmPassword.message}</p>
+              )}
             </div>
 
             {error && (

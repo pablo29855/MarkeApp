@@ -15,7 +15,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        setUserName(user.email?.split('@')[0] || 'Usuario')
+        // Try to get profile first
+        // Use Supabase Auth metadata for display name
+        setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario')
       }
     }
     getUser()

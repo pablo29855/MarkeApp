@@ -1,6 +1,9 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { createClient } from '@/lib/supabase/client'
+import { z } from '@/lib/validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,23 +13,35 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { LogIn, Mail, Lock } from 'lucide-react'
 
+const loginSchema = z.object({
+  email: z.string().email("Correo electrónico inválido"),
+  password: z.string().min(1, "La contraseña es obligatoria"),
+})
+
+type LoginFormData = z.infer<typeof loginSchema>
+
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const supabase = createClient()
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const supabase = createClient()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  })
+
+  const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     setError(null)
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: data.email,
+        password: data.password,
       })
       if (error) throw error
       navigate('/dashboard')
@@ -70,7 +85,7 @@ export default function LoginPage() {
         </CardHeader>
         
         <CardContent className="relative z-10">
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
                 Correo Electrónico
@@ -81,13 +96,14 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   placeholder="tu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
+                  {...register("email")}
                   disabled={isLoading}
                   className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
                 />
               </div>
+              {errors.email && (
+                <p className="text-sm text-red-600">{errors.email.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -95,8 +111,8 @@ export default function LoginPage() {
                 <Label htmlFor="password" className="text-sm font-medium">
                   Contraseña
                 </Label>
-                <Link 
-                  to="/auth/forgot-password" 
+                <Link
+                  to="/auth/forgot-password"
                   className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"
                 >
                   ¿Olvidaste tu contraseña?
@@ -107,13 +123,14 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                  {...register("password")}
                   disabled={isLoading}
                   className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
                 />
               </div>
+              {errors.password && (
+                <p className="text-sm text-red-600">{errors.password.message}</p>
+              )}
             </div>
 
             {error && (
