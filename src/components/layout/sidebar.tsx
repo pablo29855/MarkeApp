@@ -42,6 +42,7 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarVersion, setAvatarVersion] = useState(Date.now())
 
   // Notificar al layout cuando cambia el estado de colapso
   useEffect(() => {
@@ -74,6 +75,23 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
     }
   }, [])
 
+  // Helper para limpiar la URL base (remover parámetros)
+  const getCleanUrl = (url: string) => {
+    if (url.startsWith('blob:')) return url
+    return url.split('?')[0].split('#')[0]
+  }
+
+  // Helper para agregar versión cacheable a la URL del avatar
+  const getAvatarDisplayUrl = (url: string | null) => {
+    if (!url) return null
+    // Si es un blob (preview), devolverlo tal cual
+    if (url.startsWith('blob:')) return url
+    // Limpiar la URL base primero
+    const cleanUrl = getCleanUrl(url)
+    // Agregar versión actual del estado (se actualiza cuando cambia el avatar)
+    return `${cleanUrl}?v=${avatarVersion}`
+  }
+
   // Load current user's avatar from Supabase Auth user_metadata
   useEffect(() => {
     let mounted = true
@@ -84,7 +102,8 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
         const { data } = await supabase.auth.getUser()
         const user = (data as any)?.user
         if (mounted && user) {
-          setAvatarUrl(user.user_metadata?.avatar_url || null)
+          const baseUrl = user.user_metadata?.avatar_url || null
+          setAvatarUrl(baseUrl)
         }
       } catch (err) {
         console.warn('Failed to load user avatar:', err)
@@ -97,22 +116,42 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
     const { data: { subscription } } = createClient().auth.onAuthStateChange((event, session) => {
       if (event === 'USER_UPDATED' || event === 'SIGNED_IN') {
         const user = session?.user
-        setAvatarUrl(user?.user_metadata?.avatar_url || null)
+        const baseUrl = user?.user_metadata?.avatar_url || null
+        console.log('🔄 Auth state changed:', event, 'Avatar URL:', baseUrl)
+        setAvatarUrl(baseUrl)
+        // Forzar nueva versión para actualizar el avatar
+        setAvatarVersion(Date.now())
       }
     })
 
     // Listen for preview events from ProfileDialog to show local preview immediately
     const onPreview = (e: Event) => {
       const detail = (e as CustomEvent)?.detail
-      if (detail && detail.url) setAvatarUrl(detail.url)
+      if (detail && detail.url) {
+        console.log('👁️ Avatar preview:', detail.url)
+        setAvatarUrl(detail.url)
+      }
     }
     window.addEventListener('avatar-preview', onPreview as EventListener)
 
-    const onUploadStart = () => setAvatarUploading(true)
+    const onUploadStart = () => {
+      console.log('⏳ Avatar upload started')
+      setAvatarUploading(true)
+    }
+    
     const onUploadEnd = (e: Event) => {
       const detail = (e as CustomEvent)?.detail
+      console.log('✅ Avatar upload ended:', detail?.url, 'Success:', detail?.success)
       setAvatarUploading(false)
-      if (detail?.url) setAvatarUrl(detail.url)
+      
+      if (detail?.success && detail?.url) {
+        // Limpiar la URL base
+        const cleanUrl = getCleanUrl(detail.url)
+        console.log('🔄 Updating avatar to:', cleanUrl)
+        setAvatarUrl(cleanUrl)
+        // Forzar nueva versión para actualizar el avatar
+        setAvatarVersion(Date.now())
+      }
     }
     window.addEventListener('avatar-upload-start', onUploadStart as EventListener)
     window.addEventListener('avatar-upload-end', onUploadEnd as EventListener)
@@ -215,7 +254,12 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
                     <div className="h-7 w-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 bg-primary/20">
                       {avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={avatarUrl} alt="avatar" className="h-full w-full object-cover" />
+                        <img 
+                          src={getAvatarDisplayUrl(avatarUrl)!} 
+                          alt="avatar" 
+                          className="h-full w-full object-cover" 
+                          loading="lazy"
+                        />
                       ) : (
                         <User className="h-3.5 w-3.5 text-primary" />
                       )}

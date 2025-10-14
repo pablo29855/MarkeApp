@@ -156,6 +156,14 @@ export function ExpenseForm({ categories, userId, onSuccess }: ExpenseFormProps)
     }
   }
 
+  // Obtener ubicación automáticamente cuando se abre el diálogo
+  useEffect(() => {
+    if (open && !location && !isGettingLocation) {
+      getLocation()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -214,7 +222,7 @@ export function ExpenseForm({ categories, userId, onSuccess }: ExpenseFormProps)
           <span className="sm:hidden">Nuevo</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
         <div className="no-ios-zoom">
           <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">Nuevo Gasto</DialogTitle>
@@ -242,6 +250,7 @@ export function ExpenseForm({ categories, userId, onSuccess }: ExpenseFormProps)
               <Input
                 id="amount"
                 type="text"
+                inputMode="numeric"
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: formatAmount(e.target.value) })}
                 placeholder="0"

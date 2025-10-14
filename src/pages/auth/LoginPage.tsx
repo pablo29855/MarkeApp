@@ -6,12 +6,11 @@ import { createClient } from '@/lib/supabase/client'
 import { z } from '@/lib/validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
-import { LogIn, Mail, Lock } from 'lucide-react'
+import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react'
 
 const loginSchema = z.object({
   email: z.string().email("Correo electrónico inválido"),
@@ -21,32 +20,56 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
-  const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const supabase = createClient()
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>({
+  const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      email: '',
+      password: '',
+    },
   })
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
-    setError(null)
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       })
-      if (error) throw error
+      
+      if (error) {
+        // Mostrar error específico en el formulario
+        if (error.message.toLowerCase().includes('invalid login') || 
+            error.message.toLowerCase().includes('invalid credentials')) {
+          form.setError('root', {
+            type: 'manual',
+            message: 'Correo o contraseña incorrectos'
+          })
+        } else if (error.message.toLowerCase().includes('email not confirmed')) {
+          form.setError('root', {
+            type: 'manual',
+            message: 'Por favor verifica tu correo electrónico'
+          })
+        } else {
+          form.setError('root', {
+            type: 'manual',
+            message: error.message
+          })
+        }
+        return
+      }
+      
       navigate('/dashboard')
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'Error al iniciar sesión')
+      form.setError('root', {
+        type: 'manual',
+        message: error instanceof Error ? error.message : 'Error al iniciar sesión'
+      })
     } finally {
       setIsLoading(false)
     }
@@ -85,78 +108,89 @@ export default function LoginPage() {
         </CardHeader>
         
         <CardContent className="relative z-10">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">
-                Correo Electrónico
-              </Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  {...register("email")}
-                  disabled={isLoading}
-                  className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-              {errors.email && (
-                <p className="text-sm text-red-600">{errors.email.message}</p>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              {form.formState.errors.root && (
+                <Alert variant="destructive" className="animate-fade-in">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{form.formState.errors.root.message}</AlertDescription>
+                </Alert>
               )}
-            </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm font-medium">
-                  Contraseña
-                </Label>
-                <Link
-                  to="/auth/forgot-password"
-                  className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"
-                >
-                  ¿Olvidaste tu contraseña?
-                </Link>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                <Input
-                  id="password"
-                  type="password"
-                  {...register("password")}
-                  disabled={isLoading}
-                  className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-              {errors.password && (
-                <p className="text-sm text-red-600">{errors.password.message}</p>
-              )}
-            </div>
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Correo Electrónico</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                        <Input
+                          type="email"
+                          placeholder="tu@email.com"
+                          autoComplete="email"
+                          disabled={isLoading}
+                          className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {error && (
-              <Alert variant="destructive" className="animate-fade-in">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-sm font-medium">Contraseña</FormLabel>
+                      <Link
+                        to="/auth/forgot-password"
+                        className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"
+                      >
+                        ¿Olvidaste tu contraseña?
+                      </Link>
+                    </div>
+                    <FormControl>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                        <Input
+                          type="password"
+                          autoComplete="current-password"
+                          disabled={isLoading}
+                          className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <Button 
-              type="submit" 
-              className="w-full h-11 text-base font-semibold transition-smooth hover:shadow-lg hover:scale-[1.02]" 
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <LoadingSpinner size="sm" />
-                  Iniciando sesión...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <LogIn className="h-5 w-5" />
+              <Button 
+                type="submit" 
+                className="w-full h-11 text-base font-semibold transition-smooth hover:shadow-lg hover:scale-[1.02]" 
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Iniciando sesión...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <LogIn className="h-5 w-5" />
                   Iniciar Sesión
                 </span>
               )}
             </Button>
           </form>
+          </Form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">

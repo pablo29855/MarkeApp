@@ -72,73 +72,73 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
     <>
       <div className="grid grid-cols-2 gap-4">
         {expenses.map((expense) => (
-          <Card key={expense.id} className="overflow-hidden">
-            <CardContent className="p-3 sm:p-4 lg:p-6">
-              {/* Layout móvil y desktop */}
-              <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
-                {/* Contenido principal */}
+          <Card key={expense.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 h-full">
+            <CardContent className="p-3 sm:p-4 lg:p-5 h-full flex flex-col">
+              {/* Header con título, categoría y botones */}
+              <div className="flex items-start justify-between gap-2 mb-3">
                 <div className="flex-1 min-w-0">
-                  {/* Título y categoría */}
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <h3 className="font-semibold text-lg sm:text-xl lg:text-2xl truncate">{expense.name}</h3>
-                    {expense.category && (
-                      <Badge 
-                        variant="secondary" 
-                        className="text-xs sm:text-sm shrink-0"
-                        style={{ backgroundColor: expense.category.color + "20" }}
-                      >
-                        <span className="hidden sm:inline">{expense.category.icon} </span>
-                        {expense.category.name}
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Información adicional - Compacta en móvil */}
-                  <div className="space-y-0.5 sm:space-y-1 text-sm sm:text-base text-muted-foreground">
-                    <p className="truncate">
-                      {format(new Date(expense.purchase_date), "PPP", {
-                        locale: es,
-                      })}
-                    </p>
-                    {expense.location && (
-                      <p className="flex items-center gap-1 truncate">
-                        <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                        <span className="truncate">{expense.location}</span>
-                      </p>
-                    )}
-                    {expense.notes && (
-                      <p className="flex items-center gap-1 truncate">
-                        <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                        <span className="truncate">{expense.notes}</span>
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Monto y acciones */}
-                <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3">
-                  <div className="text-left sm:text-right">
-                    <p className="text-2xl sm:text-3xl lg:text-4xl font-bold">{formatCurrency(Number(expense.amount))}</p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => setDeleteId(expense.id)}
+                  <h3 className="font-semibold text-base sm:text-lg lg:text-xl leading-tight line-clamp-2 mb-2">
+                    {expense.name}
+                  </h3>
+                  {expense.category && (
+                    <Badge 
+                      variant="secondary" 
+                      className="text-xs sm:text-sm inline-flex items-center"
+                      style={{ backgroundColor: expense.category.color + "20" }}
                     >
-                      <Trash2 className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                      onClick={() => setEditExpense(expense)}
-                    >
-                      <Pencil className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-                    </Button>
-                  </div>
+                      <span className="hidden sm:inline mr-1">{expense.category.icon}</span>
+                      <span className="truncate">{expense.category.name}</span>
+                    </Badge>
+                  )}
                 </div>
+                
+                {/* Botones de acción en el header */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => setDeleteId(expense.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                    onClick={() => setEditExpense(expense)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Información adicional */}
+              <div className="space-y-1 text-xs sm:text-sm text-muted-foreground mb-3 flex-1">
+                <p className="truncate">
+                  {format(new Date(expense.purchase_date), "PPP", {
+                    locale: es,
+                  })}
+                </p>
+                {expense.location && (
+                  <p className="flex items-center gap-1 truncate">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{expense.location}</span>
+                  </p>
+                )}
+                {expense.notes && (
+                  <p className="flex items-center gap-1 truncate">
+                    <FileText className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{expense.notes}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Monto al final del card */}
+              <div className="mt-auto pt-3 border-t">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold break-all">
+                  {formatCurrency(Number(expense.amount))}
+                </p>
               </div>
             </CardContent>
           </Card>

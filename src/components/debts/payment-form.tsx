@@ -128,7 +128,7 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
           </Button>
         </DialogTrigger>
       </div>
-      <DialogContent className="max-w-md w-[calc(100%-2rem)] sm:w-full">
+      <DialogContent className="max-w-md w-[calc(100%-2rem)] sm:w-full" onOpenAutoFocus={(e) => e.preventDefault()}>
         <div className="no-ios-zoom">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl">Abonar a Deuda</DialogTitle>
@@ -147,6 +147,7 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
             <Input
               id="amount"
               type="text"
+              inputMode="numeric"
               value={formData.amount}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, amount: formatAmount(e.target.value) })}
               placeholder="0"

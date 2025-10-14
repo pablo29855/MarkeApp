@@ -111,7 +111,7 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
           <span className="xs:hidden">Nueva</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md w-[calc(100%-2rem)] sm:w-full">
+      <DialogContent className="max-w-md w-[calc(100%-2rem)] sm:w-full" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">Nueva Deuda</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
@@ -138,6 +138,7 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
               <Input
                 id="total_amount"
                 type="text"
+                inputMode="numeric"
                 value={formData.total_amount}
                 onChange={(e) => setFormData({ ...formData, total_amount: formatAmount(e.target.value) })}
                 placeholder="0"

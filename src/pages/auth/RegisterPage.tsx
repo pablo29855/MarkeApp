@@ -6,11 +6,10 @@ import { createClient } from '@/lib/supabase/client'
 import { z } from '@/lib/validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { UserPlus, Mail, Lock, CheckCircle2 } from 'lucide-react'
+import { UserPlus, Mail, Lock, CheckCircle2, AlertCircle } from 'lucide-react'
 
 const registerSchema = z.object({
   email: z.string().email("Correo electrónico inválido"),
@@ -26,23 +25,23 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>
 
 export default function RegisterPage() {
-  const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const supabase = createClient()
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterFormData>({
+  const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
   })
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true)
-    setError(null)
     setSuccess(false)
 
     try {
@@ -54,14 +53,37 @@ export default function RegisterPage() {
         },
       })
 
-      if (error) throw error
+      if (error) {
+        // Mostrar error específico en el formulario
+        if (error.message.toLowerCase().includes('already registered') || 
+            error.message.toLowerCase().includes('already exists')) {
+          form.setError('email', {
+            type: 'manual',
+            message: 'Este correo ya está registrado'
+          })
+        } else if (error.message.toLowerCase().includes('password')) {
+          form.setError('password', {
+            type: 'manual',
+            message: error.message
+          })
+        } else {
+          form.setError('root', {
+            type: 'manual',
+            message: error.message
+          })
+        }
+        return
+      }
 
       setSuccess(true)
       setTimeout(() => {
         navigate('/dashboard')
       }, 2000)
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'Error al registrar usuario')
+      form.setError('root', {
+        type: 'manual',
+        message: error instanceof Error ? error.message : 'Error al registrar usuario'
+      })
     } finally {
       setIsLoading(false)
     }
@@ -91,105 +113,123 @@ export default function RegisterPage() {
         </CardHeader>
         
         <CardContent className="relative z-10">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">
-                Correo Electrónico
-              </Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  {...register("email")}
-                  disabled={isLoading}
-                  className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-              {errors.email && (
-                <p className="text-sm text-red-600">{errors.email.message}</p>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              {form.formState.errors.root && (
+                <Alert variant="destructive" className="animate-fade-in">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{form.formState.errors.root.message}</AlertDescription>
+                </Alert>
               )}
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium">
-                Contraseña
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Mínimo 6 caracteres"
-                  {...register("password")}
-                  disabled={isLoading}
-                  className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-              {errors.password && (
-                <p className="text-sm text-red-600">{errors.password.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                Confirmar Contraseña
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="Repite tu contraseña"
-                  {...register("confirmPassword")}
-                  disabled={isLoading}
-                  className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-              {errors.confirmPassword && (
-                <p className="text-sm text-red-600">{errors.confirmPassword.message}</p>
-              )}
-            </div>
-
-            {error && (
-              <Alert variant="destructive" className="animate-fade-in">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            {success && (
-              <Alert className="bg-green-50 dark:bg-green-950/20 text-green-900 dark:text-green-400 border-green-200 dark:border-green-900 animate-fade-in">
-                <CheckCircle2 className="h-5 w-5" />
-                <AlertDescription className="ml-2">
-                  ¡Cuenta creada exitosamente! Redirigiendo...
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <Button 
-              type="submit" 
-              className="w-full h-11 text-base font-semibold transition-smooth hover:shadow-lg hover:scale-[1.02]" 
-              disabled={isLoading || success}
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <LoadingSpinner size="sm" />
-                  Creando cuenta...
-                </span>
-              ) : success ? (
-                <span className="flex items-center gap-2">
+              {success && (
+                <Alert className="bg-green-50 dark:bg-green-950/20 text-green-900 dark:text-green-400 border-green-200 dark:border-green-900 animate-fade-in">
                   <CheckCircle2 className="h-5 w-5" />
-                  Cuenta creada
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <UserPlus className="h-5 w-5" />
-                  Crear Cuenta
+                  <AlertDescription className="ml-2">
+                    ¡Cuenta creada exitosamente! Redirigiendo...
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Correo Electrónico</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                        <Input
+                          type="email"
+                          placeholder="tu@email.com"
+                          autoComplete="email"
+                          disabled={isLoading || success}
+                          className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Contraseña</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                        <Input
+                          type="password"
+                          placeholder="Mínimo 6 caracteres"
+                          autoComplete="new-password"
+                          disabled={isLoading || success}
+                          className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormDescription className="text-xs">
+                      Debe contener mayúscula, minúscula y número
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Confirmar Contraseña</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                        <Input
+                          type="password"
+                          placeholder="Repite tu contraseña"
+                          autoComplete="new-password"
+                          disabled={isLoading || success}
+                          className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button 
+                type="submit" 
+                className="w-full h-11 text-base font-semibold transition-smooth hover:shadow-lg hover:scale-[1.02]" 
+                disabled={isLoading || success}
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Creando cuenta...
+                  </span>
+                ) : success ? (
+                  <span className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5" />
+                    Cuenta creada
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <UserPlus className="h-5 w-5" />
+                    Crear Cuenta
                 </span>
               )}
             </Button>
           </form>
+          </Form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">

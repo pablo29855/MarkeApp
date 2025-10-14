@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeProvider } from '@/components/theme-provider'
-import { Toaster } from '@/components/ui/sonner'
+import { Toaster } from '@/components/ui/toaster'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 
