@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/client'
 import { IncomeFormWrapper } from '@/components/incomes/income-form-wrapper'
 import { IncomeList } from '@/components/incomes/income-list'
 import { SkeletonIncome } from '@/components/ui/skeleton-income'
+import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -174,6 +175,10 @@ export default function IncomesPage() {
 
   const currentYear = new Date().getFullYear()
   const years = Array.from({ length: 5 }, (_, i) => (currentYear - i).toString())
+
+  if (loading) {
+    return <LoadingCheckOverlay message="Cargando ingresos..." />
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6" style={{ position: 'relative', isolation: 'isolate' }}>
