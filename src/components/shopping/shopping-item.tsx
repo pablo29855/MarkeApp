@@ -1,11 +1,12 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import {
   AlertDialog,
@@ -18,7 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Trash2, MapPin, ShoppingBag, Pencil } from "lucide-react"
+import { Trash2, MapPin, ShoppingBag, Pencil, Loader2 } from "lucide-react"
 import type { ShoppingItem, Category } from "@/lib/types"
 import { formatCurrency } from "@/lib/utils"
 import { ShoppingForm } from "./shopping-form"
@@ -42,7 +43,68 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories,
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [locationName, setLocationName] = useState<string>("")
   const [isGettingLocation, setIsGettingLocation] = useState(false)
+  const [isGeocoding, setIsGeocoding] = useState(false)
   const { showSuccess, showError, showDeleted } = useNotification()
+
+  // Obtener ubicación automáticamente cuando se abre el diálogo de compra
+  useEffect(() => {
+    if (showPriceDialog && !location && !isGettingLocation) {
+      getLocation()
+    }
+  }, [showPriceDialog])
+
+  // Geocode en tiempo real cuando el usuario escribe en el input de ubicación
+  // Debounce básico: 500ms y cache en localStorage
+  useEffect(() => {
+    const query = locationName?.trim()
+    if (!query) {
+      setLocation(null)
+      return
+    }
+
+    let aborted = false
+    const timer = setTimeout(async () => {
+      setIsGeocoding(true)
+      try {
+        const cacheKey = `geocode_cache:${query.toLowerCase()}`
+        try {
+          const cached = typeof window !== 'undefined' ? localStorage.getItem(cacheKey) : null
+          if (cached) {
+            const parsed = JSON.parse(cached)
+            if (!aborted) {
+              setLocation(parsed)
+              setIsGeocoding(false)
+              return
+            }
+          }
+        } catch {}
+
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
+        )
+        const data = await res.json()
+        if (aborted) return
+        if (data && data.length > 0) {
+          const first = data[0]
+          const coords = { lat: parseFloat(first.lat), lng: parseFloat(first.lon) }
+          setLocation(coords)
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify(coords))
+          } catch {}
+        }
+      } catch (err) {
+        console.error("Error geocoding query:", err)
+      } finally {
+        if (!aborted) setIsGeocoding(false)
+      }
+    }, 500)
+
+    return () => {
+      aborted = true
+      clearTimeout(timer)
+      setIsGeocoding(false)
+    }
+  }, [locationName])
 
   // Función para formatear números con puntos de mil
   const formatNumber = (value: string) => {
@@ -57,11 +119,14 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories,
 
   const handlePurchaseClick = () => {
     setQuantity(formatNumber(item.quantity.toString()))
+    setError(null) // Limpiar errores previos
     setShowPriceDialog(true)
+    // La ubicación se obtiene automáticamente por el useEffect
   }
 
   const getLocation = () => {
     setIsGettingLocation(true)
+    setError(null) // Limpiar error antes de intentar
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -83,7 +148,8 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories,
         },
         (error) => {
           console.error("Error getting location:", error)
-          setError("No se pudo obtener la ubicación. Verifica los permisos.")
+          // No mostrar error si el usuario rechazó los permisos (es opcional)
+          // Solo loguear en consola
           setIsGettingLocation(false)
         },
       )
@@ -165,40 +231,71 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories,
     setShowDeleteDialog(true)
   }
 
+  const getCategoryInfo = () => {
+    if (!item.category) return null
+    const category = categories.find(c => c.id === item.category)
+    return category
+  }
+
+  const categoryInfo = getCategoryInfo()
+
   return (
     <>
-      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
-        <div className="p-3 sm:p-4 lg:p-5 bg-card">
+      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group h-full">
+        <div className="p-3 sm:p-4 lg:p-5 bg-card h-full flex flex-col">
+          {/* Header con título y botones */}
           <div className="flex items-start justify-between gap-2 mb-3">
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-base sm:text-xl lg:text-2xl leading-tight mb-2 line-clamp-2">
+              <h3 className="font-bold text-base sm:text-lg lg:text-xl leading-tight mb-2 line-clamp-2">
                 {item.product_name}
               </h3>
-              <span className="inline-flex items-center px-2 py-1 sm:px-2.5 sm:py-1 bg-primary/10 text-primary rounded text-xs sm:text-sm font-semibold">
-                Cantidad: {item.quantity.toLocaleString('es-CO')}
-              </span>
+              {categoryInfo && (
+                <Badge 
+                  variant="secondary"
+                  className="inline-flex items-center text-xs sm:text-sm"
+                  style={{ backgroundColor: categoryInfo.color + "20", color: categoryInfo.color }}
+                >
+                  <span className="mr-1">{categoryInfo.icon}</span>
+                  <span className="truncate">{categoryInfo.name}</span>
+                </Badge>
+              )}
             </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={confirmDelete} 
-              className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-primary hover:bg-primary/10"
-              onClick={() => setShowEditDialog(true)}
-            >
-              <Pencil className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-            </Button>
+            
+            {/* Botones de acción */}
+            <div className="flex items-center gap-1 shrink-0">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={confirmDelete} 
+                className="h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                onClick={() => setShowEditDialog(true)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           
+          {/* Información de cantidad */}
+          <div className="flex-1 mb-3">
+            <div className="inline-flex items-center px-3 py-2 bg-muted rounded-lg">
+              <span className="text-xs sm:text-sm text-muted-foreground mr-2">Cantidad:</span>
+              <span className="text-lg sm:text-xl lg:text-2xl font-bold text-primary">
+                {item.quantity.toLocaleString('es-CO')}
+              </span>
+            </div>
+          </div>
+          
+          {/* Botón de comprado al final */}
           <Button 
             onClick={handlePurchaseClick}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm sm:text-base h-9 sm:h-10"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm sm:text-base h-10 sm:h-11 mt-auto"
             size="sm"
           >
             <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
@@ -207,11 +304,20 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories,
         </div>
       </Card>
 
-      <Dialog open={showPriceDialog} onOpenChange={setShowPriceDialog}>
-        <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <Dialog open={showPriceDialog} onOpenChange={(open) => {
+        setShowPriceDialog(open)
+        if (!open) {
+          // Limpiar estados cuando se cierra el diálogo
+          setError(null)
+          setUnitPrice("")
+          setLocation(null)
+          setLocationName("")
+        }
+      }}>
+        <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
           <div className="no-ios-zoom">
             <DialogHeader>
-              <DialogTitle className="text-lg sm:text-xl">Marcar como Comprado</DialogTitle>
+              <DialogTitle className="text-lg sm:text-xl">Comprado</DialogTitle>
               <DialogDescription className="text-xs sm:text-sm">
                 Ingresa el precio unitario para registrar esta compra
               </DialogDescription>
@@ -227,6 +333,7 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories,
               <Input
                 id="quantity"
                 type="text"
+                inputMode="numeric"
                 value={quantity}
                 onChange={(e) => setQuantity(formatNumber(e.target.value))}
                 placeholder="0"
@@ -244,31 +351,33 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories,
               <Input
                 id="unitPrice"
                 type="text"
+                inputMode="numeric"
                 value={unitPrice}
                 onChange={(e) => setUnitPrice(formatNumber(e.target.value))}
                 placeholder="0"
                 required
                 disabled={isLoading}
-                autoFocus
                 className="text-sm sm:text-base h-9 sm:h-10"
               />
             </div>
 
             <div className="space-y-1.5 sm:space-y-2">
               <Label className="text-xs sm:text-sm">Ubicación del Supermercado</Label>
-              {/* Input manual para ingresar/editar la ubicación */}
-              <Input
-                id="purchase_location"
-                value={locationName}
-                onChange={(e) => {
-                  setLocationName(e.target.value)
-                  // Si el usuario edita manualmente, limpiamos la lat/lng para no mostrar el mapa
-                  setLocation(null)
-                }}
-                placeholder="Ej: Supermercado XYZ"
-                disabled={isLoading}
-                className="text-sm sm:text-base h-9 sm:h-10"
-              />
+              <div className="relative">
+                <Input
+                  id="purchase_location"
+                  value={locationName}
+                  onChange={(e) => {
+                    setLocationName(e.target.value)
+                  }}
+                  placeholder="Ej: Supermercado XYZ, Calle 123"
+                  disabled={isLoading}
+                  className="text-sm sm:text-base h-9 sm:h-10 pr-10"
+                />
+                {isGeocoding && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+              </div>
 
               <div className="mt-2">
                 {!location ? (
@@ -284,10 +393,6 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories,
                   </Button>
                 ) : (
                   <div className="space-y-2">
-                    <div className="p-3 bg-muted rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Ubicación guardada:</p>
-                      <p className="text-sm font-medium truncate">{locationName}</p>
-                    </div>
                     {/* Mapa simple con OpenStreetMap */}
                     <div className="relative w-full h-48 rounded-lg overflow-hidden border">
                       <iframe

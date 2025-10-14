@@ -136,6 +136,36 @@ html, body {
   line-height: 1.2 !important;
 }
 
+/* Prevenir el desplazamiento/zoom al hacer focus en inputs en iOS */
+.no-ios-zoom input:focus,
+.no-ios-zoom textarea:focus,
+.no-ios-zoom select:focus {
+  /* Evitar que el teclado empuje el contenido fuera de la vista */
+  position: relative;
+  z-index: auto;
+}
+
+/* Asegurar que los diálogos no se muevan en iOS */
+[data-slot="dialog-content"] {
+  position: fixed !important;
+  /* Mantener la posición centrada incluso cuando aparece el teclado */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevenir que el viewport se ajuste cuando aparece el teclado en iOS */
+@supports (-webkit-touch-callout: none) {
+  /* Solo en iOS/Safari */
+  [data-slot="dialog-content"] {
+    /* Asegurar que el diálogo permanezca visible y no se desplace */
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+}
+
 /* Eliminamos la regla global :focus que podía forzar transform/none y afectar animaciones/estilos */
 
 
