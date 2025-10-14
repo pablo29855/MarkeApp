@@ -9,8 +9,10 @@ import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
-import { Camera, Lock } from "lucide-react"
+import { Camera, Lock, AlertCircle, User, Phone, CheckCircle2 } from "lucide-react"
 import Cropper from 'react-easy-crop'
 import { Area } from 'react-easy-crop/types'
 import { format } from "date-fns"
@@ -18,7 +20,10 @@ import { es } from "date-fns/locale"
 
 const passwordSchema = z.object({
   currentPassword: z.string().min(1, "La contraseña actual es requerida"),
-  newPassword: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+  newPassword: z.string()
+    .min(6, "La contraseña debe tener al menos 6 caracteres")
+    .regex(/[A-Za-z]/, "Debe contener al menos una letra")
+    .regex(/[0-9]/, "Debe contener al menos un número"),
   confirmPassword: z.string().min(1, "La confirmación es requerida"),
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: "Las contraseñas no coinciden",
@@ -26,6 +31,13 @@ const passwordSchema = z.object({
 })
 
 type PasswordFormData = z.infer<typeof passwordSchema>
+
+const profileSchema = z.object({
+  full_name: z.string().min(2, "El nombre debe tener al menos 2 caracteres").optional().or(z.literal("")),
+  phone: z.string().regex(/^[0-9+\-\s()]*$/, "Teléfono inválido").optional().or(z.literal("")),
+})
+
+type ProfileFormData = z.infer<typeof profileSchema>
 
 interface Profile {
   id: string
@@ -59,9 +71,16 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
   const { toast } = useToast()
   const supabase = useMemo(() => createClient(), [])
 
+  // Form para el perfil
+  const profileForm = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    mode: 'onBlur',
+  })
+
+  // Form para contraseña
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
-    mode: 'onChange', // Validar mientras el usuario escribe para feedback inmediato
+    mode: 'onChange',
     defaultValues: {
       currentPassword: "",
       newPassword: "",
@@ -69,7 +88,18 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
     },
   })
 
-  const { register, handleSubmit, formState: { errors, isValid, isSubmitting }, reset } = passwordForm
+  const { 
+    handleSubmit: handlePasswordSubmit, 
+    formState: { errors: passwordErrors, isSubmitting: isPasswordSubmitting }, 
+    reset: resetPassword,
+    setError: setPasswordError
+  } = passwordForm
+
+  const {
+    handleSubmit: handleProfileSubmit,
+    formState: { isSubmitting: isProfileSubmitting },
+    setValue: setProfileValue
+  } = profileForm
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "No disponible"
@@ -85,17 +115,16 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
       fetchProfile()
     } else {
       // Reset password form when modal closes
-      reset()
+      resetPassword()
     }
-  }, [isOpen, reset])
+  }, [isOpen, resetPassword])
 
   const fetchProfile = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        // Try to read from application's profiles table first
         // Use only Supabase Auth user metadata for profile fields
-        setProfile({
+        const profileData = {
           id: user.id,
           full_name: user.user_metadata?.full_name || null,
           phone: user.phone || user.user_metadata?.phone || null,
@@ -103,7 +132,13 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
           avatar_url: user.user_metadata?.avatar_url || null,
           created_at: user.created_at || null,
           last_sign_in_at: user.last_sign_in_at || null
-        })
+        }
+        
+        setProfile(profileData)
+        
+        // Actualizar valores del formulario de perfil
+        setProfileValue('full_name', profileData.full_name || '')
+        setProfileValue('phone', profileData.phone || '')
       }
     } catch (error) {
       console.error('Error fetching profile:', error)
@@ -141,6 +176,43 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
     if (url.includes('?v=') || url.includes('&v=')) return url
     // Usar caché para evitar generar nuevos timestamps constantemente
     return avatarTimestampCache.get(url)
+  }
+
+  // Handler para el formulario de perfil con React Hook Form
+  const handleProfileUpdate = async (data: ProfileFormData) => {
+    if (!profile) return
+
+    try {
+      const updateData: any = { data: {} }
+
+      if (data.full_name && data.full_name.trim() !== '') {
+        updateData.data.full_name = data.full_name.trim()
+      }
+      
+      if (data.phone && data.phone.trim() !== '') {
+        updateData.data.phone = data.phone.trim()
+      }
+
+      if (Object.keys(updateData.data).length > 0) {
+        const { error } = await supabase.auth.updateUser(updateData)
+
+        if (error) throw error
+
+        setProfile({ ...profile, ...updateData.data })
+        await fetchProfile()
+        
+        toast({
+          title: "¡Perfil actualizado!",
+          description: "Tu información se guardó correctamente",
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error al actualizar",
+        description: error?.message || "No se pudo actualizar el perfil",
+        variant: "destructive",
+      })
+    }
   }
 
   const updateProfile = async (updates: Partial<Profile>, skipClose = false) => {
@@ -638,11 +710,32 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
   }
 
   const changePassword = async (data: PasswordFormData) => {
-    console.log('changePassword called with data:', data)
-    console.log('Form errors:', errors)
-    console.log('Form isValid:', isValid)
-
     try {
+      // Primero verificar la contraseña actual intentando hacer re-autenticación
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user?.email) {
+        setPasswordError('root', {
+          type: 'manual',
+          message: 'No se pudo verificar tu identidad. Por favor inicia sesión nuevamente.'
+        })
+        return
+      }
+
+      // Intentar re-autenticar con la contraseña actual
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: data.currentPassword,
+      })
+
+      if (signInError) {
+        setPasswordError('currentPassword', {
+          type: 'manual',
+          message: 'La contraseña actual es incorrecta'
+        })
+        return
+      }
+
       // Update password and metadata
       const { error } = await supabase.auth.updateUser({
         password: data.newPassword,
@@ -653,29 +746,39 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
       })
 
       if (error) {
-        console.error('Supabase error:', error)
-        toast({
-          title: "Error",
-          description: error.message || "No se pudo cambiar la contraseña",
-          variant: "destructive",
+        // Mensajes más específicos según el tipo de error
+        let errorMessage = "No se pudo cambiar la contraseña"
+        let errorField: 'newPassword' | 'root' = 'newPassword'
+        
+        if (error.message.toLowerCase().includes('weak')) {
+          errorMessage = "La contraseña es muy débil. Usa una combinación de letras, números y símbolos."
+        } else if (error.message.toLowerCase().includes('same')) {
+          errorMessage = "La nueva contraseña no puede ser igual a la actual."
+        } else if (error.message.toLowerCase().includes('network')) {
+          errorMessage = "Error de conexión. Verifica tu internet e intenta nuevamente."
+          errorField = 'root'
+        } else if (error.message) {
+          errorMessage = error.message
+          errorField = 'root'
+        }
+        
+        setPasswordError(errorField, {
+          type: 'manual',
+          message: errorMessage
         })
         return
       }
-
-      console.log('Password changed successfully')
-      // Limpiar formulario
-      reset()
-
+      
+      // Limpiar formulario y mostrar éxito
+      resetPassword()
       toast({
-        title: "Éxito",
-        description: "Contraseña cambiada correctamente",
+        title: "¡Contraseña actualizada!",
+        description: "Tu contraseña se ha cambiado correctamente.",
       })
-    } catch (error) {
-      console.error('Exception in changePassword:', error)
-      toast({
-        title: "Error",
-        description: "No se pudo cambiar la contraseña. Verifica tu conexión.",
-        variant: "destructive",
+    } catch (error: any) {
+      setPasswordError('root', {
+        type: 'manual',
+        message: error?.message || "Ocurrió un error inesperado. Por favor intenta nuevamente."
       })
     }
   }
@@ -763,48 +866,90 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Correo electrónico</Label>
-              <Input
-                id="email"
-                value={profile?.email || ""}
-                disabled
-                className="bg-muted"
-              />
-            </div>
+            <Form {...profileForm}>
+              <form onSubmit={handleProfileSubmit(handleProfileUpdate)} className="space-y-4">
+                <FormItem>
+                  <FormLabel>Correo electrónico</FormLabel>
+                  <FormControl>
+                    <Input
+                      value={profile?.email || ""}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs">
+                    El correo no se puede cambiar desde aquí
+                  </FormDescription>
+                </FormItem>
 
-            <div className="space-y-2">
-              <Label htmlFor="full_name">Nombre completo</Label>
-              <Input
-                id="full_name"
-                value={profile?.full_name || ""}
-                onChange={(e) => setProfile(prev => prev ? { ...prev, full_name: e.target.value } : null)}
-                placeholder="Ingresa tu nombre completo"
-              />
-            </div>
+                <FormField
+                  control={profileForm.control}
+                  name="full_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre completo</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Ingresa tu nombre completo"
+                            className="pl-9"
+                            {...field}
+                            value={field.value || ''}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="space-y-2">
-              <Label htmlFor="phone">Teléfono</Label>
-              <Input
-                id="phone"
-                type="tel"
-                inputMode="tel"
-                value={profile?.phone || ""}
-                onChange={(e) => setProfile(prev => prev ? { ...prev, phone: e.target.value } : null)}
-                placeholder="Ingresa tu número de teléfono"
-              />
-              <p className="text-xs text-muted-foreground">
-                Se guardará en metadatos. Para verificación completa, configura SMS Provider.
-              </p>
-            </div>
+                <FormField
+                  control={profileForm.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Teléfono</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            type="tel"
+                            inputMode="tel"
+                            placeholder="+52 123 456 7890"
+                            className="pl-9"
+                            {...field}
+                            value={field.value || ''}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormDescription className="text-xs">
+                        Opcional. Se guardará en tu perfil
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <Button
-              onClick={() => updateProfile({ full_name: profile?.full_name || null, phone: profile?.phone || null, avatar_url: profile?.avatar_url || null })}
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? "Guardando..." : "Guardar Cambios"}
-            </Button>
+                <Button
+                  type="submit"
+                  disabled={isProfileSubmitting}
+                  className="w-full"
+                >
+                  {isProfileSubmitting ? (
+                    <>
+                      <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Guardar Cambios
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Form>
           </TabsContent>
 
           {/* Cropper dialog */}
@@ -1018,57 +1163,94 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
           </TabsContent>
 
           <TabsContent value="password" className="space-y-4">
-            <form onSubmit={handleSubmit(changePassword)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="current_password">Contraseña actual</Label>
-                <Input
-                  id="current_password"
-                  type="password"
-                  {...register("currentPassword")}
-                  placeholder="Ingresa tu contraseña actual"
-                />
-                {errors.currentPassword && (
-                  <p className="text-sm text-red-600">{errors.currentPassword.message}</p>
+            <Form {...passwordForm}>
+              <form onSubmit={handlePasswordSubmit(changePassword)} className="space-y-4">
+                {passwordErrors.root && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{passwordErrors.root.message}</AlertDescription>
+                  </Alert>
                 )}
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="new_password">Nueva contraseña</Label>
-                <Input
-                  id="new_password"
-                  type="password"
-                  {...register("newPassword")}
-                  placeholder="Ingresa nueva contraseña (mínimo 6 caracteres)"
+                <FormField
+                  control={passwordForm.control}
+                  name="currentPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contraseña actual</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="Ingresa tu contraseña actual"
+                          autoComplete="current-password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                
-                {errors.newPassword && (
-                  <p className="text-sm text-red-600">{errors.newPassword.message}</p>
-                )}
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirm_password">Confirmar contraseña</Label>
-                <Input
-                  id="confirm_password"
-                  type="password"
-                  {...register("confirmPassword")}
-                  placeholder="Confirma nueva contraseña"
+                <FormField
+                  control={passwordForm.control}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nueva contraseña</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="Mínimo 6 caracteres, incluye letras y números"
+                          autoComplete="new-password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription className="text-xs">
+                        Debe contener al menos una letra y un número
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                
-                {errors.confirmPassword && (
-                  <p className="text-sm text-red-600">{errors.confirmPassword.message}</p>
-                )}
-              </div>
 
-              <Button
-                type="submit"
-                disabled={isSubmitting || !isValid}
-                className="w-full"
-              >
-                <Lock className="h-4 w-4 mr-2" />
-                {isSubmitting ? "Cambiando..." : "Cambiar Contraseña"}
-              </Button>
-            </form>
+                <FormField
+                  control={passwordForm.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirmar contraseña</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="Repite tu nueva contraseña"
+                          autoComplete="new-password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  disabled={isPasswordSubmitting}
+                  className="w-full"
+                >
+                  {isPasswordSubmitting ? (
+                    <>
+                      <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      Cambiando contraseña...
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-4 w-4 mr-2" />
+                      Cambiar Contraseña
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Form>
           </TabsContent>
         </Tabs>
         </div>
