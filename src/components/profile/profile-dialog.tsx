@@ -52,8 +52,10 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
   const [rawFile, setRawFile] = useState<File | null>(null)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
-  const [croppedArea, setCroppedArea] = useState<Area | null>(null)
+  const [rotation, setRotation] = useState(0)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
   const [croppedPreviewUrl, setCroppedPreviewUrl] = useState<string | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
   const { toast } = useToast()
   const supabase = useMemo(() => createClient(), [])
 
@@ -113,7 +115,35 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
     }
   }
 
-  const updateProfile = async (updates: Partial<Profile>) => {
+  // Cache para evitar generar timestamps constantemente
+  const avatarTimestampCache = useMemo(() => {
+    const cache: { [key: string]: string } = {}
+    return {
+      get: (url: string) => {
+        if (!cache[url]) {
+          // Generar timestamp solo una vez por URL
+          cache[url] = `${url}${url.includes('?') ? '&' : '?'}v=${Date.now()}`
+        }
+        return cache[url]
+      },
+      clear: () => {
+        Object.keys(cache).forEach(key => delete cache[key])
+      }
+    }
+  }, [])
+
+  // Helper function para agregar timestamp a la URL del avatar (evita caché)
+  const getAvatarUrlWithTimestamp = (url: string | null | undefined) => {
+    if (!url) return undefined
+    // Si la URL ya tiene un timestamp de preview (blob:), no modificarla
+    if (url.startsWith('blob:')) return url
+    // Si ya tiene un parámetro de versión, no agregar otro
+    if (url.includes('?v=') || url.includes('&v=')) return url
+    // Usar caché para evitar generar nuevos timestamps constantemente
+    return avatarTimestampCache.get(url)
+  }
+
+  const updateProfile = async (updates: Partial<Profile>, skipClose = false) => {
     if (!profile || loading) return
 
     setLoading(true)
@@ -125,7 +155,13 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
         updateData.data.full_name = updates.full_name
       }
       if (updates.avatar_url !== undefined && updates.avatar_url !== null) {
-        updateData.data.avatar_url = updates.avatar_url
+        // Limpiar cualquier timestamp que pueda tener la URL antes de guardar
+        let cleanUrl = updates.avatar_url
+        if (!cleanUrl.startsWith('blob:')) {
+          // Remover parámetros de timestamp (t=...) de la URL
+          cleanUrl = cleanUrl.split('?')[0]
+        }
+        updateData.data.avatar_url = cleanUrl
       }
 
       // Always save phone in metadata, regardless of auth field update
@@ -142,6 +178,7 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
 
       // If there are any updates, send them to Supabase Auth (metadata) first
       if (Object.keys(updateData.data).length > 0 || updateData.phone) {
+        console.log('🔄 Actualizando usuario con:', updateData)
         const { error } = await supabase.auth.updateUser(updateData)
 
         if (error) {
@@ -162,10 +199,14 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
             throw error
           }
         } else {
-          toast({
-            title: "Éxito",
-            description: "Perfil actualizado correctamente",
-          })
+          console.log('✅ Usuario actualizado exitosamente')
+          // Solo mostrar toast de éxito si no es solo avatar
+          if (!updates.avatar_url || Object.keys(updates).length > 1) {
+            toast({
+              title: "Éxito",
+              description: "Perfil actualizado correctamente",
+            })
+          }
         }
       }
 
@@ -177,8 +218,10 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
       // Refresh profile data to get updated information from server
       await fetchProfile()
 
-      // Close modal after successful update
-      setIsOpen(false)
+      // Close modal after successful update (unless skipClose is true, like when uploading avatar)
+      if (!skipClose) {
+        setIsOpen(false)
+      }
     } catch (error) {
       console.error('Error updating profile:', error)
       toast({
@@ -195,45 +238,122 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
     const file = event.target.files?.[0]
     if (!file || !profile) return
 
+    // Validar tipo de archivo
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Archivo inválido",
+        description: "Por favor selecciona una imagen válida",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validar tamaño (máximo 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "Archivo muy grande",
+        description: "La imagen no debe superar los 10MB",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Resetear estados del cropper
+    setCrop({ x: 0, y: 0 })
+    setZoom(1)
+    setRotation(0)
+    setCroppedAreaPixels(null)
+
     // Open crop UI with the selected file
     setRawFile(file)
     setIsCropOpen(true)
-    return
+    
+    // Resetear el input para permitir seleccionar el mismo archivo
+    event.target.value = ''
+  }
+
+  // Manejar drag and drop
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+
+    const file = e.dataTransfer.files?.[0]
+    if (!file || !profile) return
+
+    // Validar tipo de archivo
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Archivo inválido",
+        description: "Por favor selecciona una imagen válida",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validar tamaño (máximo 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "Archivo muy grande",
+        description: "La imagen no debe superar los 10MB",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Resetear estados del cropper
+    setCrop({ x: 0, y: 0 })
+    setZoom(1)
+    setRotation(0)
+    setCroppedAreaPixels(null)
+
+    setRawFile(file)
+    setIsCropOpen(true)
   }
 
   // When crop is confirmed, this function will be called with the cropped blob
   const handleCroppedUpload = async (blob: Blob, ext = 'jpg') => {
-    if (!profile) return
-    setIsCropOpen(false)
-    setUploading(true)
+    if (!profile) {
+      throw new Error('No hay perfil de usuario')
+    }
+    
     const bucketName = import.meta.env.VITE_AVATAR_BUCKET || 'MarketApp'
+    
     try {
       // notify upload start so other UI (sidebar) can show spinner
       try { window.dispatchEvent(new CustomEvent('avatar-upload-start')) } catch (e) {}
+      
       const fileExt = ext
       const fileName = `${profile.id}.${fileExt}`
       const filePath = fileName
 
+      console.log('Subiendo archivo:', filePath, 'Tamaño:', blob.size, 'bytes')
+
       // Ensure there's a valid session / access token before upload
-      try {
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-        console.log('Supabase session before upload:', sessionData, sessionError)
-        if (sessionError) console.warn('Session retrieval error:', sessionError)
-        if (!sessionData?.session?.access_token) {
-          toast({
-            title: 'No autenticado',
-            description: 'No se encontró una sesión activa. Por favor inicia sesión e intenta de nuevo.',
-            variant: 'destructive',
-          })
-          setUploading(false)
-          return
-        }
-      } catch (err) {
-        console.warn('Error checking session before upload:', err)
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      console.log('Sesión de Supabase antes de subir:', sessionData ? 'OK' : 'NO', sessionError)
+      
+      if (sessionError) {
+        console.warn('Error al obtener sesión:', sessionError)
+      }
+      
+      if (!sessionData?.session?.access_token) {
+        setUploading(false)
+        throw new Error('No se encontró una sesión activa. Por favor inicia sesión e intenta de nuevo.')
       }
 
       if (import.meta.env.VITE_USE_BACKEND_UPLOAD === 'true') {
         // Send file to backend endpoint which uses service_role key to upload
+        console.log('Usando backend upload...')
         const formData = new FormData()
         formData.append('file', blob, `${profile.id}.${fileExt}`)
 
@@ -249,25 +369,67 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
 
         if (!resp.ok) {
           const errText = await resp.text()
-          throw new Error(errText || 'Backend upload failed')
+          throw new Error(errText || 'Error al subir al servidor')
         }
 
         const body = await resp.json()
-        await updateProfile({ avatar_url: body.url })
+        console.log('Avatar subido exitosamente via backend:', body.url)
+        
+        // Limpiar caché de timestamps cuando se sube nueva imagen
+        avatarTimestampCache.clear()
+        
+        await updateProfile({ avatar_url: body.url }, true) // skipClose = true
         try { window.dispatchEvent(new CustomEvent('avatar-upload-end', { detail: { success: true, url: body.url } })) } catch (e) {}
+        
+        // Mostrar toast de éxito después de subir avatar
+        toast({
+          title: "¡Perfecto!",
+          description: "Tu foto de perfil se actualizó correctamente",
+        })
       } else {
+        // Upload directly to Supabase Storage
+        console.log('Subiendo directamente a Supabase Storage...')
+        
         const { error: uploadError } = await supabase.storage
           .from(bucketName)
-          .upload(filePath, blob, { upsert: true })
+          .upload(filePath, blob, { 
+            upsert: true,
+            contentType: 'image/jpeg',
+            cacheControl: '3600'
+          })
 
-        if (uploadError) throw uploadError
+        if (uploadError) {
+          console.error('Error al subir a storage:', uploadError)
+          throw new Error(uploadError.message || 'Error al subir la imagen')
+        }
 
+        console.log('Archivo subido exitosamente a storage')
+
+        // Obtener la URL pública (sin timestamp en la base de datos)
         const { data } = supabase.storage
           .from(bucketName)
           .getPublicUrl(filePath)
 
-        await updateProfile({ avatar_url: data.publicUrl })
-        try { window.dispatchEvent(new CustomEvent('avatar-upload-end', { detail: { success: true, url: data.publicUrl } })) } catch (e) {}
+        const publicUrl = data.publicUrl
+        console.log('✅ URL pública generada:', publicUrl)
+
+        // Limpiar caché de timestamps cuando se sube nueva imagen
+        avatarTimestampCache.clear()
+
+        // Guardar la URL sin timestamp en la base de datos
+        console.log('💾 Guardando avatar en perfil...')
+        await updateProfile({ avatar_url: publicUrl }, true) // skipClose = true
+        
+        console.log('📢 Enviando evento avatar-upload-end con URL:', publicUrl)
+        try { window.dispatchEvent(new CustomEvent('avatar-upload-end', { detail: { success: true, url: publicUrl } })) } catch (e) {
+          console.error('Error al enviar evento avatar-upload-end:', e)
+        }
+        
+        // Mostrar toast de éxito después de subir avatar
+        toast({
+          title: "¡Perfecto!",
+          description: "Tu foto de perfil se actualizó correctamente",
+        })
       }
     } catch (error) {
       try { window.dispatchEvent(new CustomEvent('avatar-upload-end', { detail: { success: false } })) } catch (e) {}
@@ -291,13 +453,16 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
         console.error(`-- Allow authenticated users to insert objects into the MarketApp bucket\ncreate policy \"Allow authenticated uploads to MarketApp\" on storage.objects\nfor insert\nto authenticated\nusing ( bucket_id = '${bucketName}' )\nwith check ( bucket_id = '${bucketName}' AND owner = auth.uid() );`)
       } else {
         toast({
-          title: "Error",
+          title: "Error al subir imagen",
           description: isBucketMissing
             ? `No se encontró el bucket '${bucketName}' en Storage. Crea el bucket con ese nombre en Supabase Storage (o configura VITE_AVATAR_BUCKET).`
-            : "No se pudo subir la imagen",
+            : message || "No se pudo subir la imagen",
           variant: "destructive",
         })
       }
+      
+      setUploading(false)
+      throw error // Re-throw para que confirmCrop pueda manejarlo
     } finally {
       setUploading(false)
     }
@@ -314,74 +479,162 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
     })
 
   // Utility: get cropped image blob from canvas
-  // This version creates a fixed-size square output (e.g. 512x512) from the
-  // pixelCrop coordinates returned by react-easy-crop (which are relative to the image's natural size).
-  async function getCroppedImg(file: File, pixelCrop: Area) {
+  // Algoritmo simple y directo que garantiza el recorte exacto
+  async function getCroppedImg(file: File, pixelCrop: Area, rotation = 0) {
     const imageUrl = URL.createObjectURL(file)
     const image = await createImage(imageUrl)
-
-    const outputSize = 512 // fixed square size for consistent avatars
+    
     const canvas = document.createElement('canvas')
-    canvas.width = outputSize
-    canvas.height = outputSize
     const ctx = canvas.getContext('2d')!
 
-    // Draw the cropped area of the source image into the canvas, scaled to outputSize
-    // pixelCrop.x/y/width/height are in pixels relative to the source image dimensions
-    ctx.drawImage(
-      image,
-      pixelCrop.x,
-      pixelCrop.y,
-      pixelCrop.width,
-      pixelCrop.height,
-      0,
-      0,
-      outputSize,
-      outputSize
-    )
+    const outputSize = 512 // Tamaño de salida fijo
 
+    // Si NO hay rotación, hacer recorte directo (más preciso)
+    if (rotation === 0) {
+      canvas.width = outputSize
+      canvas.height = outputSize
+
+      // Recorte directo: toma exactamente el área seleccionada
+      ctx.drawImage(
+        image,
+        pixelCrop.x,      // sx: origen X en la imagen fuente
+        pixelCrop.y,      // sy: origen Y en la imagen fuente
+        pixelCrop.width,  // sWidth: ancho a recortar
+        pixelCrop.height, // sHeight: alto a recortar
+        0,                // dx: destino X en el canvas
+        0,                // dy: destino Y en el canvas
+        outputSize,       // dWidth: ancho final
+        outputSize        // dHeight: alto final
+      )
+    } else {
+      // CON rotación: aplicar transformaciones
+      const rad = (rotation * Math.PI) / 180
+      
+      // Calcular dimensiones necesarias para la rotación
+      const sin = Math.abs(Math.sin(rad))
+      const cos = Math.abs(Math.cos(rad))
+      
+      // Canvas temporal para la imagen rotada
+      const rotatedWidth = image.width * cos + image.height * sin
+      const rotatedHeight = image.width * sin + image.height * cos
+      
+      const tempCanvas = document.createElement('canvas')
+      tempCanvas.width = rotatedWidth
+      tempCanvas.height = rotatedHeight
+      const tempCtx = tempCanvas.getContext('2d')!
+      
+      // Rotar la imagen completa primero
+      tempCtx.translate(rotatedWidth / 2, rotatedHeight / 2)
+      tempCtx.rotate(rad)
+      tempCtx.drawImage(image, -image.width / 2, -image.height / 2)
+      
+      // Ahora recortar del canvas rotado
+      canvas.width = outputSize
+      canvas.height = outputSize
+      
+      ctx.drawImage(
+        tempCanvas,
+        pixelCrop.x,
+        pixelCrop.y,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        outputSize,
+        outputSize
+      )
+    }
+
+    // Limpiar URL temporal
+    URL.revokeObjectURL(imageUrl)
+
+    // Convertir a blob con alta calidad
     return new Promise<Blob | null>((resolve) => {
-      canvas.toBlob((blob) => {
-        resolve(blob)
-      }, 'image/jpeg', 0.92)
+      canvas.toBlob(
+        (blob) => {
+          resolve(blob)
+        },
+        'image/jpeg',
+        0.95
+      )
     })
   }
 
   // Handler when user confirms crop
   const confirmCrop = async () => {
-    if (!rawFile || !croppedArea) return
-    const blob = await getCroppedImg(rawFile, croppedArea)
-    if (!blob) {
-      toast({ title: 'Error', description: 'No se pudo procesar la imagen', variant: 'destructive' })
+    if (!rawFile || !croppedAreaPixels) {
+      toast({ 
+        title: 'Error', 
+        description: 'No se pudo obtener el área de recorte', 
+        variant: 'destructive' 
+      })
       return
     }
-    // Create preview URL so viewer shows exact crop immediately and update UI
-    const prevPreview = croppedPreviewUrl
-    if (prevPreview) {
-      try { URL.revokeObjectURL(prevPreview) } catch (e) {}
-    }
-    const previewUrl = URL.createObjectURL(blob)
-    setCroppedPreviewUrl(previewUrl)
-
-    // Update local profile state so the small avatar shows the preview immediately
-    const previousAvatar = profile?.avatar_url || null
-    setProfile(prev => prev ? { ...prev, avatar_url: previewUrl } : prev)
-
-    // Notify other components (sidebar) about preview via event
+    
+    setUploading(true)
+    
     try {
-      window.dispatchEvent(new CustomEvent('avatar-preview', { detail: { url: previewUrl } }))
-    } catch (e) {}
+      // Generar la imagen recortada
+      const blob = await getCroppedImg(rawFile, croppedAreaPixels, rotation)
+      if (!blob) {
+        toast({ title: 'Error', description: 'No se pudo procesar la imagen', variant: 'destructive' })
+        setUploading(false)
+        return
+      }
+      
+      console.log('Blob generado:', blob.size, 'bytes')
+      
+      // Cerrar el modal de crop primero
+      setIsCropOpen(false)
+      
+      // Create preview URL so viewer shows exact crop immediately and update UI
+      const prevPreview = croppedPreviewUrl
+      if (prevPreview) {
+        try { URL.revokeObjectURL(prevPreview) } catch (e) {}
+      }
+      const previewUrl = URL.createObjectURL(blob)
+      setCroppedPreviewUrl(previewUrl)
 
-    // Determine extension and upload; if upload fails, revert preview
-    const ext = (rawFile.name.split('.').pop() || 'jpg').replace(/\?.*$/, '')
-    try {
+      // Update local profile state so the small avatar shows the preview immediately
+      setProfile(prev => prev ? { ...prev, avatar_url: previewUrl } : prev)
+
+      // Notify other components (sidebar) about preview via event
+      try {
+        window.dispatchEvent(new CustomEvent('avatar-preview', { detail: { url: previewUrl } }))
+      } catch (e) {}
+
+      // Subir la imagen recortada
+      const ext = 'jpg' // Siempre usar jpg para consistencia
+      console.log('Iniciando upload del blob...')
       await handleCroppedUpload(blob, ext)
+      
+      console.log('Upload completado exitosamente')
+      
+      // Limpiar archivo raw después de subir
+      setRawFile(null)
+      setCrop({ x: 0, y: 0 })
+      setZoom(1)
+      setRotation(0)
+      setCroppedAreaPixels(null)
     } catch (err) {
-      // revert preview
-      setProfile(prev => prev ? { ...prev, avatar_url: previousAvatar } : prev)
-      try { window.dispatchEvent(new CustomEvent('avatar-preview', { detail: { url: previousAvatar } })) } catch (e) {}
-      throw err
+      console.error('Error cropping image:', err)
+      setUploading(false)
+      setIsCropOpen(false)
+      toast({ 
+        title: 'Error', 
+        description: err instanceof Error ? err.message : 'No se pudo procesar la imagen. Intenta con otra imagen.', 
+        variant: 'destructive' 
+      })
     }
+  }
+
+  const cancelCrop = () => {
+    setIsCropOpen(false)
+    setRawFile(null)
+    setCrop({ x: 0, y: 0 })
+    setZoom(1)
+    setRotation(0)
+    setCroppedAreaPixels(null)
   }
 
   const changePassword = async (data: PasswordFormData) => {
@@ -432,15 +685,16 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Perfil de Usuario</DialogTitle>
-          <DialogDescription>
-            Gestiona tu información personal y configuración de cuenta.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[500px]" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <div className="no-ios-zoom">
+          <DialogHeader>
+            <DialogTitle>Perfil de Usuario</DialogTitle>
+            <DialogDescription>
+              Gestiona tu información personal y configuración de cuenta.
+            </DialogDescription>
+          </DialogHeader>
 
-        <Tabs defaultValue="profile" className="w-full">
+          <Tabs defaultValue="profile" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile">Información</TabsTrigger>
             <TabsTrigger value="account">Cuenta</TabsTrigger>
@@ -449,34 +703,45 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
 
           <TabsContent value="profile" className="space-y-4">
             <div className="flex flex-col items-center space-y-4">
-              <div className="relative">
-                  <div className="relative inline-block">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        // Prevent opening viewer when clicking the upload button (label/input)
-                        const target = e.target as HTMLElement
-                        const isUploadControl = target.closest('label')
-                        if (!isUploadControl) setIsViewerOpen(true)
-                      }}
-                      className="p-0 border-0 bg-transparent"
-                      aria-label="Ver avatar"
-                    >
-                      <Avatar className="w-20 h-20">
-                        <AvatarImage src={profile?.avatar_url || undefined} />
-                        <AvatarFallback>
-                          {userName.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </button>
-                    {uploading && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
-                        <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div 
+                className={`relative rounded-full transition-all duration-200 ${isDragging ? 'ring-4 ring-primary ring-offset-4' : ''}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <div className="relative inline-block group">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      // Prevent opening viewer when clicking the upload button (label/input)
+                      const target = e.target as HTMLElement
+                      const isUploadControl = target.closest('label')
+                      if (!isUploadControl && !uploading) setIsViewerOpen(true)
+                    }}
+                    className="p-0 border-0 bg-transparent relative"
+                    aria-label="Ver avatar"
+                    disabled={uploading}
+                  >
+                    <Avatar className="w-24 h-24 border-4 border-muted transition-all duration-200 group-hover:border-primary">
+                      <AvatarImage src={getAvatarUrlWithTimestamp(profile?.avatar_url)} />
+                      <AvatarFallback className="text-3xl font-bold">
+                        {userName.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    {!uploading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 rounded-full transition-all duration-200">
+                        <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                       </div>
                     )}
-                  </div>
+                    {uploading && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-full">
+                        <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                        <p className="text-xs text-white mt-2 font-medium">Subiendo...</p>
+                      </div>
+                    )}
+                  </button>
 
-                  <label className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1 cursor-pointer hover:bg-primary/90">
+                  <label className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-2 cursor-pointer hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
                     <Camera className="h-4 w-4" />
                     <input
                       type="file"
@@ -487,7 +752,15 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
                     />
                   </label>
                 </div>
-              {uploading && <p className="text-sm text-muted-foreground">Subiendo imagen...</p>}
+              </div>
+              <div className="text-center space-y-1">
+                <p className="text-xs text-muted-foreground">
+                  Haz clic en la cámara o arrastra una imagen
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  JPG, PNG o GIF • Máx. 10MB
+                </p>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -514,6 +787,8 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
               <Label htmlFor="phone">Teléfono</Label>
               <Input
                 id="phone"
+                type="tel"
+                inputMode="tel"
                 value={profile?.phone || ""}
                 onChange={(e) => setProfile(prev => prev ? { ...prev, phone: e.target.value } : null)}
                 placeholder="Ingresa tu número de teléfono"
@@ -533,65 +808,191 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
           </TabsContent>
 
           {/* Cropper dialog */}
-          <Dialog open={isCropOpen} onOpenChange={setIsCropOpen}>
-            <DialogContent className="max-w-3xl w-full">
-              <DialogHeader>
-                <DialogTitle>Recortar imagen</DialogTitle>
-                <DialogDescription>Ajústala para que quede bien dentro del círculo</DialogDescription>
-              </DialogHeader>
-              <div className="h-[60vh] w-full relative bg-black/5 rounded-md overflow-hidden">
-                {rawFile && (
-                  <Cropper
-                    image={URL.createObjectURL(rawFile)}
-                    crop={crop}
-                    zoom={zoom}
-                    aspect={1}
-                    cropShape="round"
-                    onCropChange={setCrop}
-                    onZoomChange={setZoom}
-                    onCropComplete={(_croppedAreaPixels: Area) => setCroppedArea(_croppedAreaPixels)}
-                  />
-                )}
-              </div>
-              <div className="mt-4 flex items-center gap-3">
-                <input
-                  type="range"
-                  min={1}
-                  max={3}
-                  step={0.01}
-                  value={zoom}
-                  onChange={(e) => setZoom(Number(e.target.value))}
-                  className="w-full"
-                />
-                <Button onClick={() => { setIsCropOpen(false); setRawFile(null); }}>Cancelar</Button>
-                <Button onClick={confirmCrop} disabled={!croppedArea}>Confirmar</Button>
+          <Dialog open={isCropOpen} onOpenChange={(open) => !open && cancelCrop()}>
+            <DialogContent className="max-w-4xl w-[95vw] sm:w-full p-0 gap-0 overflow-hidden" onOpenAutoFocus={(e) => e.preventDefault()}>
+              <div className="no-ios-zoom">
+                <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 border-b bg-background">
+                  <DialogTitle className="text-xl sm:text-2xl font-bold">Editar foto de perfil</DialogTitle>
+                  <DialogDescription className="text-sm">Ajusta el zoom y la posición para que quede perfecto</DialogDescription>
+                </DialogHeader>
+                
+                {/* Cropper Area */}
+                <div className="relative bg-black/95 w-full" style={{ height: 'min(70vh, 500px)' }}>
+                  {rawFile && (
+                    <Cropper
+                      image={URL.createObjectURL(rawFile)}
+                      crop={crop}
+                      zoom={zoom}
+                      rotation={rotation}
+                      aspect={1}
+                      cropShape="round"
+                      showGrid={false}
+                      onCropChange={setCrop}
+                      onZoomChange={setZoom}
+                      onRotationChange={setRotation}
+                      onCropComplete={(_croppedArea: Area, croppedAreaPixels: Area) => {
+                        setCroppedAreaPixels(croppedAreaPixels)
+                      }}
+                      style={{
+                        containerStyle: {
+                          backgroundColor: 'rgba(0, 0, 0, 0.95)',
+                        },
+                        mediaStyle: {
+                          maxHeight: '100%',
+                        },
+                      }}
+                    />
+                  )}
+                </div>
+
+                {/* Controls */}
+                <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 bg-background">
+                  {/* Zoom Control */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Zoom</Label>
+                      <span className="text-xs text-muted-foreground">{zoom.toFixed(1)}x</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                        <line x1="8" y1="11" x2="14" y2="11"/>
+                      </svg>
+                      <input
+                        type="range"
+                        min={1}
+                        max={3}
+                        step={0.01}
+                        value={zoom}
+                        onChange={(e) => setZoom(Number(e.target.value))}
+                        className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                      />
+                      <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                        <line x1="8" y1="11" x2="14" y2="11"/>
+                        <line x1="11" y1="8" x2="11" y2="14"/>
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Rotation Control */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Rotación</Label>
+                      <span className="text-xs text-muted-foreground">{rotation}°</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                      </svg>
+                      <input
+                        type="range"
+                        min={0}
+                        max={360}
+                        step={1}
+                        value={rotation}
+                        onChange={(e) => setRotation(Number(e.target.value))}
+                        className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                      />
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setRotation(0)}
+                        className="text-xs"
+                      >
+                        Reset
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 pt-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={cancelCrop}
+                      className="flex-1"
+                      disabled={uploading}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button 
+                      onClick={confirmCrop} 
+                      disabled={!croppedAreaPixels || uploading}
+                      className="flex-1 font-semibold"
+                    >
+                      {uploading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                          Procesando...
+                        </>
+                      ) : (
+                        'Aplicar'
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </DialogContent>
           </Dialog>
 
           {/* Avatar viewer dialog */}
           <Dialog open={isViewerOpen} onOpenChange={setIsViewerOpen}>
-            <DialogContent className="w-full max-w-3xl p-6 bg-black/60 backdrop-blur-sm shadow-lg rounded-lg">
-                <div className="relative flex items-center justify-center w-full h-full py-8">
+            <DialogContent className="max-w-2xl w-[95vw] sm:w-full p-0 gap-0 bg-black/95 backdrop-blur-xl border-none" onOpenAutoFocus={(e) => e.preventDefault()}>
+              <div className="no-ios-zoom">
+                <div className="relative flex items-center justify-center w-full py-8 sm:py-12">
+                  {/* Close Button */}
                   <button
-                    onClick={() => { setIsViewerOpen(false); try { if (croppedPreviewUrl) { URL.revokeObjectURL(croppedPreviewUrl); setCroppedPreviewUrl(null) } } catch(e){} }}
-                    className="absolute right-4 top-4 text-white bg-black/40 rounded-full p-2 hover:bg-black/60"
+                    onClick={() => { 
+                      setIsViewerOpen(false)
+                      try { 
+                        if (croppedPreviewUrl) { 
+                          URL.revokeObjectURL(croppedPreviewUrl)
+                          setCroppedPreviewUrl(null) 
+                        } 
+                      } catch(e){} 
+                    }}
+                    className="absolute right-4 top-4 z-10 text-white bg-black/60 hover:bg-black/80 rounded-full p-2 sm:p-3 transition-all duration-200 hover:scale-110"
                     aria-label="Cerrar vista previa"
                   >
-                    ✕
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
 
-                  {croppedPreviewUrl || profile?.avatar_url ? (
-                    <div className="w-[360px] h-[360px] rounded-full overflow-hidden bg-black/5 flex items-center justify-center border border-white/20">
-                      <img src={croppedPreviewUrl || profile?.avatar_url!} alt="Avatar grande" className="w-full h-full object-cover" />
-                    </div>
-                  ) : (
-                    <div className="w-80 h-80 flex items-center justify-center bg-muted rounded-lg">
-                      <span className="text-muted-foreground">No hay imagen</span>
-                    </div>
-                  )}
+                  {/* Avatar Image */}
+                  <div className="relative px-4 sm:px-8">
+                    {croppedPreviewUrl || profile?.avatar_url ? (
+                      <div className="relative">
+                        <div className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full overflow-hidden bg-black/20 flex items-center justify-center border-4 border-white/10 shadow-2xl">
+                          <img 
+                            src={croppedPreviewUrl || getAvatarUrlWithTimestamp(profile?.avatar_url)!} 
+                            alt="Avatar grande" 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        {/* User Name Overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 text-center pb-4 sm:pb-6">
+                          <div className="bg-black/60 backdrop-blur-sm rounded-full px-4 sm:px-6 py-2 inline-block">
+                            <p className="text-white font-semibold text-sm sm:text-base">{profile?.full_name || userName}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full flex flex-col items-center justify-center bg-muted/20 border-4 border-white/10">
+                        <Avatar className="w-32 h-32 sm:w-40 sm:h-40">
+                          <AvatarFallback className="text-5xl sm:text-6xl font-bold bg-primary/20 text-white">
+                            {userName.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <p className="text-white/60 mt-4 text-sm sm:text-base">Sin foto de perfil</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </DialogContent>
+              </div>
+            </DialogContent>
           </Dialog>
 
           <TabsContent value="account" className="space-y-4">
@@ -670,6 +1071,7 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
             </form>
           </TabsContent>
         </Tabs>
+        </div>
       </DialogContent>
     </Dialog>
   )
