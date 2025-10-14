@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react'
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 
 const loginSchema = z.object({
   email: z.string().email("Correo electrónico inválido"),
@@ -21,8 +22,36 @@ type LoginFormData = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string>('')
+  const [captchaVerified, setCaptchaVerified] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+  const turnstileRef = useRef<TurnstileInstance>(null)
   const navigate = useNavigate()
   const supabase = createClient()
+
+  // Verificar si el captcha está habilitado
+  const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || import.meta.env.VITE_RECAPTCHA_SITE_KEY
+  const isCaptchaEnabled = !!turnstileSiteKey
+
+  // Detectar el tema del sistema
+  useEffect(() => {
+    const checkDarkMode = () => {
+      const isDark = document.documentElement.classList.contains('dark')
+      setIsDarkMode(isDark)
+    }
+
+    // Verificar inicialmente
+    checkDarkMode()
+
+    // Observar cambios en la clase del HTML
+    const observer = new MutationObserver(checkDarkMode)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
+
+    return () => observer.disconnect()
+  }, [])
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -33,16 +62,53 @@ export default function LoginPage() {
     },
   })
 
+  const handleTurnstileSuccess = (token: string) => {
+    setCaptchaToken(token)
+    setCaptchaVerified(true)
+  }
+
+  const handleTurnstileError = () => {
+    setCaptchaToken('')
+    setCaptchaVerified(false)
+  }
+
+  const resetCaptcha = () => {
+    turnstileRef.current?.reset()
+    setCaptchaToken('')
+    setCaptchaVerified(false)
+  }
+
   const onSubmit = async (data: LoginFormData) => {
+    // Validar captcha si está habilitado
+    if (isCaptchaEnabled && !captchaToken) {
+      form.setError('root', {
+        type: 'manual',
+        message: 'Por favor completa la verificación de seguridad'
+      })
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const signInOptions: any = {
         email: data.email,
         password: data.password,
-      })
+      }
+
+      // Si hay captcha token, incluirlo en las opciones
+      if (captchaToken) {
+        signInOptions.options = {
+          captchaToken: captchaToken,
+        }
+      }
+      
+      const { error } = await supabase.auth.signInWithPassword(signInOptions)
       
       if (error) {
+        // Resetear captcha en caso de error
+        resetCaptcha()
+
         // Mostrar error específico en el formulario
         if (error.message.toLowerCase().includes('invalid login') || 
             error.message.toLowerCase().includes('invalid credentials')) {
@@ -55,6 +121,11 @@ export default function LoginPage() {
             type: 'manual',
             message: 'Por favor verifica tu correo electrónico'
           })
+        } else if (error.message.toLowerCase().includes('captcha')) {
+          form.setError('root', {
+            type: 'manual',
+            message: 'Error de verificación del captcha. Por favor intenta nuevamente.'
+          })
         } else {
           form.setError('root', {
             type: 'manual',
@@ -66,6 +137,9 @@ export default function LoginPage() {
       
       navigate('/dashboard')
     } catch (error: unknown) {
+      // Resetear captcha en caso de error
+      resetCaptcha()
+      
       form.setError('root', {
         type: 'manual',
         message: error instanceof Error ? error.message : 'Error al iniciar sesión'
@@ -172,10 +246,25 @@ export default function LoginPage() {
                 )}
               />
 
+              {isCaptchaEnabled && (
+                <div className="flex justify-center w-full">
+                  <Turnstile
+                    ref={turnstileRef}
+                    siteKey={turnstileSiteKey}
+                    onSuccess={handleTurnstileSuccess}
+                    onError={handleTurnstileError}
+                    options={{
+                      theme: isDarkMode ? 'dark' : 'light',
+                      size: 'normal',
+                    }}
+                  />
+                </div>
+              )}
+
               <Button 
                 type="submit" 
                 className="w-full h-11 text-base font-semibold transition-smooth hover:shadow-lg hover:scale-[1.02]" 
-                disabled={isLoading}
+                disabled={isLoading || (isCaptchaEnabled && !captchaVerified)}
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">

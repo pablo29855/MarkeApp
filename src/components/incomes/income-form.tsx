@@ -1,0 +1,244 @@
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { DialogClose } from '@/components/ui/dialog'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { createClient } from '@/lib/supabase/client'
+import { useNotification } from '@/hooks/use-notification'
+import { Loader2 } from 'lucide-react'
+import type { Income } from '@/lib/types'
+
+interface IncomeFormProps {
+  onSuccess?: () => void
+  income?: Income
+}
+
+export function IncomeForm({ onSuccess, income }: IncomeFormProps) {
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const { showCreated, showUpdated, showError } = useNotification()
+
+  // Función para formatear el monto con puntos de mil (formato colombiano)
+  const formatAmount = (value: string) => {
+    // Remover todo excepto números
+    const cleanValue = value.replace(/\D/g, '')
+    
+    // Si está vacío, retornar vacío
+    if (!cleanValue) return ''
+    
+    // Formatear con puntos de mil
+    return cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  }
+
+  // Función para obtener el valor numérico limpio
+  const getNumericValue = (formattedValue: string) => {
+    return formattedValue.replace(/\./g, '')
+  }
+
+  const [formData, setFormData] = useState({
+    description: income?.description || '',
+    amount: income?.amount ? formatAmount(income.amount.toString()) : '',
+    income_type: income?.income_type || '',
+    income_date: income?.income_date || new Date().toISOString().split('T')[0],
+    notes: income?.notes || '',
+  })
+
+  // Actualizar formData cuando cambie el income (al editar)
+  useEffect(() => {
+    if (income) {
+      setFormData({
+        description: income.description || '',
+        amount: formatAmount(income.amount.toString()),
+        income_type: income.income_type || '',
+        income_date: income.income_date || new Date().toISOString().split('T')[0],
+        notes: income.notes || '',
+      })
+    }
+  }, [income])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Validación manual de tipo
+    if (!formData.income_type) {
+      setError('Por favor selecciona un tipo de ingreso')
+      // Hacer scroll al error
+      setTimeout(() => {
+        const errorElement = document.querySelector('[role="alert"]')
+        errorElement?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 100)
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setError('Debes iniciar sesión')
+        return
+      }
+
+      const incomeData = {
+        user_id: user.id,
+        description: formData.description,
+        amount: Number.parseInt(getNumericValue(formData.amount)),
+        income_type: formData.income_type,
+        income_date: formData.income_date,
+        notes: formData.notes || null,
+      }
+
+      let result
+
+      if (income?.id) {
+        // Actualizar
+        result = await supabase
+          .from('incomes')
+          .update(incomeData)
+          .eq('id', income.id)
+      } else {
+        // Crear
+        result = await supabase
+          .from('incomes')
+          .insert([incomeData])
+      }
+
+      if (result.error) throw result.error
+
+      if (income?.id) {
+        showUpdated('Ingreso')
+      } else {
+        showCreated('Ingreso')
+      }
+
+      onSuccess?.()
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al guardar el ingreso'
+      setError(errorMessage)
+      showError('Error al guardar', errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const incomeTypeOptions = [
+    { value: 'nomina', label: 'Nómina', icon: '💼' },
+    { value: 'transferencia', label: 'Transferencia Bancaria', icon: '🏦' },
+    { value: 'efectivo', label: 'Efectivo', icon: '💵' },
+  ]
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+      <div className="space-y-1.5 sm:space-y-2">
+        <Label htmlFor="description" className="text-xs sm:text-sm">Descripción</Label>
+        <Input
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="Ej: Pago de salario, Cliente XYZ..."
+          required
+          disabled={isLoading}
+          className="text-sm sm:text-base h-9 sm:h-10"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <div className="space-y-1.5 sm:space-y-2">
+          <Label htmlFor="amount" className="text-xs sm:text-sm">Monto</Label>
+          <Input
+            id="amount"
+            type="text"
+            inputMode="numeric"
+            value={formData.amount}
+            onChange={(e) => setFormData({ ...formData, amount: formatAmount(e.target.value) })}
+            placeholder="0"
+            required
+            disabled={isLoading}
+            className="text-sm sm:text-base h-9 sm:h-10"
+          />
+        </div>
+
+        <div className="space-y-1.5 sm:space-y-2">
+          <Label htmlFor="income_date" className="text-xs sm:text-sm">Fecha</Label>
+          <Input
+            id="income_date"
+            type="date"
+            value={formData.income_date}
+            onChange={(e) => setFormData({ ...formData, income_date: e.target.value })}
+            required
+            disabled={isLoading}
+            className="text-sm sm:text-base h-9 sm:h-10"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1.5 sm:space-y-2">
+        <Label htmlFor="income_type" className="text-xs sm:text-sm">Tipo de Ingreso *</Label>
+        <Select
+          value={formData.income_type || undefined}
+          onValueChange={(value) => setFormData({ ...formData, income_type: value as 'nomina' | 'transferencia' | 'efectivo' })}
+          disabled={isLoading}
+        >
+          <SelectTrigger className="h-9 sm:h-10 text-sm sm:text-base">
+            <SelectValue placeholder="Selecciona un tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            {incomeTypeOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value} className="text-sm sm:text-base">
+                {option.icon} {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-1.5 sm:space-y-2">
+        <Label htmlFor="notes" className="text-xs sm:text-sm">Notas (opcional)</Label>
+        <Textarea
+          id="notes"
+          value={formData.notes}
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          placeholder="Información adicional..."
+          rows={3}
+          disabled={isLoading}
+          className="text-sm sm:text-base resize-none"
+        />
+      </div>
+
+      {error && (
+        <Alert variant="destructive" className="animate-in fade-in-50 slide-in-from-top-2 duration-300">
+          <AlertDescription className="text-xs sm:text-sm font-medium">{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="flex gap-2 pt-2">
+        <DialogClose asChild>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1 h-9 sm:h-10 text-sm sm:text-base"
+            disabled={isLoading}
+          >
+            Cancelar
+          </Button>
+        </DialogClose>
+        <Button type="submit" className="flex-1 h-9 sm:h-10 text-sm sm:text-base" disabled={isLoading}>
+          {isLoading && <Loader2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />}
+          {isLoading ? "Guardando..." : "Guardar"}
+        </Button>
+      </div>
+    </form>
+  )
+}

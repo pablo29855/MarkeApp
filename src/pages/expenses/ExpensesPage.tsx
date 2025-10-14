@@ -121,9 +121,9 @@ export default function ExpensesPage() {
   const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0)
 
   return (
-    <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6">
+    <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6" style={{ position: 'relative', isolation: 'isolate' }}>
       {/* Header - Más compacto en móvil */}
-      <div className="sticky top-16 lg:top-0 z-20 bg-background pb-2 -mt-2 pt-2">
+      <div className="sticky top-16 lg:top-0 z-20 bg-background pb-2 -mt-2 pt-2" style={{ transform: 'translateZ(0)' }}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
           <div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">Gastos</h1>

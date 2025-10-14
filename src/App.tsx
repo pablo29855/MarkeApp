@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
+import { Toaster as Sonner } from '@/components/ui/sonner'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 
@@ -13,6 +14,7 @@ import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
 import DashboardPage from '@/pages/dashboard/DashboardPage'
 import ExpensesPage from '@/pages/expenses/ExpensesPage'
+import IncomesPage from '@/pages/incomes/IncomesPage'
 import DebtsPage from '@/pages/debts/DebtsPage'
 import ShoppingPage from '@/pages/shopping/ShoppingPage'
 import ReportsPage from '@/pages/reports/ReportsPage'
@@ -52,6 +54,7 @@ function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="markeapp-theme">
       <Toaster />
+      <Sonner />
       <Routes>
         {/* Public routes */}
         <Route path="/auth/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" />} />
@@ -78,6 +81,18 @@ function App() {
             user ? (
               <DashboardLayout>
                 <ExpensesPage />
+              </DashboardLayout>
+            ) : (
+              <Navigate to="/auth/login" />
+            )
+          }
+        />
+        <Route
+          path="/incomes"
+          element={
+            user ? (
+              <DashboardLayout>
+                <IncomesPage />
               </DashboardLayout>
             ) : (
               <Navigate to="/auth/login" />
