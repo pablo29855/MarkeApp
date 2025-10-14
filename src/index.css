@@ -120,6 +120,43 @@ html, body {
   -webkit-text-size-adjust: 100%; /* evita que iOS cambie el tamaño del texto automáticamente */
 }
 
+/* Mejorar el scroll en iOS - prevenir el rebote y comportamiento extraño */
+@supports (-webkit-touch-callout: none) {
+  /* Solo en iOS/Safari */
+  html {
+    height: 100%;
+    overflow: auto;
+  }
+  
+  body {
+    height: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+  }
+  
+  /* Asegurar que el main tenga el scroll correcto */
+  main {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+  
+  /* Prevenir que elementos sticky causen scroll jump en iOS */
+  .sticky {
+    position: -webkit-sticky;
+    position: sticky;
+    /* Forzar GPU acceleration para mejor performance */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+  }
+  
+  /* Asegurar que el contenedor del sticky no cause problemas */
+  [class*="space-y"] {
+    isolation: isolate;
+  }
+}
+
 /*
   NOTA: aplicar font-size:16px global en inputs puede romper el layout (los campos se vuelven más grandes).
   En su lugar, aplica la corrección solo a las páginas/controles que la necesiten añadiendo la clase
@@ -150,6 +187,8 @@ html, body {
   position: fixed !important;
   /* Mantener la posición centrada incluso cuando aparece el teclado */
   -webkit-overflow-scrolling: touch;
+  /* Mejorar el scroll en iOS */
+  overscroll-behavior: contain;
 }
 
 /* Prevenir que el viewport se ajuste cuando aparece el teclado en iOS */
@@ -162,7 +201,15 @@ html, body {
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;
-    transform: translate(-50%, -50%) !important;
+    /* Usar will-change para mejor performance */
+    will-change: transform;
+  }
+  
+  /* Prevenir el scroll del body cuando el diálogo está abierto */
+  body:has([data-slot="dialog-content"]) {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
   }
 }
 
@@ -172,16 +219,49 @@ html, body {
 /* Forzar apariencia del AlertDialog para que luzca igual en light/dark */
 [data-slot="alert-dialog-overlay"] {
   background-color: rgba(0, 0, 0, 0.5);
+  z-index: 200 !important;
 }
 
 /* Allow AlertDialog content to be themed by component tokens and dark: classes */
 [data-slot="alert-dialog-content"] {
   /* intentionally left blank so AlertDialog component controls colors via tokens/dark classes */
+  z-index: 200 !important;
 }
 
 /* In dark mode reduce overlay opacity slightly */
 .dark [data-slot="alert-dialog-overlay"] {
   background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Mejorar scroll en formularios dentro de diálogos en iOS */
+@supports (-webkit-touch-callout: none) {
+  .no-ios-zoom {
+    /* Prevenir rebote del scroll */
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Asegurar que los inputs dentro del diálogo no causen scroll */
+  .no-ios-zoom input:focus,
+  .no-ios-zoom textarea:focus,
+  .no-ios-zoom select:focus {
+    /* Evitar que iOS mueva el viewport */
+    scroll-margin-top: 100px;
+    scroll-margin-bottom: 100px;
+  }
+  
+  /* Prevenir scroll jump al interactuar con inputs en listas largas */
+  input:not(.no-ios-zoom input),
+  textarea:not(.no-ios-zoom textarea),
+  select:not(.no-ios-zoom select) {
+    /* No permitir que iOS haga scroll automático al hacer focus */
+    scroll-behavior: auto;
+  }
+  
+  /* Prevenir que las tarjetas causen scroll jump */
+  [class*="grid"] {
+    contain: layout style;
+  }
 }
 
 /* Estilos exactos para la X (botón de cierre) en modo oscuro — opción 3 (verde tenue) */
@@ -212,4 +292,51 @@ html, body {
 .dark .toaster .toast [data-sonner-close] svg {
   fill: #DFF7EA !important;
   stroke: #DFF7EA !important;
+}
+
+/* Estilos para el CAPTCHA de Cloudflare Turnstile */
+/* Asegurar que el iframe respete el tema de la aplicación */
+iframe[src*="challenges.cloudflare.com"],
+iframe[src*="turnstile"] {
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
+}
+
+/* Contenedor del Turnstile - modo claro */
+[data-theme="light"] iframe[src*="challenges.cloudflare.com"],
+[data-theme="light"] iframe[src*="turnstile"],
+:not(.dark) iframe[src*="challenges.cloudflare.com"],
+:not(.dark) iframe[src*="turnstile"] {
+  background: white !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Contenedor del Turnstile - modo oscuro */
+.dark iframe[src*="challenges.cloudflare.com"],
+.dark iframe[src*="turnstile"] {
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Mejorar la integración visual del captcha */
+div:has(> iframe[src*="challenges.cloudflare.com"]),
+div:has(> iframe[src*="turnstile"]) {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0.5rem !important;
+  border-radius: 0.75rem !important;
+  background: transparent !important;
+}
+
+/* Asegurar que el captcha no se vea cortado en móviles */
+@media (max-width: 640px) {
+  iframe[src*="challenges.cloudflare.com"],
+  iframe[src*="turnstile"] {
+    max-width: 100% !important;
+    transform: scale(0.95) !important;
+    transform-origin: center !important;
+  }
 }

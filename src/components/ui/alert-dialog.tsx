@@ -38,7 +38,7 @@ const AlertDialogOverlay = React.forwardRef<
         data-slot="alert-dialog-overlay"
         className={cn(
           // overlay claro por defecto; en dark lo hacemos menos opaco para no oscurecer el diálogo
-          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50 dark:bg-black/40',
+          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[200] bg-black/50 dark:bg-black/40',
           className,
         )}
         {...props}
@@ -60,7 +60,7 @@ function AlertDialogContent({
           // Use design tokens so dialog respects light/dark themes
           // tokens + explicit dark fallback to ensure proper contrast
           'bg-background text-foreground border-border dark:bg-slate-800 dark:text-foreground dark:border-slate-700',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg overflow-x-hidden min-w-0',
+          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-[200] grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg overflow-x-hidden min-w-0',
           className,
         )}
         {...props}

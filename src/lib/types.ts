@@ -60,3 +60,32 @@ export interface DebtPayment {
   notes: string | null
   created_at: string
 }
+
+export type IncomeType = 'nomina' | 'transferencia' | 'efectivo'
+
+export interface Income {
+  id: string
+  user_id: string
+  description: string
+  amount: number
+  income_type: IncomeType
+  income_date: string
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface IncomesByType {
+  type: string
+  total: number
+  color?: string
+  icon?: string
+}
+
+export interface FinancialSummary {
+  totalIncome: number
+  totalExpenses: number
+  totalDebts: number
+  balance: number
+  incomeByType: IncomesByType[]
+}

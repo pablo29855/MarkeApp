@@ -8,6 +8,7 @@ import {
   ShoppingCart,
   BarChart3,
   CreditCard,
+  TrendingUp,
   LogOut,
   Menu,
   X,
@@ -22,6 +23,7 @@ import { ProfileDialog } from "@/components/profile/profile-dialog"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Ingresos", href: "/incomes", icon: TrendingUp },
   { name: "Gastos", href: "/expenses", icon: Receipt },
   { name: "Lista de Compras", href: "/shopping", icon: ShoppingCart },
   { name: "Reportes", href: "/reports", icon: BarChart3 },

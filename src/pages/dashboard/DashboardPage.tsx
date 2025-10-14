@@ -3,19 +3,24 @@ import { createClient } from '@/lib/supabase/client'
 import { StatsCard } from '@/components/dashboard/stats-card'
 import { ExpenseChart } from '@/components/dashboard/expense-chart'
 import { RecentExpenses } from '@/components/dashboard/recent-expenses'
+import { BalanceCard } from '@/components/dashboard/balance-card'
+import { IncomeChart } from '@/components/dashboard/income-chart'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { formatCurrency } from '@/lib/utils'
 import { DollarSign, TrendingUp, ShoppingCart, CreditCard } from 'lucide-react'
-import type { Expense, ExpensesByCategory } from '@/lib/types'
+import type { Expense, ExpensesByCategory, IncomesByType } from '@/lib/types'
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [dashboardData, setDashboardData] = useState({
     totalExpenses: 0,
+    totalIncome: 0,
     expensesByCategoryData: [] as ExpensesByCategory[],
+    incomesByTypeData: [] as IncomesByType[],
     recentExpenses: [] as Expense[],
     shoppingCount: 0,
     totalDebts: 0,
+    balance: 0,
   })
 
   useEffect(() => {
@@ -62,7 +67,16 @@ export default function DashboardPage() {
           .select('total_amount, paid_amount')
           .eq('user_id', user.id)
 
+        // Obtener ingresos del mes
+        const { data: incomes } = await supabase
+          .from('incomes')
+          .select('*')
+          .eq('user_id', user.id)
+          .gte('income_date', firstDayOfMonth.toISOString().split('T')[0])
+          .lte('income_date', lastDayOfMonth.toISOString().split('T')[0])
+
         const totalExpenses = expenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0
+        const totalIncome = incomes?.reduce((sum, inc) => sum + Number(inc.amount), 0) || 0
 
         const categoryMap = new Map<string, ExpensesByCategory>()
         expensesByCategory?.forEach((exp: any) => {
@@ -80,15 +94,34 @@ export default function DashboardPage() {
           }
         })
 
+        // Agrupar ingresos por tipo
+        const incomeTypeMap = new Map<string, IncomesByType>()
+        incomes?.forEach((inc: any) => {
+          const existing = incomeTypeMap.get(inc.income_type)
+          if (existing) {
+            existing.total += Number(inc.amount)
+          } else {
+            incomeTypeMap.set(inc.income_type, {
+              type: inc.income_type,
+              total: Number(inc.amount),
+            })
+          }
+        })
+
         const expensesByCategoryData = Array.from(categoryMap.values())
+        const incomesByTypeData = Array.from(incomeTypeMap.values())
         const totalDebts = debts?.reduce((sum, debt) => sum + Number(debt.total_amount) - Number(debt.paid_amount), 0) || 0
+        const balance = totalIncome - totalExpenses - totalDebts
 
         setDashboardData({
           totalExpenses,
+          totalIncome,
           expensesByCategoryData,
+          incomesByTypeData,
           recentExpenses: (recentExpenses || []) as Expense[],
           shoppingCount: shoppingCount || 0,
           totalDebts,
+          balance,
         })
       } catch (error) {
         console.error('[Dashboard] Error fetching data:', error)
@@ -117,16 +150,16 @@ export default function DashboardPage() {
       {/* Stats Cards Grid - Responsivo: 2 col en móvil, 4 en desktop */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
         <StatsCard
+          title="Ingresos del Mes"
+          value={formatCurrency(dashboardData.totalIncome)}
+          icon={TrendingUp}
+          description="Total de ingresos"
+        />
+        <StatsCard
           title="Gastos del Mes"
           value={formatCurrency(dashboardData.totalExpenses)}
           icon={DollarSign}
           description="Total gastado este mes"
-        />
-        <StatsCard
-          title="Categorías Activas"
-          value={dashboardData.expensesByCategoryData.length.toString()}
-          icon={TrendingUp}
-          description="Categorías con gastos"
         />
         <StatsCard
           title="Lista de Compras"
@@ -146,6 +179,19 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
         <ExpenseChart data={dashboardData.expensesByCategoryData} />
         <RecentExpenses expenses={dashboardData.recentExpenses} />
+      </div>
+
+      {/* Balance Financiero - Al final */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        <BalanceCard 
+          totalIncome={dashboardData.totalIncome}
+          totalExpenses={dashboardData.totalExpenses}
+          totalDebts={dashboardData.totalDebts}
+        />
+        <IncomeChart 
+          data={dashboardData.incomesByTypeData}
+          totalIncome={dashboardData.totalIncome}
+        />
       </div>
     </div>
   )

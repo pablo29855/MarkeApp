@@ -170,6 +170,11 @@ export function ExpenseForm({ categories, userId, onSuccess }: ExpenseFormProps)
     // Validación manual de categoría
     if (!formData.category_id) {
       setError("Por favor selecciona una categoría")
+      // Hacer scroll al error
+      setTimeout(() => {
+        const errorElement = document.querySelector('[role="alert"]')
+        errorElement?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 100)
       return
     }
     
@@ -366,8 +371,8 @@ export function ExpenseForm({ categories, userId, onSuccess }: ExpenseFormProps)
           </div>
 
           {error && (
-            <Alert variant="destructive">
-              <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
+            <Alert variant="destructive" className="animate-in fade-in-50 slide-in-from-top-2 duration-300">
+              <AlertDescription className="text-xs sm:text-sm font-medium">{error}</AlertDescription>
             </Alert>
           )}
 

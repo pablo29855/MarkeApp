@@ -66,6 +66,11 @@ export default function RegisterPage() {
             type: 'manual',
             message: error.message
           })
+        } else if (error.message.toLowerCase().includes('captcha')) {
+          form.setError('root', {
+            type: 'manual',
+            message: 'Error de verificación. Por favor, ve a Supabase → Authentication → Providers → Email y desactiva el Captcha Protection.'
+          })
         } else {
           form.setError('root', {
             type: 'manual',

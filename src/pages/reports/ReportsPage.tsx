@@ -5,6 +5,7 @@ import { ReportFilters } from '@/components/reports/report-filters'
 import { CategoryPieChart } from '@/components/reports/category-pie-chart'
 import { ComparisonBarChart } from '@/components/reports/comparison-bar-chart'
 import { CategoryTable } from '@/components/reports/category-table'
+import { FinancialBalanceCard } from '@/components/reports/financial-balance-card'
 import { Card, CardContent } from '@/components/ui/card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { formatCurrency } from '@/lib/utils'
@@ -17,6 +18,10 @@ export default function ReportsPage() {
   const [expensesByCategory, setExpensesByCategory] = useState<ExpensesByCategory[]>([])
   const [compareExpensesByCategory, setCompareExpensesByCategory] = useState<ExpensesByCategory[]>([])
   const [isComparing, setIsComparing] = useState(false)
+  const [totalIncome, setTotalIncome] = useState(0)
+  const [totalDebts, setTotalDebts] = useState(0)
+  const [compareTotalIncome, setCompareTotalIncome] = useState(0)
+  const [compareTotalDebts, setCompareTotalDebts] = useState(0)
 
   useEffect(() => {
     async function fetchData() {
@@ -30,8 +35,31 @@ export default function ReportsPage() {
         const month = searchParams.get('month') ? Number.parseInt(searchParams.get('month')!) : currentDate.getMonth() + 1
         const year = searchParams.get('year') ? Number.parseInt(searchParams.get('year')!) : currentDate.getFullYear()
 
+        const startDate = new Date(year, month - 1, 1)
+        const endDate = new Date(year, month, 0)
+
         const data = await getExpensesByCategory(user.id, month, year)
         setExpensesByCategory(data)
+
+        // Obtener ingresos del período
+        const { data: incomes } = await supabase
+          .from('incomes')
+          .select('amount')
+          .eq('user_id', user.id)
+          .gte('income_date', startDate.toISOString().split('T')[0])
+          .lte('income_date', endDate.toISOString().split('T')[0])
+
+        const income = incomes?.reduce((sum, inc) => sum + Number(inc.amount), 0) || 0
+        setTotalIncome(income)
+
+        // Obtener deudas pendientes
+        const { data: debts } = await supabase
+          .from('debts')
+          .select('total_amount, paid_amount')
+          .eq('user_id', user.id)
+
+        const debtsTotal = debts?.reduce((sum, debt) => sum + Number(debt.total_amount) - Number(debt.paid_amount), 0) || 0
+        setTotalDebts(debtsTotal)
 
         const compareMonth = searchParams.get('compareMonth')
         const compareYear = searchParams.get('compareYear')
@@ -44,9 +72,28 @@ export default function ReportsPage() {
             Number.parseInt(compareYear)
           )
           setCompareExpensesByCategory(compareData)
+
+          // Obtener ingresos del período de comparación
+          const compareStartDate = new Date(Number.parseInt(compareYear), Number.parseInt(compareMonth) - 1, 1)
+          const compareEndDate = new Date(Number.parseInt(compareYear), Number.parseInt(compareMonth), 0)
+
+          const { data: compareIncomes } = await supabase
+            .from('incomes')
+            .select('amount')
+            .eq('user_id', user.id)
+            .gte('income_date', compareStartDate.toISOString().split('T')[0])
+            .lte('income_date', compareEndDate.toISOString().split('T')[0])
+
+          const compareIncome = compareIncomes?.reduce((sum, inc) => sum + Number(inc.amount), 0) || 0
+          setCompareTotalIncome(compareIncome)
+
+          // Las deudas son las mismas para ambos períodos (son acumulativas)
+          setCompareTotalDebts(debtsTotal)
         } else {
           setIsComparing(false)
           setCompareExpensesByCategory([])
+          setCompareTotalIncome(0)
+          setCompareTotalDebts(0)
         }
       } catch (error) {
         console.error('[Reports] Error fetching data:', error)
@@ -210,6 +257,20 @@ export default function ReportsPage() {
           <CategoryTable data={expensesByCategory} title="Detalle por Categoría" />
         </div>
       )}
+
+      {/* Balance Financiero - Al final */}
+      <FinancialBalanceCard
+        totalIncome={totalIncome}
+        totalExpenses={totalExpenses}
+        totalDebts={totalDebts}
+        periodLabel={periodLabel}
+        compareData={isComparing ? {
+          totalIncome: compareTotalIncome,
+          totalExpenses: compareTotalExpenses,
+          totalDebts: compareTotalDebts,
+          periodLabel: comparePeriodLabel,
+        } : undefined}
+      />
     </div>
   )
 }
