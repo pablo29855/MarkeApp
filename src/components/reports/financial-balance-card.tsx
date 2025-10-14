@@ -1,7 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency } from '@/lib/utils'
 import { TrendingUp, TrendingDown, Wallet, DollarSign, CreditCard, ArrowRight } from 'lucide-react'
-import { Separator } from '@/components/ui/separator'
 
 interface FinancialBalanceCardProps {
   totalIncome: number
@@ -31,7 +30,6 @@ export function FinancialBalanceCard({
 
   // Cálculos de comparación
   const compareBalance = compareData ? compareData.totalIncome - compareData.totalExpenses - compareData.totalDebts : 0
-  const compareSpent = compareData ? compareData.totalExpenses + compareData.totalDebts : 0
   
   const incomeDiff = compareData ? totalIncome - compareData.totalIncome : 0
   const expensesDiff = compareData ? totalExpenses - compareData.totalExpenses : 0
