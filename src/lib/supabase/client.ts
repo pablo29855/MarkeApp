@@ -1,4 +1,4 @@
-import { createBrowserClient } from "@supabase/ssr"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
 export function createClient() {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -16,5 +16,11 @@ export function createClient() {
 
   console.log("[Supabase] Creating client with URL:", supabaseUrl)
 
-  return createBrowserClient(supabaseUrl, supabaseAnonKey)
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  })
 }
