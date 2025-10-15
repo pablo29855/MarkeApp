@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, parseLocalDate } from '@/lib/utils'
 import { Pencil, Trash2, FileText } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useNotification } from '@/hooks/use-notification'
@@ -136,7 +136,7 @@ export function IncomeList({ incomes, onUpdate }: IncomeListProps) {
                 {/* Información adicional */}
                 <div className="space-y-1 text-xs sm:text-sm text-muted-foreground mb-3 flex-1">
                   <p className="truncate">
-                    {format(new Date(income.income_date), "PPP", {
+                    {format(parseLocalDate(income.income_date), "PPP", {
                       locale: es,
                     })}
                   </p>

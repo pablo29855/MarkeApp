@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useNotification } from "@/hooks/use-notification"
+import { getTodayLocal } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogClose } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { DateInput } from "@/components/ui/date-input"
 import { Plus, Loader2, MapPin } from "lucide-react"
 import type { Category } from "@/lib/types"
 
@@ -30,7 +32,7 @@ export function ExpenseForm({ categories, userId, onSuccess }: ExpenseFormProps)
     name: "",
     amount: "",
     category_id: "",
-    purchase_date: new Date().toISOString().split("T")[0],
+    purchase_date: getTodayLocal(),
     location: "",
     notes: "",
   })
@@ -57,7 +59,7 @@ export function ExpenseForm({ categories, userId, onSuccess }: ExpenseFormProps)
       name: "",
       amount: "",
       category_id: "",
-      purchase_date: new Date().toISOString().split("T")[0],
+      purchase_date: getTodayLocal(),
       location: "",
       notes: "",
     })
@@ -267,9 +269,8 @@ export function ExpenseForm({ categories, userId, onSuccess }: ExpenseFormProps)
 
             <div className="space-y-1.5 sm:space-y-2">
               <Label htmlFor="purchase_date" className="text-xs sm:text-sm">Fecha</Label>
-              <Input
+              <DateInput
                 id="purchase_date"
-                type="date"
                 value={formData.purchase_date}
                 onChange={(e) => setFormData({ ...formData, purchase_date: e.target.value })}
                 required

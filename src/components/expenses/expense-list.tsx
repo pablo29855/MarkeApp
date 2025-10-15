@@ -19,7 +19,7 @@ import { Trash2, MapPin, FileText, Pencil } from "lucide-react"
 import type { Expense, Category } from "@/lib/types"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, parseLocalDate } from "@/lib/utils"
 import { useNotification } from '@/hooks/use-notification'
 import { ExpenseEditDialog } from "./expense-edit-dialog"
 
@@ -116,7 +116,7 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
               {/* Información adicional */}
               <div className="space-y-1 text-xs sm:text-sm text-muted-foreground mb-3 flex-1">
                 <p className="truncate">
-                  {format(new Date(expense.purchase_date), "PPP", {
+                  {format(parseLocalDate(expense.purchase_date), "PPP", {
                     locale: es,
                   })}
                 </p>

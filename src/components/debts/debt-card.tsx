@@ -20,7 +20,7 @@ import { PaymentForm } from "./payment-form"
 import type { Debt, DebtPayment } from "@/lib/types"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { cn } from "@/lib/utils"
+import { cn, parseLocalDate } from "@/lib/utils"
 
 interface DebtCardProps {
   debt: Debt
@@ -168,7 +168,7 @@ export function DebtCard({ debt, payments, onUpdate }: DebtCardProps) {
                   {debt.due_date && (
                     <p className="text-muted-foreground flex items-center gap-2">
                       <Calendar className="h-4 w-4 flex-shrink-0" />
-                      <span>Vence: {format(new Date(debt.due_date), "PP", { locale: es })}</span>
+                      <span>Vence: {format(parseLocalDate(debt.due_date), "PP", { locale: es })}</span>
                     </p>
                   )}
                 </div>
@@ -254,7 +254,7 @@ export function DebtCard({ debt, payments, onUpdate }: DebtCardProps) {
                         </p>
                         <p className="text-sm sm:text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
                           <Calendar className="h-3.5 w-3.5" />
-                          {format(new Date(payment.payment_date), "PP", { locale: es })}
+                          {format(parseLocalDate(payment.payment_date), "PP", { locale: es })}
                         </p>
                         {payment.notes && (
                           <p className="text-sm sm:text-sm text-muted-foreground mt-1.5 line-clamp-2">

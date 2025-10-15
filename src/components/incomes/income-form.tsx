@@ -12,8 +12,10 @@ import {
 } from '@/components/ui/select'
 import { DialogClose } from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { DateInput } from '@/components/ui/date-input'
 import { createClient } from '@/lib/supabase/client'
 import { useNotification } from '@/hooks/use-notification'
+import { getTodayLocal } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 import type { Income } from '@/lib/types'
 
@@ -48,7 +50,7 @@ export function IncomeForm({ onSuccess, income }: IncomeFormProps) {
     description: income?.description || '',
     amount: income?.amount ? formatAmount(income.amount.toString()) : '',
     income_type: income?.income_type || '',
-    income_date: income?.income_date || new Date().toISOString().split('T')[0],
+    income_date: income?.income_date || getTodayLocal(),
     notes: income?.notes || '',
   })
 
@@ -59,7 +61,7 @@ export function IncomeForm({ onSuccess, income }: IncomeFormProps) {
         description: income.description || '',
         amount: formatAmount(income.amount.toString()),
         income_type: income.income_type || '',
-        income_date: income.income_date || new Date().toISOString().split('T')[0],
+        income_date: income.income_date || getTodayLocal(),
         notes: income.notes || '',
       })
     }
@@ -172,9 +174,8 @@ export function IncomeForm({ onSuccess, income }: IncomeFormProps) {
 
         <div className="space-y-1.5 sm:space-y-2">
           <Label htmlFor="income_date" className="text-xs sm:text-sm">Fecha</Label>
-          <Input
+          <DateInput
             id="income_date"
-            type="date"
             value={formData.income_date}
             onChange={(e) => setFormData({ ...formData, income_date: e.target.value })}
             required

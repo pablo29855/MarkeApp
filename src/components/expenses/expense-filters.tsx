@@ -1,10 +1,10 @@
 import { useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
+import { DateInput } from "@/components/ui/date-input"
 import { Filter, X } from "lucide-react"
 import type { Category } from "@/lib/types"
 
@@ -77,9 +77,8 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="startDate" className="text-sm sm:text-base">Fecha Inicio</Label>
-                <Input
+                <DateInput
                   id="startDate"
-                  type="date"
                   value={filters.startDate}
                   onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
                   className="text-sm sm:text-base"
@@ -88,9 +87,8 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="endDate" className="text-sm sm:text-base">Fecha Fin</Label>
-                <Input
+                <DateInput
                   id="endDate"
-                  type="date"
                   value={filters.endDate}
                   onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
                   className="text-sm sm:text-base"

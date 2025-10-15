@@ -4,12 +4,14 @@ import type React from "react"
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useNotification } from "@/hooks/use-notification"
+import { getTodayLocal } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { DateInput } from "@/components/ui/date-input"
 import { DollarSign, Loader2 } from "lucide-react"
 
 interface PaymentFormProps {
@@ -42,7 +44,7 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
 
   const [formData, setFormData] = useState({
     amount: "",
-    payment_date: new Date().toISOString().split("T")[0],
+    payment_date: getTodayLocal(),
     notes: "",
   })
 
@@ -92,7 +94,7 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
       
       setFormData({
         amount: "",
-        payment_date: new Date().toISOString().split("T")[0],
+        payment_date: getTodayLocal(),
         notes: "",
       })
       setOpen(false)
@@ -159,14 +161,13 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
 
           <div className="space-y-1.5 sm:space-y-2">
             <Label htmlFor="payment_date" className="text-xs sm:text-sm">Fecha del Abono</Label>
-            <Input
+            <DateInput
               id="payment_date"
-              type="date"
               value={formData.payment_date}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, payment_date: e.target.value })}
               required
               disabled={isLoading}
-              className="text-sm dark:[color-scheme:dark]"
+              className="text-sm"
             />
           </div>
 

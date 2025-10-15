@@ -11,7 +11,7 @@ import { FinancialBalanceCard } from '@/components/reports/financial-balance-car
 import { Card, CardContent } from '@/components/ui/card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, formatDateLocal } from '@/lib/utils'
 import { BarChart3 } from 'lucide-react'
 import type { ExpensesByCategory, IncomesByType } from '@/lib/types'
 
@@ -54,8 +54,8 @@ export default function ReportsPage() {
           .from('incomes')
           .select('amount, income_type')
           .eq('user_id', user.id)
-          .gte('income_date', startDate.toISOString().split('T')[0])
-          .lte('income_date', endDate.toISOString().split('T')[0])
+          .gte('income_date', formatDateLocal(startDate))
+          .lte('income_date', formatDateLocal(endDate))
 
         const income = allIncomes?.reduce((sum, inc) => sum + Number(inc.amount), 0) || 0
         setTotalIncome(income)
@@ -104,8 +104,8 @@ export default function ReportsPage() {
             .from('incomes')
             .select('amount')
             .eq('user_id', user.id)
-            .gte('income_date', compareStartDate.toISOString().split('T')[0])
-            .lte('income_date', compareEndDate.toISOString().split('T')[0])
+            .gte('income_date', formatDateLocal(compareStartDate))
+            .lte('income_date', formatDateLocal(compareEndDate))
 
           const compareIncome = compareIncomes?.reduce((sum, inc) => sum + Number(inc.amount), 0) || 0
           setCompareTotalIncome(compareIncome)
@@ -115,8 +115,8 @@ export default function ReportsPage() {
             .from('incomes')
             .select('amount, income_type')
             .eq('user_id', user.id)
-            .gte('income_date', compareStartDate.toISOString().split('T')[0])
-            .lte('income_date', compareEndDate.toISOString().split('T')[0])
+            .gte('income_date', formatDateLocal(compareStartDate))
+            .lte('income_date', formatDateLocal(compareEndDate))
 
           const compareIncomeTypeMap = new Map<string, number>()
           compareAllIncomes?.forEach(inc => {
@@ -165,8 +165,8 @@ export default function ReportsPage() {
       .from('expenses')
       .select('amount, category:categories(name, color, icon)')
       .eq('user_id', userId)
-      .gte('purchase_date', startDate.toISOString().split('T')[0])
-      .lte('purchase_date', endDate.toISOString().split('T')[0])
+      .gte('purchase_date', formatDateLocal(startDate))
+      .lte('purchase_date', formatDateLocal(endDate))
 
     const categoryMap = new Map<string, ExpensesByCategory>()
     expenses?.forEach((exp: any) => {

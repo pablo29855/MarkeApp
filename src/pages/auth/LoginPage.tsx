@@ -206,13 +206,13 @@ export default function LoginPage() {
                     <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">Correo Electrónico</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none" />
                         <Input
                           type="email"
                           placeholder="tu@email.com"
                           autoComplete="email"
                           disabled={isLoading}
-                          className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20 border-input focus:border-primary aria-invalid:border-input aria-invalid:ring-0"
+                          className="pl-10 h-11 transition-smooth bg-white dark:bg-white/5 border border-slate-200 dark:border-neutral-700 rounded-md shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-500"
                           {...field}
                         />
                       </div>
@@ -238,12 +238,12 @@ export default function LoginPage() {
                     </div>
                     <FormControl>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none" />
                         <Input
                           type="password"
                           autoComplete="current-password"
                           disabled={isLoading}
-                          className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20 border-input focus:border-primary aria-invalid:border-input aria-invalid:ring-0"
+                          className="pl-10 h-11 transition-smooth bg-white dark:bg-white/5 border border-slate-200 dark:border-neutral-700 rounded-md shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-500"
                           {...field}
                         />
                       </div>
