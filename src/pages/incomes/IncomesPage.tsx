@@ -216,19 +216,19 @@ export default function IncomesPage() {
       {/* Filtros */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            onClick={() => setIsFiltersOpen(!isFiltersOpen)} 
+          <Button
+            variant="outline"
+            onClick={() => setIsFiltersOpen(!isFiltersOpen)}
             className="text-sm sm:text-base"
           >
             <Filter className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
             Filtros
           </Button>
           {(searchTerm || selectedType !== 'all') && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={clearFilters} 
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
               className="text-sm sm:text-base"
             >
               <X className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />

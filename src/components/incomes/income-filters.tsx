@@ -27,7 +27,7 @@ const months = [
 const currentYear = new Date().getFullYear()
 const years = Array.from({ length: 5 }, (_, i) => currentYear - i)
 
-export function ReportFilters() {
+export function IncomeFilters() {
   const navigate = useNavigate()
   const currentMonth = new Date().getMonth() + 1
   const [month, setMonth] = useState(currentMonth.toString())
@@ -40,7 +40,7 @@ export function ReportFilters() {
     const params = new URLSearchParams()
     params.set("month", month)
     params.set("year", year)
-    params.set("type", "expenses") // Indicar que es un reporte de gastos
+    params.set("type", "incomes") // Indicar que es un reporte de ingresos
     if (compareMonth && compareYear) {
       params.set("compareMonth", compareMonth)
       params.set("compareYear", compareYear)
@@ -66,7 +66,7 @@ export function ReportFilters() {
               <BarChart3 className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-primary" />
             </div>
             <div className="text-left flex-1 min-w-0">
-              <h3 className="text-sm sm:text-base font-semibold truncate">Filtros de Gastos</h3>
+              <h3 className="text-sm sm:text-base font-semibold truncate">Filtros de Ingresos</h3>
               {!isOpen && (
                 <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
                   {selectedMonthLabel} {year}
@@ -75,7 +75,7 @@ export function ReportFilters() {
               )}
             </div>
           </div>
-          <ChevronDown 
+          <ChevronDown
             className={`h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''}`}
           />
         </div>
@@ -180,12 +180,12 @@ export function ReportFilters() {
             </div>
           </div>
 
-          <Button 
-            onClick={applyFilters} 
+          <Button
+            onClick={applyFilters}
             className="w-full h-9 sm:h-10 text-xs sm:text-sm font-semibold shadow-sm"
           >
             <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
-            Generar Reporte de Gastos
+            Generar Reporte de Ingresos
           </Button>
         </div>
       </CollapsibleContent>
