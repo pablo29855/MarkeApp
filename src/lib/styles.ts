@@ -1,0 +1,1 @@
+export const scrollbarClasses = 'scrollbar-thin scrollbar-track-transparent scrollbar-thumb-secondary hover:scrollbar-thumb-secondary/80'

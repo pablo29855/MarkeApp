@@ -229,14 +229,14 @@ export function ExpenseForm({ categories, userId, onSuccess }: ExpenseFormProps)
           <span className="sm:hidden">Nuevo</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <div className="no-ios-zoom">
-          <DialogHeader>
+      <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-secondary hover:scrollbar-thumb-secondary/80" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">Nuevo Gasto</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
             Completa el formulario para registrar un nuevo gasto
           </DialogDescription>
         </DialogHeader>
+        <div className="no-ios-zoom mt-4">
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div className="space-y-1.5 sm:space-y-2">
             <Label htmlFor="name" className="text-xs sm:text-sm">Nombre del Gasto</Label>

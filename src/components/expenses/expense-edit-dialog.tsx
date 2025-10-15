@@ -232,7 +232,7 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+      <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-secondary hover:scrollbar-thumb-secondary/80" onOpenAutoFocus={(e) => e.preventDefault()}>
         <div className="no-ios-zoom">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl">Editar Gasto</DialogTitle>

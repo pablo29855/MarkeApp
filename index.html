@@ -6,6 +6,23 @@
     <link rel="apple-touch-icon" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MarkeApp - Gestión de Gastos</title>
+    <!-- Script inline para aplicar el tema antes de que React monte y evitar flash de tema -->
+    <script>
+      (function() {
+        try {
+          var storageKey = 'vite-ui-theme';
+          var theme = localStorage.getItem(storageKey);
+          if (!theme || theme === 'system') {
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            theme = prefersDark ? 'dark' : 'light';
+          }
+          document.documentElement.classList.remove('light','dark');
+          document.documentElement.classList.add(theme);
+        } catch (e) {
+          // Si algo falla, no bloqueamos la carga
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

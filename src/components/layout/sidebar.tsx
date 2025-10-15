@@ -1,5 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
+import { scrollbarClasses } from "@/lib/styles"
+import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import {
@@ -41,7 +43,6 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
   const pathname = location.pathname
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarVersion, setAvatarVersion] = useState(Date.now())
@@ -68,14 +69,7 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
     setIsMobileMenuOpen(false)
   }, [pathname])
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme")
-    const isDark = savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)
-    setIsDarkMode(isDark)
-    if (isDark) {
-      document.documentElement.classList.add("dark")
-    }
-  }, [])
+
 
   // Helper para limpiar la URL base (remover parámetros)
   const getCleanUrl = (url: string) => {
@@ -168,16 +162,12 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
     }
   }, [])
 
+  const { theme, setTheme } = useTheme()
+  
   const toggleTheme = () => {
-    const newTheme = !isDarkMode
-    setIsDarkMode(newTheme)
-    if (newTheme) {
-      document.documentElement.classList.add("dark")
-      localStorage.setItem("theme", "dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-      localStorage.setItem("theme", "light")
-    }
+    const newTheme = theme === 'dark' ? 'light' : 'dark'
+    // Indicamos que el cambio fue iniciado por el usuario (botón)
+    setTheme(newTheme, { userInitiated: true })
   }
 
   const handleLogout = async () => {
@@ -279,7 +269,7 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto relative z-10">
+          <nav className={`flex-1 px-3 py-4 space-y-1.5 overflow-y-auto relative z-10 ${scrollbarClasses}`}>
             {navigation.map((item, index) => {
               const isActive = pathname === item.href
               return (
@@ -326,9 +316,9 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
                 isCollapsed ? "justify-center px-0" : "justify-start"
               )}
               onClick={toggleTheme}
-              title={isCollapsed ? (isDarkMode ? "Modo Claro" : "Modo Oscuro") : undefined}
+              title={isCollapsed ? (theme === 'dark' ? "Modo Claro" : "Modo Oscuro") : undefined}
             >
-              {isDarkMode ? (
+              {theme === 'dark' ? (
                 <>
                   <Sun className="h-4 w-4 shrink-0 text-yellow-500" />
                   {!isCollapsed && <span className="text-xs">Modo Claro</span>}

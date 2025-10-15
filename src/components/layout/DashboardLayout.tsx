@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react'
 import { Sidebar } from '@/components/layout/sidebar'
 import { createClient } from '@/lib/supabase/client'
+import { scrollbarClasses } from '@/lib/styles'
 
 interface DashboardLayoutProps {
   children: ReactNode
@@ -28,7 +29,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <Sidebar userName={userName} onCollapse={setIsCollapsed} />
       <main className={`transition-all duration-300 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
         {/* Espacio para el header móvil (16 = h-16) */}
-        <div className="pt-16 lg:pt-0">
+        <div className={`pt-16 lg:pt-0 h-[100vh] overflow-y-auto ${scrollbarClasses}`}>
           <div className="p-3 sm:p-4 md:p-6 lg:p-8">{children}</div>
         </div>
       </main>

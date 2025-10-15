@@ -378,7 +378,7 @@ export default function ReportsPage() {
           {/* Detalles en acordeones */}
           <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2">
             {(!reportType || reportType === 'expenses') && (
-              <Accordion type="single" collapsible defaultValue="expenses" className="w-full">
+              <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="expenses" className="border rounded-lg bg-card shadow-sm">
                   <AccordionTrigger className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 hover:no-underline">
                     <div className="flex items-center gap-2 text-left">
@@ -394,7 +394,7 @@ export default function ReportsPage() {
             )}
 
             {(!reportType || reportType === 'incomes') && (
-              <Accordion type="single" collapsible defaultValue="incomes" className="w-full">
+              <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="incomes" className="border rounded-lg bg-card shadow-sm">
                   <AccordionTrigger className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 hover:no-underline">
                     <div className="flex items-center gap-2 text-left">
