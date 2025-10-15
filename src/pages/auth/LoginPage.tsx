@@ -63,11 +63,14 @@ export default function LoginPage() {
   })
 
   const handleTurnstileSuccess = (token: string) => {
+    console.log('✅ Turnstile verificado exitosamente')
+    console.log('🔑 Token recibido (primeros 20 chars):', token.substring(0, 20) + '...')
     setCaptchaToken(token)
     setCaptchaVerified(true)
   }
 
-  const handleTurnstileError = () => {
+  const handleTurnstileError = (error?: any) => {
+    console.error('❌ Error en Turnstile:', error)
     setCaptchaToken('')
     setCaptchaVerified(false)
   }
@@ -79,8 +82,8 @@ export default function LoginPage() {
   }
 
   const onSubmit = async (data: LoginFormData) => {
-    // Validar captcha si está habilitado
-    if (isCaptchaEnabled && !captchaToken) {
+    // Validar CAPTCHA si está habilitado
+    if (isCaptchaEnabled && !captchaVerified) {
       form.setError('root', {
         type: 'manual',
         message: 'Por favor completa la verificación de seguridad'
@@ -91,21 +94,24 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const signInOptions: any = {
+      console.log('🔐 Intentando login con CAPTCHA...')
+      console.log('📧 Email:', data.email)
+      console.log('🎫 CAPTCHA habilitado:', isCaptchaEnabled)
+      console.log('✅ CAPTCHA verificado:', captchaVerified)
+      console.log('🔑 Token presente:', !!captchaToken)
+      
+      // Según la documentación de Supabase, el captchaToken debe ir en options
+      // https://supabase.com/docs/guides/auth/auth-captcha
+      const { error, data: authData } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
-      }
-
-      // Si hay captcha token, incluirlo en las opciones
-      if (captchaToken) {
-        signInOptions.options = {
+        options: {
           captchaToken: captchaToken,
-        }
-      }
-      
-      const { error } = await supabase.auth.signInWithPassword(signInOptions)
+        },
+      })
       
       if (error) {
+        console.error('❌ Error de Supabase:', error)
         // Resetear captcha en caso de error
         resetCaptcha()
 
@@ -135,6 +141,7 @@ export default function LoginPage() {
         return
       }
       
+      console.log('✅ Login exitoso:', authData?.user?.email)
       navigate('/dashboard')
     } catch (error: unknown) {
       // Resetear captcha en caso de error
@@ -196,7 +203,7 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">Correo Electrónico</FormLabel>
+                    <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">Correo Electrónico</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
@@ -205,7 +212,7 @@ export default function LoginPage() {
                           placeholder="tu@email.com"
                           autoComplete="email"
                           disabled={isLoading}
-                          className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
+                          className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20 border-input focus:border-primary aria-invalid:border-input aria-invalid:ring-0"
                           {...field}
                         />
                       </div>
@@ -221,7 +228,7 @@ export default function LoginPage() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between">
-                      <FormLabel className="text-sm font-medium">Contraseña</FormLabel>
+                      <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">Contraseña</FormLabel>
                       <Link
                         to="/auth/forgot-password"
                         className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"
@@ -236,7 +243,7 @@ export default function LoginPage() {
                           type="password"
                           autoComplete="current-password"
                           disabled={isLoading}
-                          className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
+                          className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20 border-input focus:border-primary aria-invalid:border-input aria-invalid:ring-0"
                           {...field}
                         />
                       </div>
