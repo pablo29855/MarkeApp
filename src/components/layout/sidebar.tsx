@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
+import { scrollbarClasses } from "@/lib/styles"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import {
@@ -279,7 +280,7 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto relative z-10">
+          <nav className={`flex-1 px-3 py-4 space-y-1.5 overflow-y-auto relative z-10 ${scrollbarClasses}`}>
             {navigation.map((item, index) => {
               const isActive = pathname === item.href
               return (

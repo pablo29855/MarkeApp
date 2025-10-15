@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { scrollbarClasses } from "@/lib/styles"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -314,7 +315,7 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories,
           setLocationName("")
         }
       }}>
-        <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className={`w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto ${scrollbarClasses}`} onOpenAutoFocus={(e) => e.preventDefault()}>
           <div className="no-ios-zoom">
             <DialogHeader>
               <DialogTitle className="text-lg sm:text-xl">Comprado</DialogTitle>
