@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { DateInput } from "@/components/ui/date-input"
 import { Loader2, MapPin } from "lucide-react"
 import type { Expense, Category } from "@/lib/types"
 
@@ -292,14 +293,13 @@ export function ExpenseEditDialog({ expense, categories, open, onOpenChange, onS
 
           <div className="space-y-1.5 sm:space-y-2">
             <Label htmlFor="edit_purchase_date" className="text-xs sm:text-sm">Fecha de Compra</Label>
-            <Input
+            <DateInput
               id="edit_purchase_date"
-              type="date"
               value={formData.purchase_date}
               onChange={(e) => setFormData({ ...formData, purchase_date: e.target.value })}
               required
               disabled={isLoading}
-              className="dark:[color-scheme:dark] text-sm sm:text-base h-9 sm:h-10"
+              className="text-sm sm:text-base h-9 sm:h-10"
             />
           </div>
 

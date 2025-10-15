@@ -5,12 +5,14 @@ import type React from "react"
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useNotification } from "@/hooks/use-notification"
+import { getTodayLocal } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { DateInput } from "@/components/ui/date-input"
 import { Plus, Loader2 } from "lucide-react"
 
 interface DebtFormProps {
@@ -55,7 +57,7 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
     const supabase = createClient()
 
     try {
-      const currentDate = new Date().toISOString().split('T')[0]
+      const currentDate = getTodayLocal()
       
       console.log("[v0] Creating debt with data:", {
         user_id: userId,
@@ -150,13 +152,12 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
 
             <div className="space-y-1.5 sm:space-y-2">
               <Label htmlFor="due_date" className="text-xs sm:text-sm">Fecha de Vencimiento</Label>
-              <Input
+              <DateInput
                 id="due_date"
-                type="date"
                 value={formData.due_date}
                 onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                 disabled={isLoading}
-                className="dark:[color-scheme:dark] text-sm"
+                className="text-sm"
               />
             </div>
           </div>

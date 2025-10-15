@@ -213,6 +213,54 @@ html, body {
   }
 }
 
+/* Corregir fondo gris de autofill en inputs (Chrome/Edge) usando variables de tema */
+input[data-slot="input"]:-webkit-autofill,
+textarea[data-slot="input"]:-webkit-autofill,
+input[data-slot="input"]:-webkit-autofill:hover,
+textarea[data-slot="input"]:-webkit-autofill:hover,
+input[data-slot="input"]:-webkit-autofill:focus,
+textarea[data-slot="input"]:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px hsl(var(--card)) inset !important;
+  box-shadow: 0 0 0px 1000px hsl(var(--card)) inset !important;
+  -webkit-text-fill-color: hsl(var(--card-foreground)) !important;
+  caret-color: auto;
+}
+
+/* Compatibilidad adicional: selector general para inputs normales */
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+input:-webkit-autofill:hover,
+textarea:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px hsl(var(--card)) inset !important;
+  box-shadow: 0 0 0px 1000px hsl(var(--card)) inset !important;
+  -webkit-text-fill-color: hsl(var(--card-foreground)) !important;
+}
+
+/* Forzar fondo consistente en inputs usando el color de la tarjeta (evita 'pills' grises) */
+input[data-slot="input"],
+textarea[data-slot="input"],
+input[data-slot="input"]:not(:placeholder-shown),
+textarea[data-slot="input"]:not(:placeholder-shown) {
+  background-color: hsl(var(--card)) !important;
+  -webkit-text-fill-color: hsl(var(--card-foreground)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  box-shadow: none !important;
+}
+
+/* Asegurar que el autofill use el mismo fondo (Chrome/Edge) */
+input[data-slot="input"]:-webkit-autofill,
+textarea[data-slot="input"]:-webkit-autofill,
+input[data-slot="input"]:-webkit-autofill:hover,
+textarea[data-slot="input"]:-webkit-autofill:hover,
+input[data-slot="input"]:-webkit-autofill:focus,
+textarea[data-slot="input"]:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px hsl(var(--card)) inset !important;
+  box-shadow: 0 0 0px 1000px hsl(var(--card)) inset !important;
+  -webkit-text-fill-color: hsl(var(--card-foreground)) !important;
+}
+
 /* Eliminamos la regla global :focus que podía forzar transform/none y afectar animaciones/estilos */
 
 

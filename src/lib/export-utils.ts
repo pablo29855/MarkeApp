@@ -1,5 +1,6 @@
 import type { Expense } from "./types"
 import { format } from "date-fns"
+import { parseLocalDate } from "./utils"
 
 export function exportExpensesToCSV(expenses: Expense[]) {
   if (!expenses || expenses.length === 0) {
@@ -14,7 +15,7 @@ export function exportExpensesToCSV(expenses: Expense[]) {
   const rows = expenses.map((expense) => {
     // Validar que expense tenga los datos necesarios
     const purchaseDate = expense.purchase_date 
-      ? format(new Date(expense.purchase_date), "yyyy-MM-dd")
+      ? format(parseLocalDate(expense.purchase_date), "yyyy-MM-dd")
       : ""
     
     const categoryName = expense.category?.name || "Sin categoría"
