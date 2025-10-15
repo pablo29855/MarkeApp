@@ -728,7 +728,6 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más det
 
 **Pablo Romero**
 - GitHub: [@pablo29855](https://github.com/pablo29855)
-- Email: tu-email@example.com
 
 ---
 
@@ -740,7 +739,6 @@ Agradecimientos especiales a todos los que han contribuido al proyecto:
 <tr>
 <td align="center">
 <a href="https://github.com/YeisonRamirezSuarez">
-<img src="https://github.com/YeisonRamirezSuarez.png" width="100px;" alt="Yeison Ramirez"/><br />
 <sub><b>Yeison Ramirez Suarez</b></sub>
 </a><br />
 <a href="https://github.com/pablo29855/MarkeApp/commits?author=YeisonRamirezSuarez" title="Code">💻</a>
@@ -783,14 +781,6 @@ Agradecimientos especiales a todos los que han contribuido al proyecto:
 ## 🐛 Reportar Problemas
 
 Si encuentras algún bug o tienes sugerencias, por favor abre un [issue en GitHub](https://github.com/pablo29855/MarkeApp/issues).
-
----
-
-## 💬 Soporte
-
-¿Necesitas ayuda? Contáctanos:
-
-- 📧 Email: support@markeapp.com
 
 ---
 
