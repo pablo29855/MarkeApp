@@ -29,7 +29,7 @@ export function ThemeProvider({
       return storedTheme as Theme
     }
     // Primera vez: usar modo claro por defecto
-    return 'light'
+    return defaultTheme
   })
 
   useEffect(() => {
