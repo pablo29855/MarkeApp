@@ -46,7 +46,6 @@ export function ThemeProvider({
     localStorage.setItem(storageKey, theme)
   }, [theme, storageKey])
 
-  const [transitionKey, setTransitionKey] = useState(0)
   const [userInitiated, setUserInitiated] = useState(false)
 
   const value: ThemeContextType = {
@@ -55,15 +54,14 @@ export function ThemeProvider({
       if (options?.userInitiated) {
         setUserInitiated(true)
       }
-      // Forzamos la transición incluso si el tema es el mismo
-      setTransitionKey(prev => prev + 1)
+      // Aplicar el tema directamente sin forzar re-mount
       setThemeState(newTheme)
     },
   }
 
   return (
     <ThemeContext.Provider value={value}>
-      <ThemeTransition key={transitionKey} theme={theme} userInitiated={userInitiated} onDone={() => setUserInitiated(false)}>
+      <ThemeTransition theme={theme} userInitiated={userInitiated} onDone={() => setUserInitiated(false)}>
         {children}
       </ThemeTransition>
     </ThemeContext.Provider>
