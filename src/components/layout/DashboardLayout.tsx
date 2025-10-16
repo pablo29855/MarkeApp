@@ -28,9 +28,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="min-h-screen bg-background">
       <Sidebar userName={userName} onCollapse={setIsCollapsed} />
       <main className={`transition-all duration-300 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
-        {/* Espacio para el header móvil (16 = h-16) */}
-        <div className={`pt-16 lg:pt-0 h-[100vh] overflow-y-auto ${scrollbarClasses}`}>
-          <div className="p-3 sm:p-4 md:p-6 lg:p-8">{children}</div>
+        {/* Contenedor con scroll optimizado */}
+        <div className={`h-[100vh] overflow-y-auto overscroll-behavior-y-contain scroll-smooth ${scrollbarClasses}`}>
+          {/* Espaciado limpio y profesional - Reducido padding superior en desktop y más espacio inferior */}
+          <div className="pt-20 lg:pt-6 px-4 sm:px-5 md:px-6 lg:px-8 pb-8 sm:pb-10 lg:pb-12 min-h-full">
+            {children}
+          </div>
         </div>
       </main>
     </div>

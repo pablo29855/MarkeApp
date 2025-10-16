@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IncomeFormWrapper } from '@/components/incomes/income-form-wrapper'
 import { IncomeList } from '@/components/incomes/income-list'
-import { SkeletonIncome } from '@/components/ui/skeleton-income'
+import { SkeletonGrid } from '@/components/ui/skeleton-card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -21,6 +21,7 @@ import type { Income } from '@/lib/types'
 
 export default function IncomesPage() {
   const [loading, setLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [incomes, setIncomes] = useState<Income[]>([])
   const [filteredIncomes, setFilteredIncomes] = useState<Income[]>([])
   const [userId, setUserId] = useState<string>('')
@@ -53,9 +54,10 @@ export default function IncomesPage() {
     }
   }, [])
 
-  const handleRefresh = useCallback(() => {
-    // Refresh completamente silencioso en segundo plano
-    fetchIncomes()
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true)
+    await fetchIncomes()
+    setTimeout(() => setIsRefreshing(false), 300)
   }, [fetchIncomes])
 
   useEffect(() => {
@@ -181,13 +183,13 @@ export default function IncomesPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6" style={{ position: 'relative', isolation: 'isolate' }}>
-      {/* Header - Más compacto en móvil */}
-      <div className="sticky top-16 lg:top-0 z-20 bg-background pb-2 -mt-2 pt-2" style={{ transform: 'translateZ(0)' }}>
+    <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6">
+      {/* Header fijo profesional - Sticky en mobile y desktop */}
+      <div className="sticky top-16 lg:top-0 z-10 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b border-border/50 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-3 sm:py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
           <div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">Ingresos</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1">Gestiona y registra tus ingresos</p>
+            <p className="text-sm sm:text-base text-muted-foreground">Gestiona y registra tus ingresos</p>
           </div>
           <div className="flex gap-2 self-end sm:self-auto">
             <IncomeFormWrapper onSuccess={handleRefresh} />
@@ -320,8 +322,8 @@ export default function IncomesPage() {
       </div>
 
       {/* Lista de Ingresos */}
-      {loading ? (
-        <SkeletonIncome />
+      {isRefreshing ? (
+        <SkeletonGrid count={filteredIncomes.length || 6} />
       ) : (
         <IncomeList incomes={filteredIncomes} onUpdate={handleRefresh} />
       )}

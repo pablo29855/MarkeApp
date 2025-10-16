@@ -138,13 +138,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-3 sm:space-y-4 lg:space-y-6 pb-4">
-      {/* Header - Mejorado y protagonista */}
-      <div className="sticky top-16 lg:top-0 z-20 bg-background pb-2 -mt-2 pt-2">
-        <div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Resumen de tus finanzas personales</p>
-        </div>
+    <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6 pb-4">
+      {/* Header fijo profesional - Sticky en mobile y desktop */}
+      <div className="sticky top-16 lg:top-0 z-10 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b border-border/50 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-3 sm:py-4">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
+          Dashboard
+        </h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Resumen de tus finanzas personales</p>
       </div>
 
       {/* Stats Cards Grid - Responsivo: 2 col en móvil, 4 en desktop */}

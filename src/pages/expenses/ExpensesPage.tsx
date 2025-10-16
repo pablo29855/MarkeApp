@@ -5,6 +5,7 @@ import { ExpenseForm } from '@/components/expenses/expense-form'
 import { ExpenseFilters } from '@/components/expenses/expense-filters'
 import { Card, CardContent } from '@/components/ui/card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
+import { SkeletonGrid } from '@/components/ui/skeleton-card'
 import { formatCurrency } from '@/lib/utils'
 import type { Expense, Category } from '@/lib/types'
 import { ExpenseListWrapper } from '@/components/expenses/expense-list-wrapper'
@@ -14,6 +15,7 @@ import { Receipt } from 'lucide-react'
 export default function ExpensesPage() {
   const [searchParams] = useSearchParams()
   const [loading, setLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [userId, setUserId] = useState<string>('')
@@ -53,9 +55,10 @@ export default function ExpensesPage() {
     }
   }, [searchParams])
 
-  const handleRefresh = useCallback(() => {
-    // Refresh completamente silencioso en segundo plano
-    fetchExpenses()
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true)
+    await fetchExpenses()
+    setTimeout(() => setIsRefreshing(false), 300)
   }, [fetchExpenses])
 
   useEffect(() => {
@@ -121,13 +124,13 @@ export default function ExpensesPage() {
   const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0)
 
   return (
-    <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6" style={{ position: 'relative', isolation: 'isolate' }}>
-      {/* Header - Más compacto en móvil */}
-      <div className="sticky top-16 lg:top-0 z-20 bg-background pb-2 -mt-2 pt-2" style={{ transform: 'translateZ(0)' }}>
+    <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6">
+      {/* Header fijo profesional - Sticky en mobile y desktop */}
+      <div className="sticky top-16 lg:top-0 z-10 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b border-border/50 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-3 sm:py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
           <div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">Gastos</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">Gestiona y controla tus gastos</p>
+            <p className="text-sm sm:text-base text-muted-foreground">Gestiona y controla tus gastos</p>
           </div>
           <div className="flex gap-2 self-end sm:self-auto">
             <ExportButton expenses={expenses} />
@@ -155,7 +158,13 @@ export default function ExpensesPage() {
       </Card>
 
       <ExpenseFilters categories={categories} />
-      <ExpenseListWrapper expenses={expenses} categories={categories} onUpdate={handleRefresh} />
+      
+      {/* Lista de Gastos */}
+      {isRefreshing ? (
+        <SkeletonGrid count={expenses.length || 6} />
+      ) : (
+        <ExpenseListWrapper expenses={expenses} categories={categories} onUpdate={handleRefresh} />
+      )}
     </div>
   )
 }
