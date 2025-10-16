@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { DateInput } from '@/components/ui/date-input'
+import { FormFieldError } from '@/components/ui/form-field-error'
+import { getValidationMessage } from '@/lib/validation-messages'
 import { createClient } from '@/lib/supabase/client'
 import { useNotification } from '@/hooks/use-notification'
 import { getTodayLocal } from '@/lib/utils'
@@ -28,6 +30,22 @@ export function IncomeForm({ onSuccess, income, onClose }: IncomeFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { showCreated, showUpdated, showError } = useNotification()
+
+  // Referencias para los campos del formulario
+  const descriptionRef = useRef<HTMLInputElement>(null)
+  const amountRef = useRef<HTMLInputElement>(null)
+  const incomeTypeRef = useRef<HTMLDivElement>(null) // Contenedor del select
+  const incomeDateRef = useRef<HTMLInputElement>(null)
+
+  // Estados para errores de validación
+  const [fieldErrors, setFieldErrors] = useState({
+    description: '',
+    amount: '',
+    income_type: '',
+    income_date: '',
+  })
+  const [showFieldError, setShowFieldError] = useState<string | null>(null)
+  const [submitAttempt, setSubmitAttempt] = useState(0)
 
   // Función para formatear el monto con puntos de mil (formato colombiano)
   const formatAmount = (value: string) => {
@@ -70,19 +88,53 @@ export function IncomeForm({ onSuccess, income, onClose }: IncomeFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validación manual de tipo
+    // Incrementar contador de intentos de envío
+    setSubmitAttempt(prev => prev + 1)
+
+    // Limpiar errores previos
+    setFieldErrors({
+      description: '',
+      amount: '',
+      income_type: '',
+      income_date: '',
+    })
+    setShowFieldError(null)
+    setError(null)
+
+    // Validaciones personalizadas
+    const errors = {
+      description: '',
+      amount: '',
+      income_type: '',
+      income_date: '',
+    }
+
+    if (!formData.description.trim()) {
+      errors.description = getValidationMessage('description')
+    }
+
+    if (!formData.amount.trim()) {
+      errors.amount = getValidationMessage('amount')
+    }
+
     if (!formData.income_type) {
-      setError('Por favor selecciona un tipo de ingreso')
-      // Hacer scroll al error
-      setTimeout(() => {
-        const errorElement = document.querySelector('[role="alert"]')
-        errorElement?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }, 100)
+      errors.income_type = getValidationMessage('income_type')
+    }
+
+    if (!formData.income_date) {
+      errors.income_date = getValidationMessage('income_date')
+    }
+
+    // Si hay errores, mostrar el primero
+    const firstError = Object.entries(errors).find(([_, value]) => value !== '')
+    if (firstError) {
+      const [field] = firstError
+      setFieldErrors(errors)
+      setShowFieldError(field)
       return
     }
 
     setIsLoading(true)
-    setError(null)
 
     try {
       const supabase = createClient()
@@ -145,67 +197,120 @@ export function IncomeForm({ onSuccess, income, onClose }: IncomeFormProps) {
     <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-6">
       <div className="space-y-1.5 sm:space-y-2">
         <Label htmlFor="description" className="text-xs sm:text-sm">Descripción *</Label>
-        <Input
-          id="description"
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          placeholder="Ej: Pago de salario, Cliente XYZ..."
-          required
-          disabled={isLoading}
-          className="text-sm sm:text-base h-9 sm:h-10"
-        />
+        <div ref={descriptionRef} className="relative">
+          <FormFieldError 
+            error={fieldErrors.description}
+            show={showFieldError === 'description'}
+            fieldRef={descriptionRef}
+            submitAttempt={submitAttempt}
+          />
+          <Input
+            id="description"
+            value={formData.description}
+            onChange={(e) => {
+              setFormData({ ...formData, description: e.target.value })
+              if (fieldErrors.description) {
+                setFieldErrors({ ...fieldErrors, description: '' })
+                setShowFieldError(null)
+              }
+            }}
+            placeholder="Ej: Pago de salario, Cliente XYZ..."
+            disabled={isLoading}
+            className="text-sm sm:text-base h-9 sm:h-10"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="space-y-1.5 sm:space-y-2">
           <Label htmlFor="amount" className="text-xs sm:text-sm">Monto *</Label>
-          <Input
-            id="amount"
-            type="text"
-            inputMode="numeric"
-            value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: formatAmount(e.target.value) })}
-            placeholder="0"
-            required
-            disabled={isLoading}
-            className="text-sm sm:text-base h-9 sm:h-10"
-          />
+          <div ref={amountRef} className="relative">
+            <FormFieldError 
+              error={fieldErrors.amount}
+              show={showFieldError === 'amount'}
+              fieldRef={amountRef}
+              submitAttempt={submitAttempt}
+            />
+            <Input
+              id="amount"
+              type="text"
+              inputMode="numeric"
+              value={formData.amount}
+              onChange={(e) => {
+                setFormData({ ...formData, amount: formatAmount(e.target.value) })
+                if (fieldErrors.amount) {
+                  setFieldErrors({ ...fieldErrors, amount: '' })
+                  setShowFieldError(null)
+                }
+              }}
+              placeholder="0"
+              disabled={isLoading}
+              className="text-sm sm:text-base h-9 sm:h-10"
+            />
+          </div>
         </div>
 
         <div className="space-y-1.5 sm:space-y-2">
           <Label htmlFor="income_date" className="text-xs sm:text-sm">Fecha *</Label>
-          <DateInput
-            id="income_date"
-            value={formData.income_date}
-            onChange={(e) => setFormData({ ...formData, income_date: e.target.value })}
-            required
-            disabled={isLoading}
-            className="text-sm sm:text-base h-9 sm:h-10"
-          />
+          <div ref={incomeDateRef} className="relative">
+            <FormFieldError 
+              error={fieldErrors.income_date}
+              show={showFieldError === 'income_date'}
+              fieldRef={incomeDateRef}
+              submitAttempt={submitAttempt}
+            />
+            <DateInput
+              id="income_date"
+              value={formData.income_date}
+              onChange={(e) => {
+                setFormData({ ...formData, income_date: e.target.value })
+                if (fieldErrors.income_date) {
+                  setFieldErrors({ ...fieldErrors, income_date: '' })
+                  setShowFieldError(null)
+                }
+              }}
+              disabled={isLoading}
+              className="text-sm sm:text-base h-9 sm:h-10"
+            />
+          </div>
         </div>
       </div>
 
       <div className="space-y-1.5 sm:space-y-2">
         <Label htmlFor="income_type" className="text-xs sm:text-sm">Tipo de Ingreso *</Label>
-        <Select
-          value={formData.income_type}
-          onValueChange={(value) => setFormData({ ...formData, income_type: value as 'nomina' | 'transferencia' | 'efectivo' })}
-          disabled={isLoading}
-        >
-          <SelectTrigger id="income_type" className="h-9 sm:h-10 text-sm sm:text-base">
-            <SelectValue placeholder="Selecciona un tipo" />
-          </SelectTrigger>
-          <SelectContent position="popper" sideOffset={8} align="start">
-            {incomeTypeOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value} className="text-sm sm:text-base cursor-pointer">
-                <span className="flex items-center gap-2">
-                  <span>{option.icon}</span>
-                  <span>{option.label}</span>
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div ref={incomeTypeRef} className="relative">
+          <FormFieldError 
+            error={fieldErrors.income_type}
+            show={showFieldError === 'income_type'}
+            fieldRef={incomeTypeRef}
+            submitAttempt={submitAttempt}
+          />
+          <Select
+            value={formData.income_type}
+            onValueChange={(value) => {
+              setFormData({ ...formData, income_type: value as 'nomina' | 'transferencia' | 'efectivo' })
+              if (fieldErrors.income_type) {
+                setFieldErrors({ ...fieldErrors, income_type: '' })
+                setShowFieldError(null)
+              }
+            }}
+            disabled={isLoading}
+          >
+            <SelectTrigger id="income_type" className="h-9 sm:h-10 text-sm sm:text-base">
+              <SelectValue placeholder="Selecciona un tipo" />
+            </SelectTrigger>
+            <SelectContent position="popper" sideOffset={8} align="start">
+              {incomeTypeOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value} className="text-sm sm:text-base cursor-pointer">
+                  <span className="flex items-center gap-2">
+                    <span>{option.icon}</span>
+                    <span>{option.label}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="space-y-1.5 sm:space-y-2">

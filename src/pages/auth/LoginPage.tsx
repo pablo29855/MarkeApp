@@ -7,9 +7,10 @@ import { z } from '@/lib/validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
+import { FormFieldErrorRHF } from '@/components/ui/form-field-error-rhf'
 import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 
@@ -25,9 +26,15 @@ export default function LoginPage() {
   const [captchaToken, setCaptchaToken] = useState<string>('')
   const [captchaVerified, setCaptchaVerified] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
+  const [showFieldError, setShowFieldError] = useState<string | null>(null)
+  const [submitAttempt, setSubmitAttempt] = useState(0)
   const turnstileRef = useRef<TurnstileInstance>(null)
   const navigate = useNavigate()
   const supabase = createClient()
+
+  // Referencias para los campos del formulario (contenedores)
+  const emailFieldRef = useRef<HTMLDivElement>(null)
+  const passwordFieldRef = useRef<HTMLDivElement>(null)
 
   // Verificar si el captcha está habilitado
   const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || import.meta.env.VITE_RECAPTCHA_SITE_KEY
@@ -55,12 +62,30 @@ export default function LoginPage() {
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
     defaultValues: {
       email: '',
       password: '',
     },
   })
+
+  // Detectar el primer error y mostrarlo solo después de intentar enviar
+  useEffect(() => {
+    // Solo mostrar errores si el formulario ya fue enviado al menos una vez
+    if (!form.formState.isSubmitted) {
+      setShowFieldError(null)
+      return
+    }
+
+    const errors = form.formState.errors
+    if (errors.email) {
+      setShowFieldError('email')
+    } else if (errors.password) {
+      setShowFieldError('password')
+    } else {
+      setShowFieldError(null)
+    }
+  }, [form.formState.errors, form.formState.isSubmitted, submitAttempt])
 
   const handleTurnstileSuccess = (token: string) => {
     console.log('✅ Turnstile verificado exitosamente')
@@ -82,6 +107,9 @@ export default function LoginPage() {
   }
 
   const onSubmit = async (data: LoginFormData) => {
+    // Limpiar error de campo anterior
+    setShowFieldError(null)
+    
     // Validar CAPTCHA si está habilitado
     if (isCaptchaEnabled && !captchaVerified) {
       form.setError('root', {
@@ -190,7 +218,11 @@ export default function LoginPage() {
         
         <CardContent className="relative z-10">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <form onSubmit={(e) => {
+              e.preventDefault()
+              setSubmitAttempt(prev => prev + 1)
+              form.handleSubmit(onSubmit)(e)
+            }} className="space-y-5" noValidate>
               {form.formState.errors.root && (
                 <Alert variant="destructive" className="animate-fade-in">
                   <AlertCircle className="h-4 w-4" />
@@ -203,12 +235,21 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">Correo Electrónico</FormLabel>
+                    <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">
+                      Correo Electrónico <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none" />
+                      <div ref={emailFieldRef} className="relative">
+                        <FormFieldErrorRHF 
+                          error={form.formState.errors.email}
+                          fieldRef={emailFieldRef}
+                          fieldName="email"
+                          showFieldError={showFieldError}
+                          submitAttempt={submitAttempt}
+                        />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none z-10" />
                         <Input
-                          type="email"
+                          type="text"
                           placeholder="tu@email.com"
                           autoComplete="email"
                           disabled={isLoading}
@@ -217,7 +258,6 @@ export default function LoginPage() {
                         />
                       </div>
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -228,7 +268,9 @@ export default function LoginPage() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between">
-                      <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">Contraseña</FormLabel>
+                      <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">
+                        Contraseña <span className="text-red-500">*</span>
+                      </FormLabel>
                       <Link
                         to="/auth/forgot-password"
                         className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"
@@ -237,8 +279,15 @@ export default function LoginPage() {
                       </Link>
                     </div>
                     <FormControl>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none" />
+                      <div ref={passwordFieldRef} className="relative">
+                        <FormFieldErrorRHF 
+                          error={form.formState.errors.password}
+                          fieldRef={passwordFieldRef}
+                          fieldName="password"
+                          showFieldError={showFieldError}
+                          submitAttempt={submitAttempt}
+                        />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none z-10" />
                         <Input
                           type="password"
                           autoComplete="current-password"
@@ -248,7 +297,6 @@ export default function LoginPage() {
                         />
                       </div>
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />

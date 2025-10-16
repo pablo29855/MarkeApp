@@ -110,14 +110,12 @@ export function DebtCard({ debt, payments, onUpdate }: DebtCardProps) {
 
         if (error) {
           console.error('Error updating debt status:', error)
-        } else {
-          onUpdate?.()
         }
       }
     }
 
     updateDebtStatus()
-  }, [urgencyStatus, debt.id, debt.status, isPaid, onUpdate])
+  }, [urgencyStatus, debt.id, debt.status, isPaid])
 
   // Configuración visual según urgencia - Colores sutiles
   const urgencyConfig = {

@@ -1,7 +1,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useNotification } from "@/hooks/use-notification"
 import { getTodayLocal } from "@/lib/utils"
@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DateInput } from "@/components/ui/date-input"
+import { FormFieldError } from "@/components/ui/form-field-error"
+import { getValidationMessage } from "@/lib/validation-messages"
 import { DollarSign, Loader2 } from "lucide-react"
 
 interface PaymentFormProps {
@@ -25,6 +27,18 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { showSaved, showError: showErrorNotif, showWarning } = useNotification()
+
+  // Referencias para los campos del formulario
+  const amountRef = useRef<HTMLInputElement>(null)
+  const paymentDateRef = useRef<HTMLInputElement>(null)
+
+  // Estados para errores de validación
+  const [fieldErrors, setFieldErrors] = useState({
+    amount: '',
+    payment_date: '',
+  })
+  const [showFieldError, setShowFieldError] = useState<string | null>(null)
+  const [submitAttempt, setSubmitAttempt] = useState(0)
 
   // Función para formatear el monto con puntos de mil (formato colombiano)
   const formatAmount = (value: string) => {
@@ -50,8 +64,42 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+
+    // Incrementar el contador de intentos de envío
+    setSubmitAttempt(prev => prev + 1)
+
+    // Limpiar errores previos
+    setFieldErrors({
+      amount: '',
+      payment_date: '',
+    })
+    setShowFieldError(null)
     setError(null)
+
+    // Validaciones personalizadas
+    const errors = {
+      amount: '',
+      payment_date: '',
+    }
+
+    if (!formData.amount.trim()) {
+      errors.amount = getValidationMessage('amount')
+    }
+
+    if (!formData.payment_date) {
+      errors.payment_date = getValidationMessage('payment_date')
+    }
+
+    // Si hay errores, mostrar el primero
+    const firstError = Object.entries(errors).find(([_, value]) => value !== '')
+    if (firstError) {
+      const [field] = firstError
+      setFieldErrors(errors)
+      setShowFieldError(field)
+      return
+    }
+
+    setIsLoading(true)
 
     const paymentAmount = Number.parseInt(getNumericValue(formData.amount))
 
@@ -100,9 +148,7 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
       setOpen(false)
       
       // Trigger update callback to refresh parent component
-      if (onUpdate) {
-        onUpdate()
-      }
+      onUpdate?.()
       
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Error al registrar el pago"
@@ -139,36 +185,63 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+
           <div className="p-3 sm:p-4 bg-muted rounded-lg">
             <p className="text-xs sm:text-sm text-muted-foreground">Saldo Pendiente</p>
             <p className="text-xl sm:text-2xl font-bold">${remainingAmount.toLocaleString()}</p>
           </div>
 
           <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="amount" className="text-xs sm:text-sm">Monto a Abonar</Label>
-            <Input
-              id="amount"
-              type="text"
-              inputMode="numeric"
-              value={formData.amount}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, amount: formatAmount(e.target.value) })}
-              placeholder="0"
-              required
-              disabled={isLoading}
-              className="text-sm"
-            />
+            <Label htmlFor="amount" className="text-xs sm:text-sm">Monto a Abonar *</Label>
+            <div ref={amountRef} className="relative">
+              <FormFieldError 
+                error={fieldErrors.amount}
+                show={showFieldError === 'amount'}
+                fieldRef={amountRef}
+                submitAttempt={submitAttempt}
+              />
+              <Input
+                id="amount"
+                type="text"
+                inputMode="numeric"
+                value={formData.amount}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setFormData({ ...formData, amount: formatAmount(e.target.value) })
+                  if (fieldErrors.amount) {
+                    setFieldErrors({ ...fieldErrors, amount: '' })
+                    setShowFieldError(null)
+                  }
+                }}
+                placeholder="0"
+                disabled={isLoading}
+                className="text-sm"
+              />
+            </div>
           </div>
 
           <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="payment_date" className="text-xs sm:text-sm">Fecha del Abono</Label>
-            <DateInput
-              id="payment_date"
-              value={formData.payment_date}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, payment_date: e.target.value })}
-              required
-              disabled={isLoading}
-              className="text-sm"
-            />
+            <Label htmlFor="payment_date" className="text-xs sm:text-sm">Fecha del Abono *</Label>
+            <div ref={paymentDateRef} className="relative">
+              <FormFieldError 
+                error={fieldErrors.payment_date}
+                show={showFieldError === 'payment_date'}
+                fieldRef={paymentDateRef}
+                submitAttempt={submitAttempt}
+              />
+              <DateInput
+                id="payment_date"
+                value={formData.payment_date}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setFormData({ ...formData, payment_date: e.target.value })
+                  if (fieldErrors.payment_date) {
+                    setFieldErrors({ ...fieldErrors, payment_date: '' })
+                    setShowFieldError(null)
+                  }
+                }}
+                disabled={isLoading}
+                className="text-sm"
+              />
+            </div>
           </div>
 
           <div className="space-y-1.5 sm:space-y-2">

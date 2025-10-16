@@ -7,8 +7,9 @@ import { z } from '@/lib/validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { FormFieldErrorRHF } from '@/components/ui/form-field-error-rhf'
 import { UserPlus, Mail, Lock, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 
@@ -31,9 +32,16 @@ export default function RegisterPage() {
   const [captchaToken, setCaptchaToken] = useState<string>('')
   const [captchaVerified, setCaptchaVerified] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
+  const [showFieldError, setShowFieldError] = useState<string | null>(null)
+  const [submitAttempt, setSubmitAttempt] = useState(0)
   const turnstileRef = useRef<TurnstileInstance>(null)
   const navigate = useNavigate()
   const supabase = createClient()
+
+  // Referencias para los campos del formulario (contenedores)
+  const emailFieldRef = useRef<HTMLDivElement>(null)
+  const passwordFieldRef = useRef<HTMLDivElement>(null)
+  const confirmPasswordFieldRef = useRef<HTMLDivElement>(null)
 
   // Verificar si el captcha está habilitado
   const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || import.meta.env.VITE_RECAPTCHA_SITE_KEY
@@ -61,13 +69,33 @@ export default function RegisterPage() {
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
     defaultValues: {
       email: '',
       password: '',
       confirmPassword: '',
     },
   })
+
+  // Detectar el primer error y mostrarlo solo después de intentar enviar
+  useEffect(() => {
+    // Solo mostrar errores si el formulario ya fue enviado al menos una vez
+    if (!form.formState.isSubmitted) {
+      setShowFieldError(null)
+      return
+    }
+
+    const errors = form.formState.errors
+    if (errors.email) {
+      setShowFieldError('email')
+    } else if (errors.password) {
+      setShowFieldError('password')
+    } else if (errors.confirmPassword) {
+      setShowFieldError('confirmPassword')
+    } else {
+      setShowFieldError(null)
+    }
+  }, [form.formState.errors, form.formState.isSubmitted, submitAttempt])
 
   const handleTurnstileSuccess = (token: string) => {
     console.log('✅ Turnstile verificado exitosamente')
@@ -89,6 +117,9 @@ export default function RegisterPage() {
   }
 
   const onSubmit = async (data: RegisterFormData) => {
+    // Limpiar error de campo anterior
+    setShowFieldError(null)
+    
     // Validar CAPTCHA si está habilitado
     if (isCaptchaEnabled && !captchaVerified) {
       form.setError('root', {
@@ -205,7 +236,11 @@ export default function RegisterPage() {
         
         <CardContent className="relative z-10">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <form onSubmit={(e) => {
+              e.preventDefault()
+              setSubmitAttempt(prev => prev + 1)
+              form.handleSubmit(onSubmit)(e)
+            }} className="space-y-5" noValidate>
               {form.formState.errors.root && (
                 <Alert variant="destructive" className="animate-fade-in">
                   <AlertCircle className="h-4 w-4" />
@@ -227,12 +262,21 @@ export default function RegisterPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">Correo Electrónico</FormLabel>
+                    <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">
+                      Correo Electrónico <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none" />
+                      <div className="relative" ref={emailFieldRef}>
+                        <FormFieldErrorRHF 
+                          fieldRef={emailFieldRef} 
+                          error={form.formState.errors.email} 
+                          fieldName="email"
+                          showFieldError={showFieldError}
+                          submitAttempt={submitAttempt}
+                        />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none z-10" />
                         <Input
-                          type="email"
+                          type="text"
                           placeholder="tu@email.com"
                           autoComplete="email"
                           disabled={isLoading || success}
@@ -241,7 +285,6 @@ export default function RegisterPage() {
                         />
                       </div>
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -251,10 +294,19 @@ export default function RegisterPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">Contraseña</FormLabel>
+                    <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">
+                      Contraseña <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none" />
+                      <div className="relative" ref={passwordFieldRef}>
+                        <FormFieldErrorRHF 
+                          fieldRef={passwordFieldRef} 
+                          error={form.formState.errors.password} 
+                          fieldName="password"
+                          showFieldError={showFieldError}
+                          submitAttempt={submitAttempt}
+                        />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none z-10" />
                         <Input
                           type="password"
                           placeholder="Mínimo 6 caracteres"
@@ -268,7 +320,6 @@ export default function RegisterPage() {
                     <FormDescription className="text-xs">
                       Debe contener mayúscula, minúscula y número
                     </FormDescription>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -278,10 +329,19 @@ export default function RegisterPage() {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">Confirmar Contraseña</FormLabel>
+                    <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">
+                      Confirmar Contraseña <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none" />
+                      <div className="relative" ref={confirmPasswordFieldRef}>
+                        <FormFieldErrorRHF 
+                          fieldRef={confirmPasswordFieldRef} 
+                          error={form.formState.errors.confirmPassword} 
+                          fieldName="confirmPassword"
+                          showFieldError={showFieldError}
+                          submitAttempt={submitAttempt}
+                        />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none z-10" />
                         <Input
                           type="password"
                           placeholder="Repite tu contraseña"
@@ -292,7 +352,6 @@ export default function RegisterPage() {
                         />
                       </div>
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />

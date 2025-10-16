@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { scrollbarClasses } from "@/lib/styles"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { FormFieldError } from "@/components/ui/form-field-error"
+import { getValidationMessage } from "@/lib/validation-messages"
 import { Plus, Loader2 } from "lucide-react"
 import type { Category, ShoppingItem } from "@/lib/types"
 
@@ -32,6 +34,18 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
 
   const isOpen = open !== undefined ? open : internalOpen
   const setIsOpen = onOpenChange || setInternalOpen
+
+  // Referencias para los campos del formulario
+  const productNameRef = useRef<HTMLInputElement>(null)
+  const quantityRef = useRef<HTMLInputElement>(null)
+
+  // Estados para errores de validación
+  const [fieldErrors, setFieldErrors] = useState({
+    product_name: '',
+    quantity: '',
+  })
+  const [showFieldError, setShowFieldError] = useState<string | null>(null)
+  const [submitAttempt, setSubmitAttempt] = useState(0)
 
   const [formData, setFormData] = useState({
     product_name: "",
@@ -62,8 +76,42 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+
+    // Incrementar contador de intentos de envío
+    setSubmitAttempt(prev => prev + 1)
+
+    // Limpiar errores previos
+    setFieldErrors({
+      product_name: '',
+      quantity: '',
+    })
+    setShowFieldError(null)
     setError(null)
+
+    // Validaciones personalizadas
+    const errors = {
+      product_name: '',
+      quantity: '',
+    }
+
+    if (!formData.product_name.trim()) {
+      errors.product_name = getValidationMessage('product_name')
+    }
+
+    if (!formData.quantity.trim()) {
+      errors.quantity = 'Ingresa una cantidad'
+    }
+
+    // Si hay errores, mostrar el primero
+    const firstError = Object.entries(errors).find(([_, value]) => value !== '')
+    if (firstError) {
+      const [field] = firstError
+      setFieldErrors(errors)
+      setShowFieldError(field)
+      return
+    }
+
+    setIsLoading(true)
 
     const supabase = createClient()
 
@@ -133,31 +181,57 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-6">
           <div className="space-y-1.5 sm:space-y-2">
             <Label htmlFor="product_name" className="text-xs sm:text-sm">Nombre del Producto *</Label>
-            <Input
-              id="product_name"
-              value={formData.product_name}
-              onChange={(e) => setFormData({ ...formData, product_name: e.target.value })}
-              placeholder="Ej: Leche"
-              required
-              disabled={isLoading}
-              className="text-sm sm:text-base h-9 sm:h-10"
-            />
+            <div ref={productNameRef} className="relative">
+              <FormFieldError 
+                error={fieldErrors.product_name}
+                show={showFieldError === 'product_name'}
+                fieldRef={productNameRef}
+                submitAttempt={submitAttempt}
+              />
+              <Input
+                id="product_name"
+                value={formData.product_name}
+                onChange={(e) => {
+                  setFormData({ ...formData, product_name: e.target.value })
+                  if (fieldErrors.product_name) {
+                    setFieldErrors({ ...fieldErrors, product_name: '' })
+                    setShowFieldError(null)
+                  }
+                }}
+                placeholder="Ej: Leche"
+                disabled={isLoading}
+                className="text-sm sm:text-base h-9 sm:h-10"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-1.5 sm:space-y-2">
               <Label htmlFor="quantity" className="text-xs sm:text-sm">Cantidad *</Label>
-              <Input
-                id="quantity"
-                type="text"
-                inputMode="numeric"
-                value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: formatNumber(e.target.value) })}
-                placeholder="1"
-                required
-                disabled={isLoading}
-                className="text-sm sm:text-base h-9 sm:h-10"
-              />
+              <div ref={quantityRef} className="relative">
+                <FormFieldError 
+                  error={fieldErrors.quantity}
+                  show={showFieldError === 'quantity'}
+                  fieldRef={quantityRef}
+                  submitAttempt={submitAttempt}
+                />
+                <Input
+                  id="quantity"
+                  type="text"
+                  inputMode="numeric"
+                  value={formData.quantity}
+                  onChange={(e) => {
+                    setFormData({ ...formData, quantity: formatNumber(e.target.value) })
+                    if (fieldErrors.quantity) {
+                      setFieldErrors({ ...fieldErrors, quantity: '' })
+                      setShowFieldError(null)
+                    }
+                  }}
+                  placeholder="1"
+                  disabled={isLoading}
+                  className="text-sm sm:text-base h-9 sm:h-10"
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5 sm:space-y-2">
