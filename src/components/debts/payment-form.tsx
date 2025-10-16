@@ -28,9 +28,9 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
   const [error, setError] = useState<string | null>(null)
   const { showSaved, showError: showErrorNotif, showWarning } = useNotification()
 
-  // Referencias para los campos del formulario
-  const amountRef = useRef<HTMLInputElement>(null)
-  const paymentDateRef = useRef<HTMLInputElement>(null)
+  // Referencias para los campos del formulario (contenedores con relative)
+  const amountRef = useRef<HTMLDivElement>(null)
+  const paymentDateRef = useRef<HTMLDivElement>(null)
 
   // Estados para errores de validación
   const [fieldErrors, setFieldErrors] = useState({

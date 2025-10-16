@@ -47,10 +47,10 @@ export function DebtFormUnified({ userId, debt, onSuccess, onClose }: DebtFormUn
   const [error, setError] = useState<string | null>(null)
   const { showCreated, showSuccess, showError } = useNotification()
 
-  // Referencias para los campos del formulario
-  const creditorNameRef = useRef<HTMLInputElement>(null)
-  const totalAmountRef = useRef<HTMLInputElement>(null)
-  const dueDateRef = useRef<HTMLInputElement>(null)
+  // Referencias para los campos del formulario (contenedores con relative)
+  const creditorNameRef = useRef<HTMLDivElement>(null)
+  const totalAmountRef = useRef<HTMLDivElement>(null)
+  const dueDateRef = useRef<HTMLDivElement>(null)
 
   // Estados para errores de validación
   const [fieldErrors, setFieldErrors] = useState({

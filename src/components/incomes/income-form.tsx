@@ -31,11 +31,11 @@ export function IncomeForm({ onSuccess, income, onClose }: IncomeFormProps) {
   const [error, setError] = useState<string | null>(null)
   const { showCreated, showUpdated, showError } = useNotification()
 
-  // Referencias para los campos del formulario
-  const descriptionRef = useRef<HTMLInputElement>(null)
-  const amountRef = useRef<HTMLInputElement>(null)
-  const incomeTypeRef = useRef<HTMLDivElement>(null) // Contenedor del select
-  const incomeDateRef = useRef<HTMLInputElement>(null)
+  // Referencias para los campos del formulario (contenedores con relative)
+  const descriptionRef = useRef<HTMLDivElement>(null)
+  const amountRef = useRef<HTMLDivElement>(null)
+  const incomeTypeRef = useRef<HTMLDivElement>(null)
+  const incomeDateRef = useRef<HTMLDivElement>(null)
 
   // Estados para errores de validación
   const [fieldErrors, setFieldErrors] = useState({
@@ -217,6 +217,7 @@ export function IncomeForm({ onSuccess, income, onClose }: IncomeFormProps) {
             placeholder="Ej: Pago de salario, Cliente XYZ..."
             disabled={isLoading}
             className="text-sm sm:text-base h-9 sm:h-10"
+            autoFocus={showFieldError === 'description'}
           />
         </div>
       </div>
@@ -246,6 +247,7 @@ export function IncomeForm({ onSuccess, income, onClose }: IncomeFormProps) {
               placeholder="0"
               disabled={isLoading}
               className="text-sm sm:text-base h-9 sm:h-10"
+              autoFocus={showFieldError === 'amount'}
             />
           </div>
         </div>
@@ -271,6 +273,7 @@ export function IncomeForm({ onSuccess, income, onClose }: IncomeFormProps) {
               }}
               disabled={isLoading}
               className="text-sm sm:text-base h-9 sm:h-10"
+              autoFocus={showFieldError === 'income_date'}
             />
           </div>
         </div>
@@ -296,7 +299,7 @@ export function IncomeForm({ onSuccess, income, onClose }: IncomeFormProps) {
             }}
             disabled={isLoading}
           >
-            <SelectTrigger id="income_type" className="h-9 sm:h-10 text-sm sm:text-base">
+            <SelectTrigger id="income_type" className="h-9 sm:h-10 text-sm sm:text-base" autoFocus={showFieldError === 'income_type'}>
               <SelectValue placeholder="Selecciona un tipo" />
             </SelectTrigger>
             <SelectContent position="popper" sideOffset={8} align="start">
