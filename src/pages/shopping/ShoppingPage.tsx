@@ -4,7 +4,7 @@ import { ShoppingFormWrapper } from '@/components/shopping/shopping-form-wrapper
 import { ShoppingItemCard } from '@/components/shopping/shopping-item'
 import { Card, CardContent } from '@/components/ui/card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
-import { SkeletonGrid } from '@/components/ui/skeleton-card'
+import { SkeletonShoppingGrid } from '@/components/ui/skeleton-card'
 import type { ShoppingItem, Category } from '@/lib/types'
 import { ShoppingCart, List } from 'lucide-react'
 
@@ -110,12 +110,12 @@ export default function ShoppingPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6">
-      {/* Header - Mejorado y protagonista */}
-      <div className="sticky top-16 lg:top-0 z-20 bg-background pb-2 -mt-2 pt-2">
+      {/* Header fijo profesional - Sticky en mobile y desktop */}
+      <div className="sticky top-16 lg:top-0 z-10 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b border-border/50 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-3 sm:py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">Lista de Compras</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">Organiza tus compras y conviértelas en gastos</p>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">Lista de Compras</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Organiza tus compras y conviértelas en gastos</p>
           </div>
           <div className="self-end sm:self-auto">
             <ShoppingFormWrapper userId={userId} categories={categories} onSuccess={handleRefresh} />
@@ -142,7 +142,7 @@ export default function ShoppingPage() {
       </Card>
 
       {isRefreshing ? (
-        <SkeletonGrid count={shoppingList.length || 3} />
+        <SkeletonShoppingGrid count={shoppingList.length || 3} />
       ) : shoppingList.length > 0 ? (
         <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3">
           {shoppingList.map((item) => (

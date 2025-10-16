@@ -66,6 +66,19 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Asegurar que el contenido de las páginas tenga el z-index correcto */
+  main {
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Cards y contenido deben estar por debajo del header fijo */
+  [class*="card"],
+  [class*="Card"] {
+    position: relative;
+    z-index: 1;
+  }
 }
 
 @layer utilities {
@@ -154,6 +167,49 @@ html, body {
   /* Asegurar que el contenedor del sticky no cause problemas */
   [class*="space-y"] {
     isolation: isolate;
+  }
+}
+
+/* Mejorar scroll en móviles - diseño limpio y profesional */
+@media (max-width: 1024px) {
+  /* Scroll nativo suave con momentum en iOS */
+  [class*="overflow-y-auto"] {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scroll-behavior: smooth;
+  }
+  
+  /* Header móvil con sombra sutil y asegurar z-index correcto - SIN blur */
+  .lg\:hidden.fixed.top-0 {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    z-index: 100 !important;
+  }
+  
+  .dark .lg\:hidden.fixed.top-0 {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Asegurar que el contenido principal esté debajo del header */
+  main {
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Prevenir el bounce en los bordes del scroll */
+  body, html {
+    overscroll-behavior-y: none;
+  }
+  
+  /* Mejorar interactividad táctil de botones y enlaces */
+  button, [role="button"], a {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  /* Feedback táctil suave */
+  button:active:not(:disabled), [role="button"]:active:not(:disabled) {
+    transform: scale(0.97);
+    transition: transform 0.1s ease-out;
   }
 }
 

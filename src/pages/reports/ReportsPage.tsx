@@ -222,12 +222,12 @@ export default function ReportsPage() {
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
       <div className="flex flex-col gap-3 sm:gap-4 lg:gap-6">
-      {/* Header */}
-      <div className="sticky top-16 lg:top-0 z-20 bg-background pb-3 sm:pb-4 lg:pb-6 pt-3 sm:pt-4 lg:pt-6">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-1 sm:mb-2">
+      {/* Header fijo profesional - Sticky en mobile y desktop */}
+      <div className="sticky top-16 lg:top-0 z-10 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b border-border/50 -mx-3 px-3 sm:-mx-4 sm:px-4 lg:-mx-8 lg:px-8 py-3 sm:py-4">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
           Reportes
         </h1>
-        <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground">
           Analiza tus gastos y compara períodos
         </p>
       </div>
