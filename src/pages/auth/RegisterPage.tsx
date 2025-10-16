@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { UserPlus, Mail, Lock, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 
 const registerSchema = z.object({
   email: z.string().email("Correo electrónico inválido"),
@@ -27,8 +28,36 @@ type RegisterFormData = z.infer<typeof registerSchema>
 export default function RegisterPage() {
   const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string>('')
+  const [captchaVerified, setCaptchaVerified] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+  const turnstileRef = useRef<TurnstileInstance>(null)
   const navigate = useNavigate()
   const supabase = createClient()
+
+  // Verificar si el captcha está habilitado
+  const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || import.meta.env.VITE_RECAPTCHA_SITE_KEY
+  const isCaptchaEnabled = !!turnstileSiteKey
+
+  // Detectar el tema del sistema
+  useEffect(() => {
+    const checkDarkMode = () => {
+      const isDark = document.documentElement.classList.contains('dark')
+      setIsDarkMode(isDark)
+    }
+
+    // Verificar inicialmente
+    checkDarkMode()
+
+    // Observar cambios en la clase del HTML
+    const observer = new MutationObserver(checkDarkMode)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
+
+    return () => observer.disconnect()
+  }, [])
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -40,26 +69,67 @@ export default function RegisterPage() {
     },
   })
 
+  const handleTurnstileSuccess = (token: string) => {
+    console.log('✅ Turnstile verificado exitosamente')
+    console.log('🔑 Token recibido (primeros 20 chars):', token.substring(0, 20) + '...')
+    setCaptchaToken(token)
+    setCaptchaVerified(true)
+  }
+
+  const handleTurnstileError = (error?: any) => {
+    console.error('❌ Error en Turnstile:', error)
+    setCaptchaToken('')
+    setCaptchaVerified(false)
+  }
+
+  const resetCaptcha = () => {
+    turnstileRef.current?.reset()
+    setCaptchaToken('')
+    setCaptchaVerified(false)
+  }
+
   const onSubmit = async (data: RegisterFormData) => {
+    // Validar CAPTCHA si está habilitado
+    if (isCaptchaEnabled && !captchaVerified) {
+      form.setError('root', {
+        type: 'manual',
+        message: 'Por favor completa la verificación de seguridad'
+      })
+      return
+    }
+
     setIsLoading(true)
     setSuccess(false)
 
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log('📝 Intentando registro con CAPTCHA...')
+      console.log('📧 Email:', data.email)
+      console.log('🎫 CAPTCHA habilitado:', isCaptchaEnabled)
+      console.log('✅ CAPTCHA verificado:', captchaVerified)
+      console.log('🔑 Token presente:', !!captchaToken)
+
+      // Supabase validará automáticamente si el correo ya existe
+      const { error, data: authData } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`,
+          captchaToken: captchaToken,
         },
       })
 
       if (error) {
+        console.error('❌ Error de Supabase:', error)
+        // Resetear captcha en caso de error
+        resetCaptcha()
+
         // Mostrar error específico en el formulario
         if (error.message.toLowerCase().includes('already registered') || 
-            error.message.toLowerCase().includes('already exists')) {
+            error.message.toLowerCase().includes('already exists') ||
+            error.message.toLowerCase().includes('user already registered')) {
           form.setError('email', {
             type: 'manual',
-            message: 'Este correo ya está registrado'
+            message: 'Este correo electrónico ya está registrado'
           })
         } else if (error.message.toLowerCase().includes('password')) {
           form.setError('password', {
@@ -69,7 +139,7 @@ export default function RegisterPage() {
         } else if (error.message.toLowerCase().includes('captcha')) {
           form.setError('root', {
             type: 'manual',
-            message: 'Error de verificación. Por favor, ve a Supabase → Authentication → Providers → Email y desactiva el Captcha Protection.'
+            message: 'Error de verificación del captcha. Por favor intenta nuevamente.'
           })
         } else {
           form.setError('root', {
@@ -80,11 +150,27 @@ export default function RegisterPage() {
         return
       }
 
+      // Verificar si el usuario ya existía (Supabase puede devolver success sin error)
+      if (authData?.user && authData.user.identities && authData.user.identities.length === 0) {
+        console.log('❌ El correo ya está registrado (detectado por identities)')
+        resetCaptcha()
+        
+        form.setError('email', {
+          type: 'manual',
+          message: 'Este correo electrónico ya está registrado'
+        })
+        return
+      }
+
+      console.log('✅ Registro exitoso')
       setSuccess(true)
       setTimeout(() => {
         navigate('/dashboard')
       }, 2000)
     } catch (error: unknown) {
+      // Resetear captcha en caso de error
+      resetCaptcha()
+      
       form.setError('root', {
         type: 'manual',
         message: error instanceof Error ? error.message : 'Error al registrar usuario'
@@ -141,16 +227,16 @@ export default function RegisterPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">Correo Electrónico</FormLabel>
+                    <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">Correo Electrónico</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none" />
                         <Input
                           type="email"
                           placeholder="tu@email.com"
                           autoComplete="email"
                           disabled={isLoading || success}
-                          className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
+                          className="pl-10 h-11 transition-smooth bg-white dark:bg-white/5 border border-slate-200 dark:border-neutral-700 rounded-md shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-500"
                           {...field}
                         />
                       </div>
@@ -165,16 +251,16 @@ export default function RegisterPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">Contraseña</FormLabel>
+                    <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">Contraseña</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none" />
                         <Input
                           type="password"
                           placeholder="Mínimo 6 caracteres"
                           autoComplete="new-password"
                           disabled={isLoading || success}
-                          className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
+                          className="pl-10 h-11 transition-smooth bg-white dark:bg-white/5 border border-slate-200 dark:border-neutral-700 rounded-md shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-500"
                           {...field}
                         />
                       </div>
@@ -192,16 +278,16 @@ export default function RegisterPage() {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">Confirmar Contraseña</FormLabel>
+                    <FormLabel className="text-sm font-medium text-foreground data-[error=true]:text-foreground">Confirmar Contraseña</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none" />
                         <Input
                           type="password"
                           placeholder="Repite tu contraseña"
                           autoComplete="new-password"
                           disabled={isLoading || success}
-                          className="pl-10 h-11 transition-smooth focus:ring-2 focus:ring-primary/20"
+                          className="pl-10 h-11 transition-smooth bg-white dark:bg-white/5 border border-slate-200 dark:border-neutral-700 rounded-md shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-500"
                           {...field}
                         />
                       </div>
@@ -211,10 +297,25 @@ export default function RegisterPage() {
                 )}
               />
 
+              {isCaptchaEnabled && (
+                <div className="flex justify-center w-full">
+                  <Turnstile
+                    ref={turnstileRef}
+                    siteKey={turnstileSiteKey}
+                    onSuccess={handleTurnstileSuccess}
+                    onError={handleTurnstileError}
+                    options={{
+                      theme: isDarkMode ? 'dark' : 'light',
+                      size: 'normal',
+                    }}
+                  />
+                </div>
+              )}
+
               <Button 
                 type="submit" 
                 className="w-full h-11 text-base font-semibold transition-smooth hover:shadow-lg hover:scale-[1.02]" 
-                disabled={isLoading || success}
+                disabled={isLoading || success || (isCaptchaEnabled && !captchaVerified)}
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">

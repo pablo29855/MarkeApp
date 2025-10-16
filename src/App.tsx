@@ -52,7 +52,7 @@ function App() {
   }
 
   return (
-    <ThemeProvider defaultTheme="system" storageKey="markeapp-theme">
+    <ThemeProvider defaultTheme="light" storageKey="markeapp-theme">
       <Toaster />
       <Sonner />
       <Routes>

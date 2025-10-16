@@ -1,25 +1,38 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" class="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MarkeApp - Gestión de Gastos</title>
+    <!-- Estilos inline para evitar flash de tema oscuro -->
+    <style>
+      html, body {
+        background-color: #fafbfc;
+        color: #0f172a;
+      }
+      html.dark, html.dark body {
+        background-color: #0f172a;
+        color: #fafbfc;
+      }
+    </style>
     <!-- Script inline para aplicar el tema antes de que React monte y evitar flash de tema -->
     <script>
       (function() {
         try {
-          var storageKey = 'vite-ui-theme';
+          var storageKey = 'markeapp-theme';
           var theme = localStorage.getItem(storageKey);
-          if (!theme || theme === 'system') {
-            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            theme = prefersDark ? 'dark' : 'light';
+          // Si no hay tema guardado, usar 'light' por defecto (primera vez)
+          if (!theme) {
+            theme = 'light';
+            localStorage.setItem(storageKey, 'light');
           }
           document.documentElement.classList.remove('light','dark');
           document.documentElement.classList.add(theme);
         } catch (e) {
-          // Si algo falla, no bloqueamos la carga
+          // Si algo falla, forzar modo claro
+          document.documentElement.classList.add('light');
         }
       })();
     </script>
