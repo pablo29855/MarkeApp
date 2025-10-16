@@ -130,9 +130,9 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
               {item ? "Edita el producto de tu lista de compras" : "Agrega un producto a tu lista de compras"}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-6">
           <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="product_name" className="text-xs sm:text-sm">Nombre del Producto</Label>
+            <Label htmlFor="product_name" className="text-xs sm:text-sm">Nombre del Producto *</Label>
             <Input
               id="product_name"
               value={formData.product_name}
@@ -146,7 +146,7 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="quantity" className="text-xs sm:text-sm">Cantidad</Label>
+              <Label htmlFor="quantity" className="text-xs sm:text-sm">Cantidad *</Label>
               <Input
                 id="quantity"
                 type="text"
@@ -170,11 +170,14 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
                 <SelectTrigger id="category_id" className="text-sm sm:text-base h-9 sm:h-10">
                   <SelectValue placeholder="Seleccionar" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" sideOffset={8} align="start">
                   {categories && categories.length > 0 ? (
                     categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id} className="text-sm sm:text-base">
-                        {category.icon} {category.name}
+                      <SelectItem key={category.id} value={category.id} className="text-sm sm:text-base cursor-pointer">
+                        <span className="flex items-center gap-2">
+                          <span>{category.icon}</span>
+                          <span>{category.name}</span>
+                        </span>
                       </SelectItem>
                     ))
                   ) : (

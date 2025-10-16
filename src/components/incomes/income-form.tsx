@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DialogClose } from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { DateInput } from '@/components/ui/date-input'
 import { createClient } from '@/lib/supabase/client'
@@ -22,9 +21,10 @@ import type { Income } from '@/lib/types'
 interface IncomeFormProps {
   onSuccess?: () => void
   income?: Income
+  onClose?: () => void
 }
 
-export function IncomeForm({ onSuccess, income }: IncomeFormProps) {
+export function IncomeForm({ onSuccess, income, onClose }: IncomeFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { showCreated, showUpdated, showError } = useNotification()
@@ -142,9 +142,9 @@ export function IncomeForm({ onSuccess, income }: IncomeFormProps) {
   ]
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-6">
       <div className="space-y-1.5 sm:space-y-2">
-        <Label htmlFor="description" className="text-xs sm:text-sm">Descripción</Label>
+        <Label htmlFor="description" className="text-xs sm:text-sm">Descripción *</Label>
         <Input
           id="description"
           value={formData.description}
@@ -158,7 +158,7 @@ export function IncomeForm({ onSuccess, income }: IncomeFormProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="space-y-1.5 sm:space-y-2">
-          <Label htmlFor="amount" className="text-xs sm:text-sm">Monto</Label>
+          <Label htmlFor="amount" className="text-xs sm:text-sm">Monto *</Label>
           <Input
             id="amount"
             type="text"
@@ -173,7 +173,7 @@ export function IncomeForm({ onSuccess, income }: IncomeFormProps) {
         </div>
 
         <div className="space-y-1.5 sm:space-y-2">
-          <Label htmlFor="income_date" className="text-xs sm:text-sm">Fecha</Label>
+          <Label htmlFor="income_date" className="text-xs sm:text-sm">Fecha *</Label>
           <DateInput
             id="income_date"
             value={formData.income_date}
@@ -188,17 +188,20 @@ export function IncomeForm({ onSuccess, income }: IncomeFormProps) {
       <div className="space-y-1.5 sm:space-y-2">
         <Label htmlFor="income_type" className="text-xs sm:text-sm">Tipo de Ingreso *</Label>
         <Select
-          value={formData.income_type || undefined}
+          value={formData.income_type}
           onValueChange={(value) => setFormData({ ...formData, income_type: value as 'nomina' | 'transferencia' | 'efectivo' })}
           disabled={isLoading}
         >
-          <SelectTrigger className="h-9 sm:h-10 text-sm sm:text-base">
+          <SelectTrigger id="income_type" className="h-9 sm:h-10 text-sm sm:text-base">
             <SelectValue placeholder="Selecciona un tipo" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" sideOffset={8} align="start">
             {incomeTypeOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value} className="text-sm sm:text-base">
-                {option.icon} {option.label}
+              <SelectItem key={option.value} value={option.value} className="text-sm sm:text-base cursor-pointer">
+                <span className="flex items-center gap-2">
+                  <span>{option.icon}</span>
+                  <span>{option.label}</span>
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -225,16 +228,15 @@ export function IncomeForm({ onSuccess, income }: IncomeFormProps) {
       )}
 
       <div className="flex gap-2 pt-2">
-        <DialogClose asChild>
-          <Button
-            type="button"
-            variant="outline"
-            className="flex-1 h-9 sm:h-10 text-sm sm:text-base"
-            disabled={isLoading}
-          >
-            Cancelar
-          </Button>
-        </DialogClose>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onClose}
+          className="flex-1 h-9 sm:h-10 text-sm sm:text-base"
+          disabled={isLoading}
+        >
+          Cancelar
+        </Button>
         <Button type="submit" className="flex-1 h-9 sm:h-10 text-sm sm:text-base" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />}
           {isLoading ? "Guardando..." : "Guardar"}

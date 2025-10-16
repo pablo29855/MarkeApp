@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { createClient } from '@/lib/supabase/client'
-import { ExpenseForm } from '@/components/expenses/expense-form'
+import { ExpenseFormWrapperUnified } from '@/components/expenses/expense-form-wrapper-unified'
 import { ExpenseFilters } from '@/components/expenses/expense-filters'
 import { Card, CardContent } from '@/components/ui/card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
@@ -134,7 +134,7 @@ export default function ExpensesPage() {
           </div>
           <div className="flex gap-2 self-end sm:self-auto">
             <ExportButton expenses={expenses} />
-            <ExpenseForm categories={categories} userId={userId} onSuccess={handleRefresh} />
+            <ExpenseFormWrapperUnified categories={categories} userId={userId} onSuccess={handleRefresh} />
           </div>
         </div>
       </div>

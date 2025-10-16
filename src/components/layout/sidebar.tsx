@@ -243,7 +243,7 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
 
             {!isCollapsed && (
               <ProfileDialog userName={userName}>
-                <div className="mt-3 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 transition-smooth hover:shadow-md cursor-pointer">
+                <div className="mt-5 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 transition-smooth hover:shadow-md cursor-pointer">
                   <div className="relative">
                     <div className="h-7 w-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 bg-primary/20">
                       {avatarUrl ? (
