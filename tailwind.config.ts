@@ -116,6 +116,7 @@ export default {
         'slide-in-right': 'slide-in-right 0.3s ease-out',
         'slide-in-left': 'slide-in-left 0.3s ease-out',
         'scale-in': 'scale-in 0.3s ease-out',
+        'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         shimmer: 'shimmer 2s infinite',
         pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         spin: 'spin 1s linear infinite',

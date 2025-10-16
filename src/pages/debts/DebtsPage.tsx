@@ -7,7 +7,7 @@ import { SkeletonDebtList } from '@/components/ui/skeleton-debt'
 import { formatCurrency } from '@/lib/utils'
 import { CreditCard, CircleCheck, AlertCircle } from 'lucide-react'
 import type { Debt, DebtPayment } from '@/lib/types'
-import { DebtFormWrapper } from '@/components/debts/debt-form-wrapper'
+import { DebtFormWrapperUnified } from '@/components/debts/debt-form-wrapper-unified'
 
 export default function DebtsPage() {
   const [loading, setLoading] = useState(true)
@@ -149,7 +149,7 @@ export default function DebtsPage() {
             <p className="text-sm sm:text-base text-muted-foreground">Gestiona tus deudas y pagos parciales</p>
           </div>
           <div className="flex gap-2 self-end sm:self-auto">
-            <DebtFormWrapper userId={userId} onSuccess={handleRefresh} />
+            <DebtFormWrapperUnified userId={userId} onSuccess={handleRefresh} />
           </div>
         </div>
       </div>

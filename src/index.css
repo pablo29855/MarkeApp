@@ -213,6 +213,30 @@ html, body {
   }
 }
 
+/* Prevenir zoom en iOS - Aplicar a TODOS los inputs, textarea y select globalmente */
+@supports (-webkit-touch-callout: none) {
+  /* Solo en iOS/Safari */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+  
+  /* Alinear inputs de fecha a la izquierda en iOS */
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"] {
+    text-align: left !important;
+  }
+  
+  /* Alinear el contenido interno del input de fecha en iOS/Safari */
+  input[type="date"]::-webkit-date-and-time-value,
+  input[type="datetime-local"]::-webkit-date-and-time-value,
+  input[type="time"]::-webkit-date-and-time-value {
+    text-align: left !important;
+  }
+}
+
 /*
   NOTA: aplicar font-size:16px global en inputs puede romper el layout (los campos se vuelven más grandes).
   En su lugar, aplica la corrección solo a las páginas/controles que la necesiten añadiendo la clase
@@ -223,10 +247,11 @@ html, body {
 .no-ios-zoom select,
 .no-ios-zoom button,
 /* mayor especificidad para el Input componente (usa data-slot) */
-.no-ios-zoom input[data-slot="input"] {
+.no-ios-zoom input[data-slot="input"],
+.no-ios-zoom textarea[data-slot="textarea"] {
   /* Forzamos 16px para evitar que iOS haga auto-zoom en focus. Se usa !important para sobreescribir utilidades de Tailwind si es necesario. */
   font-size: 16px !important;
-  line-height: 1.2 !important;
+  line-height: 1.5 !important;
 }
 
 /* Prevenir el desplazamiento/zoom al hacer focus en inputs en iOS */
@@ -360,11 +385,6 @@ textarea[data-slot="input"]:-webkit-autofill:focus {
   select:not(.no-ios-zoom select) {
     /* No permitir que iOS haga scroll automático al hacer focus */
     scroll-behavior: auto;
-  }
-  
-  /* Prevenir que las tarjetas causen scroll jump */
-  [class*="grid"] {
-    contain: layout style;
   }
 }
 

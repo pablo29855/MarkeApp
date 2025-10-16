@@ -114,15 +114,16 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md w-[calc(100%-2rem)] sm:w-full" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Nueva Deuda</DialogTitle>
-          <DialogDescription className="text-xs sm:text-sm">
-            Registra una nueva deuda para llevar un control de tus pagos pendientes
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        <div className="no-ios-zoom">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">Nueva Deuda</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
+              Registra una nueva deuda para llevar un control de tus pagos pendientes
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-6">
           <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="creditor_name" className="text-xs sm:text-sm">Acreedor</Label>
+            <Label htmlFor="creditor_name" className="text-xs sm:text-sm">Acreedor *</Label>
             <Input
               id="creditor_name"
               value={formData.creditor_name}
@@ -136,7 +137,7 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="total_amount" className="text-xs sm:text-sm">Monto Total</Label>
+              <Label htmlFor="total_amount" className="text-xs sm:text-sm">Monto Total *</Label>
               <Input
                 id="total_amount"
                 type="text"
@@ -151,12 +152,13 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
             </div>
 
             <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="due_date" className="text-xs sm:text-sm">Fecha de Vencimiento</Label>
+              <Label htmlFor="due_date" className="text-xs sm:text-sm">Fecha de Vencimiento *</Label>
               <DateInput
                 id="due_date"
                 value={formData.due_date}
                 onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                 disabled={isLoading}
+                required
                 className="text-sm"
               />
             </div>
@@ -197,6 +199,7 @@ export function DebtForm({ userId, onSuccess }: DebtFormProps) {
             </Button>
           </div>
         </form>
+        </div>
       </DialogContent>
     </Dialog>
   )

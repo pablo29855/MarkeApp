@@ -48,8 +48,12 @@ export interface Debt {
   paid_amount: number
   debt_date: string
   due_date?: string | null
+  category?: string | null
+  status?: string | null
+  notes?: string | null
   description?: string | null
   created_at: string
+  updated_at?: string
 }
 
 export interface DebtPayment {

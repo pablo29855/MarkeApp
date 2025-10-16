@@ -21,7 +21,7 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { formatCurrency, parseLocalDate } from "@/lib/utils"
 import { useNotification } from '@/hooks/use-notification'
-import { ExpenseEditDialog } from "./expense-edit-dialog"
+import { ExpenseFormWrapperUnified } from "./expense-form-wrapper-unified"
 
 interface ExpenseListProps {
   expenses: Expense[]
@@ -31,7 +31,6 @@ interface ExpenseListProps {
 
 export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [editExpense, setEditExpense] = useState<Expense | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const { showDeleted, showError } = useNotification()
 
@@ -102,14 +101,21 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                    onClick={() => setEditExpense(expense)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
+                  <ExpenseFormWrapperUnified
+                    expense={expense}
+                    categories={categories}
+                    userId={expense.user_id}
+                    onSuccess={onUpdate}
+                    trigger={
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    }
+                  />
                 </div>
               </div>
 
@@ -144,19 +150,6 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
           </Card>
         ))}
       </div>
-
-      {editExpense && (
-        <ExpenseEditDialog
-          expense={editExpense}
-          categories={categories}
-          open={!!editExpense}
-          onOpenChange={(open) => !open && setEditExpense(null)}
-          onSuccess={() => {
-            setEditExpense(null)
-            onUpdate?.()
-          }}
-        />
-      )}
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
