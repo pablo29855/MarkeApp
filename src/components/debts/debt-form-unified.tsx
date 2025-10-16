@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useNotification } from "@/hooks/use-notification"
 import { getTodayLocal } from "@/lib/utils"
@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DateInput } from "@/components/ui/date-input"
+import { FormFieldError } from "@/components/ui/form-field-error"
+import { getValidationMessage } from "@/lib/validation-messages"
 import { Loader2 } from "lucide-react"
 import type { Debt } from "@/lib/types"
 
@@ -44,6 +46,20 @@ export function DebtFormUnified({ userId, debt, onSuccess, onClose }: DebtFormUn
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { showCreated, showSuccess, showError } = useNotification()
+
+  // Referencias para los campos del formulario
+  const creditorNameRef = useRef<HTMLInputElement>(null)
+  const totalAmountRef = useRef<HTMLInputElement>(null)
+  const dueDateRef = useRef<HTMLInputElement>(null)
+
+  // Estados para errores de validación
+  const [fieldErrors, setFieldErrors] = useState({
+    creditor_name: '',
+    total_amount: '',
+    due_date: '',
+  })
+  const [showFieldError, setShowFieldError] = useState<string | null>(null)
+  const [submitAttempt, setSubmitAttempt] = useState(0)
 
   // Función para formatear el monto con puntos de mil (formato colombiano)
   const formatAmount = (value: string) => {
@@ -88,8 +104,48 @@ export function DebtFormUnified({ userId, debt, onSuccess, onClose }: DebtFormUn
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+
+    // Incrementar contador de intentos de envío
+    setSubmitAttempt(prev => prev + 1)
+
+    // Limpiar errores previos
+    setFieldErrors({
+      creditor_name: '',
+      total_amount: '',
+      due_date: '',
+    })
+    setShowFieldError(null)
     setError(null)
+
+    // Validaciones personalizadas
+    const errors = {
+      creditor_name: '',
+      total_amount: '',
+      due_date: '',
+    }
+
+    if (!formData.creditor_name.trim()) {
+      errors.creditor_name = getValidationMessage('creditor_name')
+    }
+
+    if (!formData.total_amount.trim()) {
+      errors.total_amount = getValidationMessage('amount')
+    }
+
+    if (!formData.due_date) {
+      errors.due_date = getValidationMessage('due_date')
+    }
+
+    // Si hay errores, mostrar el primero
+    const firstError = Object.entries(errors).find(([_, value]) => value !== '')
+    if (firstError) {
+      const [field] = firstError
+      setFieldErrors(errors)
+      setShowFieldError(field)
+      return
+    }
+
+    setIsLoading(true)
 
     const supabase = createClient()
 
@@ -161,43 +217,82 @@ export function DebtFormUnified({ userId, debt, onSuccess, onClose }: DebtFormUn
     <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-6">
       <div className="space-y-1.5 sm:space-y-2">
         <Label htmlFor="creditor_name" className="text-xs sm:text-sm">Acreedor *</Label>
-        <Input
-          id="creditor_name"
-          value={formData.creditor_name}
-          onChange={(e) => setFormData({ ...formData, creditor_name: e.target.value })}
-          placeholder="Ej: Banco XYZ"
-          required
-          disabled={isLoading}
-          className="text-sm sm:text-base h-9 sm:h-10"
-        />
+        <div ref={creditorNameRef} className="relative">
+          <FormFieldError 
+            error={fieldErrors.creditor_name}
+            show={showFieldError === 'creditor_name'}
+            fieldRef={creditorNameRef}
+            submitAttempt={submitAttempt}
+          />
+          <Input
+            id="creditor_name"
+            value={formData.creditor_name}
+            onChange={(e) => {
+              setFormData({ ...formData, creditor_name: e.target.value })
+              if (fieldErrors.creditor_name) {
+                setFieldErrors({ ...fieldErrors, creditor_name: '' })
+                setShowFieldError(null)
+              }
+            }}
+            placeholder="Ej: Banco XYZ"
+            disabled={isLoading}
+            className="text-sm sm:text-base h-9 sm:h-10"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="space-y-1.5 sm:space-y-2">
           <Label htmlFor="total_amount" className="text-xs sm:text-sm">Monto Total *</Label>
-          <Input
-            id="total_amount"
-            type="text"
-            inputMode="numeric"
-            value={formData.total_amount}
-            onChange={(e) => setFormData({ ...formData, total_amount: formatAmount(e.target.value) })}
-            placeholder="0"
-            required
-            disabled={isLoading}
-            className="text-sm sm:text-base h-9 sm:h-10"
-          />
+          <div ref={totalAmountRef} className="relative">
+            <FormFieldError 
+              error={fieldErrors.total_amount}
+              show={showFieldError === 'total_amount'}
+              fieldRef={totalAmountRef}
+              submitAttempt={submitAttempt}
+            />
+            <Input
+              id="total_amount"
+              type="text"
+              inputMode="numeric"
+              value={formData.total_amount}
+              onChange={(e) => {
+                setFormData({ ...formData, total_amount: formatAmount(e.target.value) })
+                if (fieldErrors.total_amount) {
+                  setFieldErrors({ ...fieldErrors, total_amount: '' })
+                  setShowFieldError(null)
+                }
+              }}
+              placeholder="0"
+              disabled={isLoading}
+              className="text-sm sm:text-base h-9 sm:h-10"
+            />
+          </div>
         </div>
 
         <div className="space-y-1.5 sm:space-y-2">
           <Label htmlFor="due_date" className="text-xs sm:text-sm">Fecha de Vencimiento *</Label>
-          <DateInput
-            id="due_date"
-            value={formData.due_date}
-            onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-            disabled={isLoading}
-            required
-            className="text-sm sm:text-base"
-          />
+          <div ref={dueDateRef} className="relative">
+            <FormFieldError 
+              error={fieldErrors.due_date}
+              show={showFieldError === 'due_date'}
+              fieldRef={dueDateRef}
+              submitAttempt={submitAttempt}
+            />
+            <DateInput
+              id="due_date"
+              value={formData.due_date}
+              onChange={(e) => {
+                setFormData({ ...formData, due_date: e.target.value })
+                if (fieldErrors.due_date) {
+                  setFieldErrors({ ...fieldErrors, due_date: '' })
+                  setShowFieldError(null)
+                }
+              }}
+              disabled={isLoading}
+              className="text-sm sm:text-base"
+            />
+          </div>
         </div>
       </div>
 

@@ -52,11 +52,15 @@ export default function DebtsPage() {
   }, [])
 
   const handleRefresh = useCallback(async () => {
+    // Evitar múltiples refreshes simultáneos
+    if (isRefreshing) return
+    
     setIsRefreshing(true)
     await fetchDebtsWithPayments()
     setTimeout(() => setIsRefreshing(false), 300)
-  }, [fetchDebtsWithPayments])
+  }, [fetchDebtsWithPayments, isRefreshing])
 
+  // Carga inicial - Solo una vez
   useEffect(() => {
     async function fetchData() {
       try {
@@ -75,7 +79,8 @@ export default function DebtsPage() {
     }
 
     fetchData()
-  }, [fetchDebtsWithPayments])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Solo al montar - fetchDebtsWithPayments está estable
 
   // Suscripción en tiempo real para debts
   useEffect(() => {
@@ -91,18 +96,31 @@ export default function DebtsPage() {
           event: '*',
           schema: 'public',
           table: 'debts',
-          filter: `user_id=eq.${userId}`
         },
-        () => {
-          handleRefresh()
+        async (payload: any) => {
+          console.log('[Debts] Event detected:', payload.eventType, payload)
+          
+          // Evitar actualización si ya está refrescando
+          if (isRefreshing) return
+          
+          // Verificar si el cambio pertenece al usuario actual
+          const record = payload.new || payload.old
+          if (record && record.user_id === userId) {
+            setIsRefreshing(true)
+            await fetchDebtsWithPayments()
+            setTimeout(() => setIsRefreshing(false), 300)
+          }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('[Debts] Subscription status:', status)
+      })
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [userId, handleRefresh])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId])
 
   // Suscripción en tiempo real para debt_payments
   useEffect(() => {
@@ -119,16 +137,27 @@ export default function DebtsPage() {
           schema: 'public',
           table: 'debt_payments',
         },
-        () => {
-          handleRefresh()
+        async (payload: any) => {
+          console.log('[Debts] Payment event detected:', payload.eventType, payload)
+          
+          // Evitar actualización si ya está refrescando
+          if (isRefreshing) return
+          
+          // Los pagos siempre activan actualización ya que están relacionados con deudas del usuario
+          setIsRefreshing(true)
+          await fetchDebtsWithPayments()
+          setTimeout(() => setIsRefreshing(false), 300)
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('[Debts] Payments subscription status:', status)
+      })
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [userId, handleRefresh])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId])
 
   if (loading) {
     return <LoadingCheckOverlay message="Cargando deudas..." />

@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { LoadingCheckOverlay } from './ui/loading-check'
+import { useEffect } from 'react'
 
 interface ThemeTransitionProps {
   children: React.ReactNode
@@ -9,42 +8,19 @@ interface ThemeTransitionProps {
   onDone?: () => void
 }
 
-export function ThemeTransition({ children, theme, userInitiated = false, onDone }: ThemeTransitionProps) {
-  const [isChanging, setIsChanging] = useState(false)
-  const [showLoader, setShowLoader] = useState(false)
-
+export function ThemeTransition({ children, userInitiated = false, onDone }: ThemeTransitionProps) {
   useEffect(() => {
-    // Solo mostramos el loader si el cambio fue iniciado por el usuario
-    if (!userInitiated) {
-      // Si no fue iniciado por el usuario, no mostramos nada y simplemente renderizamos children
-      return
-    }
-
-    setIsChanging(true)
-    setShowLoader(true)
-
-    const hideTimer = setTimeout(() => {
-      setShowLoader(false)
-      setTimeout(() => {
-        setIsChanging(false)
+    // Solo llamamos onDone si fue iniciado por el usuario
+    if (userInitiated) {
+      // Pequeño delay para permitir que el tema se aplique suavemente
+      const timer = setTimeout(() => {
         onDone?.()
-      }, 300)
-    }, 1000)
+      }, 100)
 
-    return () => clearTimeout(hideTimer)
-  }, [theme, userInitiated, onDone])
+      return () => clearTimeout(timer)
+    }
+  }, [userInitiated, onDone])
 
-  if (isChanging) {
-    return (
-      <div
-        className={`fixed inset-0 z-[9999] flex items-center justify-center bg-background transition-all duration-300 ${
-          showLoader ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        <LoadingCheckOverlay message="Cambiando tema..." />
-      </div>
-    )
-  }
-
+  // Simplemente renderizamos los children sin overlay
   return <>{children}</>
 }
