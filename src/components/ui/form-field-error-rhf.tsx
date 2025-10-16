@@ -27,14 +27,79 @@ export function FormFieldErrorRHF({ error, fieldRef, className, fieldName, showF
     if (error?.message && shouldShow) {
       setShow(true)
       
-      // Hacer scroll al campo con error cada vez que se muestra
+      // Hacer scroll al campo con error y enfocarlo automáticamente
       if (fieldRef?.current) {
-        setTimeout(() => {
-          fieldRef.current?.scrollIntoView({ 
+        // Usar requestAnimationFrame para mantener la "confianza" de iOS
+        requestAnimationFrame(() => {
+          if (!fieldRef.current) return
+          
+          fieldRef.current.scrollIntoView({ 
             behavior: 'smooth', 
             block: 'center' 
           })
-        }, 100)
+          
+          // Segundo frame para asegurar que el scroll terminó
+          requestAnimationFrame(() => {
+            if (!fieldRef.current) return
+            
+            // Enfocar el campo automáticamente con múltiples intentos para móvil
+            const focusElement = (element: HTMLElement) => {
+              const tryFocus = (el: HTMLInputElement | HTMLTextAreaElement) => {
+                // Múltiples intentos con diferentes técnicas para iOS
+                const wasReadOnly = el.readOnly
+                
+                // Intento 1: Focus directo
+                el.readOnly = false
+                el.focus({ preventScroll: true })
+                el.readOnly = wasReadOnly
+                
+                // Intento 2: Con click después de un micro-delay
+                setTimeout(() => {
+                  el.readOnly = false
+                  el.click()
+                  el.focus()
+                  el.readOnly = wasReadOnly
+                  
+                  // Seleccionar texto
+                  try {
+                    el.setSelectionRange(el.value.length, el.value.length)
+                  } catch (e) {
+                    // Ignorar errores
+                  }
+                }, 50)
+                
+                // Intento 3: Focus adicional con más delay
+                setTimeout(() => {
+                  el.readOnly = false
+                  el.focus()
+                  el.click()
+                  el.readOnly = wasReadOnly
+                }, 100)
+              }
+              
+              if (element instanceof HTMLInputElement || 
+                  element instanceof HTMLTextAreaElement) {
+                tryFocus(element)
+              } else if (element instanceof HTMLSelectElement) {
+                element.focus({ preventScroll: true })
+                setTimeout(() => element.click(), 50)
+              } else if (element) {
+                // Si es un contenedor, buscar el input dentro
+                const input = element.querySelector('input, textarea') as HTMLInputElement | HTMLTextAreaElement | null
+                const select = element.querySelector('select') as HTMLSelectElement | null
+                
+                if (input) {
+                  tryFocus(input)
+                } else if (select) {
+                  select.focus({ preventScroll: true })
+                  setTimeout(() => select.click(), 50)
+                }
+              }
+            }
+            
+            focusElement(fieldRef.current)
+          })
+        })
       }
 
       // Auto-ocultar después de 3 segundos

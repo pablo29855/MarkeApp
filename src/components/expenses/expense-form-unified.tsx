@@ -31,11 +31,11 @@ export function ExpenseFormUnified({ expense, categories, userId, onSuccess, onC
   const { showCreated, showUpdated, showError } = useNotification()
   const [isGeocoding, setIsGeocoding] = useState(false)
 
-  // Referencias para los campos del formulario
-  const nameRef = useRef<HTMLInputElement>(null)
-  const amountRef = useRef<HTMLInputElement>(null)
-  const categoryRef = useRef<HTMLDivElement>(null) // Contenedor del select
-  const purchaseDateRef = useRef<HTMLInputElement>(null)
+  // Referencias para los campos del formulario (contenedores con relative)
+  const nameRef = useRef<HTMLDivElement>(null)
+  const amountRef = useRef<HTMLDivElement>(null)
+  const categoryRef = useRef<HTMLDivElement>(null)
+  const purchaseDateRef = useRef<HTMLDivElement>(null)
 
   // Estados para errores de validación
   const [fieldErrors, setFieldErrors] = useState({

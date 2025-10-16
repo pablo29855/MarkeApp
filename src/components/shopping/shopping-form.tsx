@@ -35,9 +35,9 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
   const isOpen = open !== undefined ? open : internalOpen
   const setIsOpen = onOpenChange || setInternalOpen
 
-  // Referencias para los campos del formulario
-  const productNameRef = useRef<HTMLInputElement>(null)
-  const quantityRef = useRef<HTMLInputElement>(null)
+  // Referencias para los campos del formulario (contenedores con relative)
+  const productNameRef = useRef<HTMLDivElement>(null)
+  const quantityRef = useRef<HTMLDivElement>(null)
 
   // Estados para errores de validación
   const [fieldErrors, setFieldErrors] = useState({
