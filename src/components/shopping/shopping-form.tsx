@@ -51,6 +51,7 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
     product_name: "",
     quantity: "1",
     category_id: "",
+    purchased_at: "",
   })
 
   useEffect(() => {
@@ -59,6 +60,14 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
         product_name: item.product_name,
         quantity: item.quantity.toString(),
         category_id: item.category || "",
+        purchased_at: item.purchased_at || "",
+      })
+    } else {
+      setFormData({
+        product_name: "",
+        quantity: "1",
+        category_id: "",
+        purchased_at: "",
       })
     }
   }, [item])
@@ -116,12 +125,14 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
     const supabase = createClient()
 
     try {
+      const { formatDateLocal, parseLocalDate } = await import("@/lib/utils")
       if (item) {
         // Update
         const { error } = await supabase.from("shopping_list").update({
           product_name: formData.product_name,
           quantity: Number.parseInt(getNumericValue(formData.quantity)),
           category: formData.category_id || null,
+          purchased_at: formData.purchased_at ? formatDateLocal(parseLocalDate(formData.purchased_at)) : null,
         }).eq("id", item.id)
 
         if (error) throw error
@@ -137,6 +148,7 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
           is_purchased: false,
           unit_price: null,
           total_price: null,
+          purchased_at: formData.purchased_at ? formatDateLocal(parseLocalDate(formData.purchased_at)) : null,
         })
 
         if (error) throw error
@@ -148,6 +160,7 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
         product_name: "",
         quantity: "1",
         category_id: "",
+        purchased_at: "",
       })
       setIsOpen(false)
       onSuccess?.()

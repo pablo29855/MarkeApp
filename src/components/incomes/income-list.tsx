@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { formatCurrency, parseLocalDate } from '@/lib/utils'
-import { Pencil, Trash2, FileText } from 'lucide-react'
+import { Pencil, Trash2, FileText, TrendingUp } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useNotification } from '@/hooks/use-notification'
 import { format } from 'date-fns'
@@ -79,10 +79,15 @@ export function IncomeList({ incomes, onUpdate }: IncomeListProps) {
 
   if (incomes.length === 0) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <p className="text-muted-foreground text-center text-base sm:text-lg">No se encontraron ingresos</p>
-          <p className="text-sm sm:text-base text-muted-foreground text-center mt-2">Agrega tu primer ingreso para comenzar</p>
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+            <TrendingUp className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
+          </div>
+          <p className="text-lg sm:text-xl font-medium text-center">No tienes ingresos registrados</p>
+          <p className="text-sm sm:text-base text-muted-foreground text-center mt-2">
+            Agrega tu primer ingreso para comenzar a hacer seguimiento
+          </p>
         </CardContent>
       </Card>
     )

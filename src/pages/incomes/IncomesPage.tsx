@@ -1,22 +1,14 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IncomeFormWrapper } from '@/components/incomes/income-form-wrapper'
+import { ExportIncomesButton } from '@/components/incomes/export-incomes-button'
 import { IncomeList } from '@/components/incomes/income-list'
 import { SkeletonGrid } from '@/components/ui/skeleton-card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Search, X, TrendingUp, Filter } from 'lucide-react'
-import { formatCurrency } from '@/lib/utils'
+import { FiltersSection } from '@/components/ui/filters-section'
+import { formatCurrency, parseLocalDate } from '@/lib/utils'
+import { TrendingUp } from 'lucide-react'
 import type { Income } from '@/lib/types'
 
 export default function IncomesPage() {
@@ -137,7 +129,7 @@ export default function IncomesPage() {
     // Filtro por mes y año
     if (selectedMonth && selectedYear) {
       filtered = filtered.filter(income => {
-        const incomeDate = new Date(income.income_date)
+        const incomeDate = parseLocalDate(income.income_date)
         return (
           incomeDate.getMonth() + 1 === Number.parseInt(selectedMonth) &&
           incomeDate.getFullYear() === Number.parseInt(selectedYear)
@@ -178,6 +170,13 @@ export default function IncomesPage() {
   const currentYear = new Date().getFullYear()
   const years = Array.from({ length: 5 }, (_, i) => (currentYear - i).toString())
 
+  const filterOptions = [
+    { value: 'all', label: 'Todos los tipos' },
+    { value: 'nomina', label: '💼 Nómina' },
+    { value: 'transferencia', label: '🏦 Transferencia' },
+    { value: 'efectivo', label: '💵 Efectivo' },
+  ]
+
   if (loading) {
     return <LoadingCheckOverlay message="Cargando ingresos..." />
   }
@@ -189,9 +188,10 @@ export default function IncomesPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
           <div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">Ingresos</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Gestiona y registra tus ingresos</p>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">Gestiona y registra tus ingresos</p>
           </div>
           <div className="flex gap-2 self-end sm:self-auto">
+            <ExportIncomesButton incomes={filteredIncomes} />
             <IncomeFormWrapper onSuccess={handleRefresh} />
           </div>
         </div>
@@ -216,110 +216,30 @@ export default function IncomesPage() {
       </Card>
 
       {/* Filtros */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-            className="text-sm sm:text-base"
-          >
-            <Filter className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-            Filtros
-          </Button>
-          {(searchTerm || selectedType !== 'all') && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="text-sm sm:text-base"
-            >
-              <X className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-              Limpiar
-            </Button>
-          )}
-        </div>
-
-        {isFiltersOpen && (
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              {/* Búsqueda */}
-              <div>
-                <Label htmlFor="search">Buscar</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="Buscar por descripción o notas..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-3">
-                {/* Tipo */}
-                <div>
-                  <Label htmlFor="type">Tipo de Ingreso</Label>
-                  <Select value={selectedType} onValueChange={setSelectedType}>
-                    <SelectTrigger id="type">
-                      <SelectValue placeholder="Todos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="nomina">💼 Nómina</SelectItem>
-                      <SelectItem value="transferencia">🏦 Transferencia</SelectItem>
-                      <SelectItem value="efectivo">💵 Efectivo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Mes */}
-                <div>
-                  <Label htmlFor="month">Mes</Label>
-                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                    <SelectTrigger id="month">
-                      <SelectValue placeholder="Seleccionar mes" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {months.map((month) => (
-                        <SelectItem key={month.value} value={month.value}>
-                          {month.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Año */}
-                <div>
-                  <Label htmlFor="year">Año</Label>
-                  <Select value={selectedYear} onValueChange={setSelectedYear}>
-                    <SelectTrigger id="year">
-                      <SelectValue placeholder="Seleccionar año" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {years.map((year) => (
-                        <SelectItem key={year} value={year}>
-                          {year}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t">
-                <p className="text-sm text-muted-foreground">
-                  Mostrando <span className="font-medium">{filteredIncomes.length}</span> de{' '}
-                  <span className="font-medium">{incomes.length}</span> ingresos •{' '}
-                  Total: <span className="font-bold text-blue-600">{formatCurrency(getTotalIncome())}</span>
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      <FiltersSection
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        selectedFilter={selectedType}
+        setSelectedFilter={setSelectedType}
+        selectedMonth={selectedMonth}
+        setSelectedMonth={setSelectedMonth}
+        selectedYear={selectedYear}
+        setSelectedYear={setSelectedYear}
+        isFiltersOpen={isFiltersOpen}
+        setIsFiltersOpen={setIsFiltersOpen}
+        filterOptions={filterOptions}
+        filteredItemsLength={filteredIncomes.length}
+        allItemsLength={incomes.length}
+        totalAmount={getTotalIncome()}
+        clearFilters={clearFilters}
+        searchPlaceholder="Buscar por descripción o notas..."
+        filterLabel="Tipo de Ingreso"
+        filterPlaceholder="Todos los tipos"
+        totalLabel="ingresos"
+        totalColor="text-blue-600"
+        months={months}
+        years={years}
+      />
 
       {/* Lista de Ingresos */}
       {isRefreshing ? (

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -7,17 +7,24 @@ import { Toaster as Sonner } from '@/components/ui/sonner'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 
-// Pages
-import LoginPage from '@/pages/auth/LoginPage'
-import RegisterPage from '@/pages/auth/RegisterPage'
-import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
-import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
-import DashboardPage from '@/pages/dashboard/DashboardPage'
-import ExpensesPage from '@/pages/expenses/ExpensesPage'
-import IncomesPage from '@/pages/incomes/IncomesPage'
-import DebtsPage from '@/pages/debts/DebtsPage'
-import ShoppingPage from '@/pages/shopping/ShoppingPage'
-import ReportsPage from '@/pages/reports/ReportsPage'
+// Lazy load pages for better performance
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
+const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'))
+const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage'))
+const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'))
+const ExpensesPage = lazy(() => import('@/pages/expenses/ExpensesPage'))
+const IncomesPage = lazy(() => import('@/pages/incomes/IncomesPage'))
+const DebtsPage = lazy(() => import('@/pages/debts/DebtsPage'))
+const ShoppingPage = lazy(() => import('@/pages/shopping/ShoppingPage'))
+const ReportsPage = lazy(() => import('@/pages/reports/ReportsPage'))
+
+// Loading component for lazy loaded pages
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <LoadingCheckOverlay message="Cargando página..." />
+  </div>
+)
 
 function App() {
   const [user, setUser] = useState<any>(null)
@@ -57,10 +64,10 @@ function App() {
       <Sonner />
       <Routes>
         {/* Public routes */}
-        <Route path="/auth/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" />} />
-        <Route path="/auth/register" element={!user ? <RegisterPage /> : <Navigate to="/dashboard" />} />
-        <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/auth/login" element={!user ? <Suspense fallback={<PageLoader />}><LoginPage /></Suspense> : <Navigate to="/dashboard" />} />
+        <Route path="/auth/register" element={!user ? <Suspense fallback={<PageLoader />}><RegisterPage /></Suspense> : <Navigate to="/dashboard" />} />
+        <Route path="/auth/forgot-password" element={<Suspense fallback={<PageLoader />}><ForgotPasswordPage /></Suspense>} />
+        <Route path="/auth/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPasswordPage /></Suspense>} />
 
         {/* Protected routes with layout */}
         <Route
@@ -68,7 +75,9 @@ function App() {
           element={
             user ? (
               <DashboardLayout>
-                <DashboardPage />
+                <Suspense fallback={<PageLoader />}>
+                  <DashboardPage />
+                </Suspense>
               </DashboardLayout>
             ) : (
               <Navigate to="/auth/login" />
@@ -80,7 +89,9 @@ function App() {
           element={
             user ? (
               <DashboardLayout>
-                <ExpensesPage />
+                <Suspense fallback={<PageLoader />}>
+                  <ExpensesPage />
+                </Suspense>
               </DashboardLayout>
             ) : (
               <Navigate to="/auth/login" />
@@ -92,7 +103,9 @@ function App() {
           element={
             user ? (
               <DashboardLayout>
-                <IncomesPage />
+                <Suspense fallback={<PageLoader />}>
+                  <IncomesPage />
+                </Suspense>
               </DashboardLayout>
             ) : (
               <Navigate to="/auth/login" />
@@ -104,7 +117,9 @@ function App() {
           element={
             user ? (
               <DashboardLayout>
-                <DebtsPage />
+                <Suspense fallback={<PageLoader />}>
+                  <DebtsPage />
+                </Suspense>
               </DashboardLayout>
             ) : (
               <Navigate to="/auth/login" />
@@ -116,7 +131,9 @@ function App() {
           element={
             user ? (
               <DashboardLayout>
-                <ShoppingPage />
+                <Suspense fallback={<PageLoader />}>
+                  <ShoppingPage />
+                </Suspense>
               </DashboardLayout>
             ) : (
               <Navigate to="/auth/login" />
@@ -128,7 +145,9 @@ function App() {
           element={
             user ? (
               <DashboardLayout>
-                <ReportsPage />
+                <Suspense fallback={<PageLoader />}>
+                  <ReportsPage />
+                </Suspense>
               </DashboardLayout>
             ) : (
               <Navigate to="/auth/login" />

@@ -150,14 +150,15 @@ export function DebtFormUnified({ userId, debt, onSuccess, onClose }: DebtFormUn
     const supabase = createClient()
 
     try {
+      const { formatDateLocal, parseLocalDate } = await import("@/lib/utils")
       const currentDate = getTodayLocal()
-      
+      const normalizedDueDate = formData.due_date ? formatDateLocal(parseLocalDate(formData.due_date)) : formatDateLocal(parseLocalDate(currentDate))
       const debtData: any = {
         name: formData.creditor_name,
         creditor: formData.creditor_name,
         total_amount: Number.parseInt(getNumericValue(formData.total_amount)),
-        debt_date: formData.due_date || currentDate,
-        due_date: formData.due_date || currentDate,
+        debt_date: normalizedDueDate,
+        due_date: normalizedDueDate,
         status: 'active', // Estado inicial
       }
 

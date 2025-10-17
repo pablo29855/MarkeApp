@@ -114,11 +114,12 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
     const supabase = createClient()
 
     try {
+      const { formatDateLocal, parseLocalDate } = await import("@/lib/utils")
       // Insert payment record
       const { error: paymentError } = await supabase.from("debt_payments").insert({
         debt_id: debtId,
         amount: paymentAmount,
-        payment_date: formData.payment_date,
+        payment_date: formData.payment_date ? formatDateLocal(parseLocalDate(formData.payment_date)) : null,
         notes: formData.notes || null,
       })
 

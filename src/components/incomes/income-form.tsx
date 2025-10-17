@@ -16,7 +16,7 @@ import { FormFieldError } from '@/components/ui/form-field-error'
 import { getValidationMessage } from '@/lib/validation-messages'
 import { createClient } from '@/lib/supabase/client'
 import { useNotification } from '@/hooks/use-notification'
-import { getTodayLocal } from '@/lib/utils'
+import { getTodayLocal, formatDateLocal, parseLocalDate } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 import type { Income } from '@/lib/types'
 
@@ -150,7 +150,8 @@ export function IncomeForm({ onSuccess, income, onClose }: IncomeFormProps) {
         description: formData.description,
         amount: Number.parseInt(getNumericValue(formData.amount)),
         income_type: formData.income_type,
-        income_date: formData.income_date,
+        // Normalizar fecha para evitar shifts de zona horaria en la DB
+        income_date: formatDateLocal(parseLocalDate(formData.income_date)),
         notes: formData.notes || null,
       }
 
