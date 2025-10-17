@@ -6,7 +6,7 @@ import { RecentExpenses } from '@/components/dashboard/recent-expenses'
 import { BalanceCard } from '@/components/dashboard/balance-card'
 import { IncomeChart } from '@/components/dashboard/income-chart'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, formatDateLocal } from '@/lib/utils'
 import { DollarSign, TrendingUp, ShoppingCart, CreditCard } from 'lucide-react'
 import type { Expense, ExpensesByCategory, IncomesByType } from '@/lib/types'
 
@@ -39,15 +39,15 @@ export default function DashboardPage() {
           .from('expenses')
           .select('*, category:categories(*)')
           .eq('user_id', user.id)
-          .gte('purchase_date', firstDayOfMonth.toISOString().split('T')[0])
-          .lte('purchase_date', lastDayOfMonth.toISOString().split('T')[0])
+          .gte('purchase_date', formatDateLocal(firstDayOfMonth))
+          .lte('purchase_date', formatDateLocal(lastDayOfMonth))
 
         const { data: expensesByCategory } = await supabase
           .from('expenses')
           .select('amount, category:categories(name, color, icon)')
           .eq('user_id', user.id)
-          .gte('purchase_date', firstDayOfMonth.toISOString().split('T')[0])
-          .lte('purchase_date', lastDayOfMonth.toISOString().split('T')[0])
+          .gte('purchase_date', formatDateLocal(firstDayOfMonth))
+          .lte('purchase_date', formatDateLocal(lastDayOfMonth))
 
         const { data: recentExpenses } = await supabase
           .from('expenses')
@@ -72,8 +72,8 @@ export default function DashboardPage() {
           .from('incomes')
           .select('*')
           .eq('user_id', user.id)
-          .gte('income_date', firstDayOfMonth.toISOString().split('T')[0])
-          .lte('income_date', lastDayOfMonth.toISOString().split('T')[0])
+          .gte('income_date', formatDateLocal(firstDayOfMonth))
+          .lte('income_date', formatDateLocal(lastDayOfMonth))
 
         const totalExpenses = expenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0
         const totalIncome = incomes?.reduce((sum, inc) => sum + Number(inc.amount), 0) || 0

@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Trash2, MapPin, FileText, Pencil } from "lucide-react"
+import { Trash2, MapPin, FileText, Pencil, Receipt } from "lucide-react"
 import type { Expense, Category } from "@/lib/types"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -58,10 +58,15 @@ export function ExpenseList({ expenses, categories, onUpdate }: ExpenseListProps
 
   if (expenses.length === 0) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <p className="text-muted-foreground text-center text-base sm:text-lg">No se encontraron gastos</p>
-          <p className="text-sm sm:text-base text-muted-foreground text-center mt-2">Agrega tu primer gasto para comenzar</p>
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+            <Receipt className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
+          </div>
+          <p className="text-lg sm:text-xl font-medium text-center">No tienes gastos registrados</p>
+          <p className="text-sm sm:text-base text-muted-foreground text-center mt-2">
+            Agrega tu primer gasto para comenzar a hacer seguimiento
+          </p>
         </CardContent>
       </Card>
     )

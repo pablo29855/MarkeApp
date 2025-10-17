@@ -2,26 +2,26 @@
 
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
-import { exportExpensesToCSV } from "@/lib/export-utils"
+import { exportIncomesToCSV } from "@/lib/export-utils"
 import { useNotification } from "@/hooks/use-notification"
-import type { Expense } from "@/lib/types"
+import type { Income } from "@/lib/types"
 
-interface ExportButtonProps {
-  expenses: Expense[]
+interface ExportIncomesButtonProps {
+  incomes: Income[]
 }
 
-export function ExportButton({ expenses }: ExportButtonProps) {
+export function ExportIncomesButton({ incomes }: ExportIncomesButtonProps) {
   const { showSuccess, showWarning } = useNotification()
 
   const handleExport = () => {
-    if (expenses.length === 0) {
-      showWarning("Sin datos", "No hay gastos para exportar")
+    if (incomes.length === 0) {
+      showWarning("Sin datos", "No hay ingresos para exportar")
       return
     }
 
     try {
-      exportExpensesToCSV(expenses)
-      showSuccess("Exportado", `Se exportaron ${expenses.length} gastos correctamente`)
+      exportIncomesToCSV(incomes)
+      showSuccess("Exportado", `Se exportaron ${incomes.length} ingresos correctamente`)
     } catch (error) {
       console.error("Error exporting CSV:", error)
       showWarning("Error al exportar", "No se pudo generar el archivo CSV")
@@ -29,7 +29,7 @@ export function ExportButton({ expenses }: ExportButtonProps) {
   }
 
   return (
-    <Button onClick={handleExport} variant="outline" disabled={expenses.length === 0}>
+    <Button onClick={handleExport} variant="outline" disabled={incomes.length === 0}>
       <Download className="h-4 w-4 mr-2" />
       Exportar Excel
     </Button>

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Expense } from "@/lib/types"
 import { formatDistanceToNow } from "date-fns"
+import { parseLocalDate } from '@/lib/utils'
 import { es } from "date-fns/locale"
 import { ListSkeleton } from "@/components/ui/skeleton-loader"
 
@@ -61,7 +62,7 @@ export function RecentExpenses({ expenses, isLoading }: RecentExpensesProps) {
                       </div>
                     )}
                     <span className="text-xs sm:text-sm text-muted-foreground">
-                      {formatDistanceToNow(new Date(expense.purchase_date), {
+                      {formatDistanceToNow(parseLocalDate(expense.purchase_date), {
                         addSuffix: true,
                         locale: es,
                       })}

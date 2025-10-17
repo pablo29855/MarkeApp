@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useNotification } from "@/hooks/use-notification"
-import { getTodayLocal } from "@/lib/utils"
+import { getTodayLocal, formatDateLocal, parseLocalDate } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -238,7 +238,8 @@ export function ExpenseFormUnified({ expense, categories, userId, onSuccess, onC
         name: formData.name,
         amount: Number.parseInt(getNumericValue(formData.amount)),
         category_id: formData.category_id,
-        purchase_date: formData.purchase_date,
+        // Normalizar fecha para evitar shifts de zona horaria en la DB
+        purchase_date: formatDateLocal(parseLocalDate(formData.purchase_date)),
         location: formData.location || null,
         notes: formData.notes || null,
       }

@@ -171,13 +171,18 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories,
 
     try {
       // Update shopping item
+  const { formatDateLocal, parseLocalDate } = await import("@/lib/utils")
+  const now = new Date()
+  // Obtener string 'YYYY-MM-DD' local para parseLocalDate
+  const nowStr = now.toISOString().split('T')[0]
+  const normalizedDate = formatDateLocal(parseLocalDate(nowStr))
       const { error: updateError } = await supabase
         .from("shopping_list")
         .update({
           is_purchased: true,
           unit_price: priceValue,
           total_price: totalPrice,
-          purchased_at: new Date().toISOString(),
+          purchased_at: normalizedDate,
         })
         .eq("id", item.id)
 
@@ -189,7 +194,7 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories,
         name: item.product_name,
         amount: totalPrice,
         category_id: marketCategoryId,
-        purchase_date: new Date().toISOString().split("T")[0],
+        purchase_date: normalizedDate,
         location: locationName || null,
         notes: `Compra de mercado - ${purchasedQuantity} unidades${location ? ` - Ubicación: ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : ""}`,
       })
