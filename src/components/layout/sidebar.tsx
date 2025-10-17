@@ -214,7 +214,7 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 bg-card border-r border-border shadow-2xl transition-transform duration-300 ease-out z-50 lg:z-40 lg:bg-card",
+          "fixed inset-y-0 left-0 bg-card border-r border-border shadow-2xl transition-transform duration-300 ease-out z-50 lg:z-40 lg:bg-card pb-6 lg:pb-0",
           isMobileMenuOpen 
             ? "translate-x-0" 
             : "-translate-x-full lg:translate-x-0",
@@ -337,7 +337,7 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
               variant="outline"
               size="sm"
               className={cn(
-                "w-full gap-2 transition-smooth hover:bg-destructive/10 hover:border-destructive/50 hover:text-destructive",
+                "w-full gap-2 transition-smooth hover:bg-destructive/10 hover:border-destructive/50 hover:text-destructive lg:mb-0 mb-2",
                 isCollapsed ? "justify-center px-0" : "justify-start"
               )}
               onClick={handleLogout}

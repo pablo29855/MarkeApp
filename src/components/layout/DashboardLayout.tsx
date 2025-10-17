@@ -31,7 +31,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Contenedor con scroll optimizado */}
         <div className={`h-[100vh] overflow-y-auto overscroll-behavior-y-contain scroll-smooth ${scrollbarClasses}`}>
           {/* Espaciado limpio y profesional - Más espacio inferior en móvil para mejor efecto de cards */}
-          <div className="pt-20 lg:pt-6 px-4 sm:px-5 md:px-6 lg:px-8 pb-32 sm:pb-20 lg:pb-16 min-h-full">
+          <div className="pt-12 lg:pt-6 px-4 sm:px-5 md:px-6 lg:px-8 pb-8 sm:pb-6 lg:pb-4 min-h-full">
             {children}
           </div>
         </div>
