@@ -123,3 +123,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Safe area utilities para iOS */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+@supports not (padding: max(0px)) {
+  .pb-safe {
+    padding-bottom: constant(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: constant(safe-area-inset-top);
+  }
+}
