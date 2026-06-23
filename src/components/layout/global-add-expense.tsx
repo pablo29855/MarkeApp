@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ExpenseFormWrapperUnified } from '@/components/expenses/expense-form-wrapper-unified'
+import { IncomeFormWrapper } from '@/components/incomes/income-form-wrapper'
+import { ShoppingFormWrapper } from '@/components/shopping/shopping-form-wrapper'
+import { DebtFormWrapperUnified } from '@/components/debts/debt-form-wrapper-unified'
+import { useLocation } from 'react-router-dom'
 import type { Category } from '@/lib/types'
 
 interface GlobalAddExpenseProps {
@@ -15,6 +19,7 @@ interface GlobalAddExpenseProps {
 export function GlobalAddExpense({ open, onOpenChange }: GlobalAddExpenseProps) {
   const [userId, setUserId] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
+  const location = useLocation()
 
   useEffect(() => {
     let mounted = true
@@ -32,6 +37,42 @@ export function GlobalAddExpense({ open, onOpenChange }: GlobalAddExpenseProps) 
 
   // No renderizar el Dialog hasta tener datos para evitar formularios vacíos
   if (!userId) return null
+
+  if (location.pathname === '/incomes') {
+    return (
+      <IncomeFormWrapper
+        open={open}
+        onOpenChange={onOpenChange}
+        onSuccess={() => onOpenChange(false)}
+        trigger={<span className="hidden" aria-hidden />}
+      />
+    )
+  }
+
+  if (location.pathname === '/shopping') {
+    return (
+      <ShoppingFormWrapper
+        categories={categories}
+        userId={userId}
+        open={open}
+        onOpenChange={onOpenChange}
+        onSuccess={() => onOpenChange(false)}
+        trigger={<span className="hidden" aria-hidden />}
+      />
+    )
+  }
+
+  if (location.pathname === '/debts') {
+    return (
+      <DebtFormWrapperUnified
+        userId={userId}
+        open={open}
+        onOpenChange={onOpenChange}
+        onSuccess={() => onOpenChange(false)}
+        trigger={<span className="hidden" aria-hidden />}
+      />
+    )
+  }
 
   return (
     <ExpenseFormWrapperUnified

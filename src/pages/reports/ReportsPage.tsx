@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { createClient } from '@/lib/supabase/client'
 import { ReportFilters } from '@/components/reports/report-filters'
 import { IncomeFilters } from '@/components/incomes/income-filters'
-import { CategoryPieChart } from '@/components/reports/category-pie-chart'
+import { DistributionChart } from '@/components/reports/distribution-chart'
 import { ComparisonBarChart } from '@/components/reports/comparison-bar-chart'
 import { CategoryTable } from '@/components/reports/category-table'
 import { IncomeTable } from '@/components/reports/income-table'
@@ -222,25 +222,25 @@ export default function ReportsPage() {
     <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
       <div className="flex flex-col gap-3 sm:gap-4 lg:gap-6">
       {/* Header */}
-      <div className="pt-1">
-        <h1 className="text-2xl font-black tracking-tight">Reportes</h1>
-        <p className="text-sm text-muted-foreground">Analiza tus gastos y compara períodos</p>
+      <div className="pt-2 flex justify-between items-center mb-2">
+        <div>
+          <h1 className="text-[28px] font-black text-[#1E293B] tracking-tight">Reportes</h1>
+          <p className="text-[15px] font-bold text-[#94A3B8]">{periodLabel}</p>
+        </div>
       </div>
 
       {/* Estadísticas — Ingresos (azul) / Gastos (coral) */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="fade-up relative overflow-hidden rounded-[24px] bg-brand-grad p-4 text-white shadow-hero">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-white/80">Ingresos</p>
-          <p className="mt-1 truncate text-2xl font-black">{formatCurrency(totalIncome)}</p>
-          <p className="mt-1 truncate text-[11px] font-semibold text-white/75">{periodLabel}</p>
-          <TrendingUp className="absolute -right-3 -top-3 h-16 w-16 opacity-15" />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="rounded-[24px] bg-[#3B6EF6] p-5 pb-6 text-white shadow-[0_6px_16px_rgba(59,110,246,0.3)] relative overflow-hidden group">
+          <p className="text-sm font-bold text-white/90 mb-1 relative z-10">Ingresos</p>
+          <p className="text-[22px] font-black tracking-tight relative z-10 truncate">{formatCurrency(totalIncome)}</p>
+          <TrendingUp className="absolute -right-4 -bottom-4 h-24 w-24 opacity-10 group-hover:scale-110 transition-transform duration-500" />
         </div>
 
-        <div className="fade-up relative overflow-hidden rounded-[24px] bg-coral-grad p-4 text-white shadow-hero" style={{ animationDelay: '80ms' }}>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-white/80">Gastos</p>
-          <p className="mt-1 truncate text-2xl font-black">{formatCurrency(totalExpenses)}</p>
-          <p className="mt-1 truncate text-[11px] font-semibold text-white/75">{periodLabel}</p>
-          <BarChart3 className="absolute -right-3 -top-3 h-16 w-16 opacity-15" />
+        <div className="rounded-[24px] bg-[#FF5A5F] p-5 pb-6 text-white shadow-[0_6px_16px_rgba(255,90,95,0.3)] relative overflow-hidden group">
+          <p className="text-sm font-bold text-white/90 mb-1 relative z-10">Gastos</p>
+          <p className="text-[22px] font-black tracking-tight relative z-10 truncate">{formatCurrency(totalExpenses)}</p>
+          <BarChart3 className="absolute -right-4 -bottom-4 h-24 w-24 opacity-10 group-hover:scale-110 transition-transform duration-500" />
         </div>
       </div>
 
@@ -256,21 +256,19 @@ export default function ReportsPage() {
 
       {isComparing ? (
         <div className="flex flex-col gap-3 sm:gap-4 lg:gap-6">
-          {/* Gráficas de torta de gastos */}
-          {(!reportType || reportType === 'expenses') && (
-            <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-2 lg:grid-cols-2">
-              <CategoryPieChart data={expensesByCategory} title={`Gastos - ${periodLabel}`} />
-              <CategoryPieChart data={compareExpensesByCategory} title={`Gastos - ${comparePeriodLabel}`} />
-            </div>
-          )}
-          
-          {/* Gráficas de torta de ingresos */}
-          {(!reportType || reportType === 'incomes') && (
-            <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-2 lg:grid-cols-2">
-              <CategoryPieChart data={incomesByType.map(item => ({ category: item.type, total: item.total, color: item.color, icon: item.icon }))} title={`Ingresos - ${periodLabel}`} />
-              <CategoryPieChart data={compareIncomesByType.map(item => ({ category: item.type, total: item.total, color: item.color, icon: item.icon }))} title={`Ingresos - ${comparePeriodLabel}`} />
-            </div>
-          )}
+          {/* Gráficos unificados de distribución (Comparación) */}
+          <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2">
+            <DistributionChart 
+              title={`Distribución - ${periodLabel}`}
+              expenses={expensesByCategory} 
+              incomes={incomesByType.map(item => ({ type: item.type, total: item.total, color: item.color, icon: item.icon }))} 
+            />
+            <DistributionChart 
+              title={`Distribución - ${comparePeriodLabel}`}
+              expenses={compareExpensesByCategory} 
+              incomes={compareIncomesByType.map(item => ({ type: item.type, total: item.total, color: item.color, icon: item.icon }))} 
+            />
+          </div>
           
           {/* Detalles de Gastos con gráfico y tablas */}
           {(!reportType || reportType === 'expenses') && (
@@ -340,15 +338,11 @@ export default function ReportsPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-3 sm:gap-4 lg:gap-6">
-          {/* Gráficas de torta */}
-          <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-2 lg:grid-cols-2">
-            {(!reportType || reportType === 'expenses') && (
-              <CategoryPieChart data={expensesByCategory} title={`Gastos - ${periodLabel}`} />
-            )}
-            {(!reportType || reportType === 'incomes') && (
-              <CategoryPieChart data={incomesByType.map(item => ({ category: item.type, total: item.total, color: item.color, icon: item.icon }))} title={`Ingresos - ${periodLabel}`} />
-            )}
-          </div>
+          {/* Gráfico unificado de distribución */}
+          <DistributionChart 
+            expenses={expensesByCategory} 
+            incomes={incomesByType.map(item => ({ type: item.type, total: item.total, color: item.color, icon: item.icon }))} 
+          />
           
           {/* Detalles en acordeones */}
           <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2">

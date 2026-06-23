@@ -4,7 +4,8 @@ import { DebtCard } from '@/components/debts/debt-card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { SkeletonDebtList } from '@/components/ui/skeleton-debt'
 import { formatCurrency } from '@/lib/utils'
-import { Landmark, CircleCheck, AlertCircle } from 'lucide-react'
+import { ChevronLeft, Landmark } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import type { Debt, DebtPayment } from '@/lib/types'
 import { DebtFormWrapperUnified } from '@/components/debts/debt-form-wrapper-unified'
 
@@ -168,42 +169,28 @@ export default function DebtsPage() {
   const totalRemaining = totalDebt - totalPaid
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4 lg:space-y-6">
+    <div className="max-w-7xl mx-auto space-y-4 lg:space-y-6 pb-20">
       {/* Header */}
-      <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight">Deudas</h1>
-          <p className="text-sm text-muted-foreground">Gestiona tus deudas y pagos parciales</p>
+      <div className="flex items-center gap-4 py-2">
+        <div className="flex-1">
+          <h1 className="text-[26px] font-black tracking-tight text-[#1e2230]">Deudas</h1>
+          <p className="text-[15px] font-extrabold text-[#8b93a7]">Seguimiento de pagos</p>
         </div>
-        <div className="flex gap-2 self-end sm:self-auto">
+        <div className="hidden lg:block">
           <DebtFormWrapperUnified userId={userId} onSuccess={handleRefresh} />
         </div>
       </div>
 
       {/* Stats — tiles Pop Azul */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="fade-up rounded-[22px] bg-card p-3 sm:p-4 shadow-card">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[hsl(var(--chart-2)/0.16)]">
-            <AlertCircle className="h-5 w-5 text-[hsl(var(--chart-2))]" strokeWidth={2.4} />
-          </div>
-          <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Pendiente</p>
-          <p className="truncate text-base sm:text-lg font-black text-foreground">{formatCurrency(totalRemaining)}</p>
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <div className="fade-up rounded-[24px] bg-white p-5 shadow-[0_6px_16px_rgba(30,40,80,.07)]">
+          <p className="text-[13px] font-bold text-[#8b93a7]">Pendiente</p>
+          <p className="mt-1 truncate text-[22px] font-black text-[#FF7A59]">$ {formatCurrency(totalRemaining).replace('$', '').trim()}</p>
         </div>
 
-        <div className="fade-up rounded-[22px] bg-card p-3 sm:p-4 shadow-card" style={{ animationDelay: '80ms' }}>
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[hsl(var(--chart-1)/0.14)]">
-            <CircleCheck className="h-5 w-5 text-[hsl(var(--chart-1))]" strokeWidth={2.4} />
-          </div>
-          <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Pagado</p>
-          <p className="truncate text-base sm:text-lg font-black text-foreground">{formatCurrency(totalPaid)}</p>
-        </div>
-
-        <div className="fade-up rounded-[22px] bg-card p-3 sm:p-4 shadow-card" style={{ animationDelay: '160ms' }}>
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[hsl(var(--chart-4)/0.16)]">
-            <Landmark className="h-5 w-5 text-[hsl(var(--chart-4))]" strokeWidth={2.4} />
-          </div>
-          <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Total</p>
-          <p className="truncate text-base sm:text-lg font-black text-foreground">{formatCurrency(totalDebt)}</p>
+        <div className="fade-up rounded-[24px] bg-white p-5 shadow-[0_6px_16px_rgba(30,40,80,.07)]" style={{ animationDelay: '80ms' }}>
+          <p className="text-[13px] font-bold text-[#8b93a7]">Pagado</p>
+          <p className="mt-1 truncate text-[22px] font-black text-[#3B6EF6]">$ {formatCurrency(totalPaid).replace('$', '').trim()}</p>
         </div>
       </div>
 
@@ -211,9 +198,9 @@ export default function DebtsPage() {
       {isRefreshing ? (
         <SkeletonDebtList count={debtsWithPayments.length || 3} />
       ) : debtsWithPayments.length > 0 ? (
-        <div className="space-y-3 sm:space-y-4">
-          {debtsWithPayments.map(({ debt, payments }) => (
-            <DebtCard key={debt.id} debt={debt} payments={payments} onUpdate={handleRefresh} />
+        <div className="space-y-4">
+          {debtsWithPayments.map(({ debt, payments }, index) => (
+            <DebtCard key={debt.id} debt={debt} payments={payments} onUpdate={handleRefresh} isActive={index === 0} />
           ))}
         </div>
       ) : (

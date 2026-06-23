@@ -71,50 +71,40 @@ export function FinancialBalanceCard({
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="col-span-full">
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-card via-card to-card/95 overflow-hidden">
-        <CollapsibleTrigger className="w-full group">
-          <CardHeader className="transition-all duration-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 shadow-sm">
-                  <Wallet className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-                </div>
-                <div className="text-left flex-1 min-w-0">
-                  <CardTitle className="text-base sm:text-lg lg:text-xl truncate flex items-center gap-2">
-                    Balance Financiero
-                    <div className={`flex items-center gap-1.5 ${status.color} text-sm`}>
-                      <StatusIcon className="h-4 w-4" />
-                      <span className="font-semibold">{status.text}</span>
-                    </div>
-                  </CardTitle>
-                  {!isOpen && (
-                    <CardDescription className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm flex-wrap mt-1">
-                      <span>{periodLabel}</span>
-                      <span className="hidden sm:inline">•</span>
-                      <span className={`font-semibold ${balance > 0 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
-                        {formatCurrency(balance)}
-                      </span>
-                      {compareData && balanceDiff !== 0 && (
-                        <>
-                          <span className="hidden sm:inline">•</span>
-                          <span className={`font-semibold flex items-center gap-1 ${balanceDiff > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                            {balanceDiff > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                            {balanceDiff > 0 ? '+' : ''}{formatCurrency(balanceDiff)}
-                          </span>
-                        </>
-                      )}
-                    </CardDescription>
-                  )}
-                </div>
+      <Card className="border-0 shadow-[0_6px_20px_rgba(91,123,254,0.3)] rounded-[24px] bg-[#5B7BFE] text-white overflow-hidden transition-all duration-300">
+        <CollapsibleTrigger className="w-full text-left">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-bold text-white text-base flex items-center gap-2">
+                Balance financiero
+                <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+              </h3>
+              <div className="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">
+                <span className={`w-2.5 h-2.5 rounded-full ${balance > totalIncome * 0.3 ? 'bg-green-400' : balance > 0 ? 'bg-blue-300' : 'bg-red-400'} shadow-[0_0_8px_rgba(255,255,255,0.4)]`} />
+                {balance > totalIncome * 0.3 ? 'Excelente' : balance > 0 ? 'Bueno' : 'Atención'}
               </div>
-              <ChevronDown 
-                className={`h-5 w-5 text-muted-foreground transition-transform duration-200 shrink-0 ml-2 ${isOpen ? 'rotate-180' : ''}`}
-              />
             </div>
-          </CardHeader>
+            
+            <div className="mb-2">
+              <p className="text-[32px] sm:text-4xl font-black tracking-tight">{formatCurrency(balance)}</p>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-sm font-bold text-white/90">
+                {savingsPercentage.toFixed(0)}% de tus ingresos disponibles
+              </p>
+              {compareData && balanceDiff !== 0 && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-white/20 font-bold flex items-center gap-1">
+                  {balanceDiff > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                  {balanceDiff > 0 ? '+' : ''}{formatCurrency(balanceDiff)}
+                </span>
+              )}
+            </div>
+          </div>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="space-y-4 sm:space-y-6 pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
+          <div className="bg-white dark:bg-card text-foreground pt-6">
+            <CardContent className="space-y-4 sm:space-y-6 pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
         {/* Balance Principal */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
           <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/20 border-green-200 dark:border-green-800 shadow-sm">
@@ -566,6 +556,7 @@ export function FinancialBalanceCard({
           </div>
         )}
           </CardContent>
+          </div>
         </CollapsibleContent>
       </Card>
     </Collapsible>

@@ -29,13 +29,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [])
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar userName={userName} onCollapse={setIsCollapsed} onMobileMenuChange={setMobileMenuOpen} />
+    <div className="min-h-[100dvh] bg-background">
+      <Sidebar 
+        userName={userName} 
+        onCollapse={setIsCollapsed} 
+        onMobileMenuChange={setMobileMenuOpen} 
+        mobileMenuOpen={mobileMenuOpen}
+      />
       <main className={`transition-all duration-300 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
         {/* Contenedor con scroll optimizado */}
-        <div className={`h-[100vh] overflow-y-auto overscroll-behavior-y-contain scroll-smooth ${scrollbarClasses}`}>
+        <div className={`h-[100dvh] overflow-y-auto overscroll-behavior-y-contain scroll-smooth ${scrollbarClasses}`}>
           {/* Espaciado: deja sitio para el BottomNav (~72px + safe-area) en móvil */}
-          <div className="pt-16 lg:pt-6 px-4 sm:px-5 md:px-6 lg:px-8 min-h-full pb-[104px] lg:pb-8">
+          <div 
+            className="px-4 sm:px-5 md:px-6 lg:px-8 min-h-full pb-[104px] lg:pb-8 lg:pt-6"
+            style={{ paddingTop: 'calc(1.5rem + env(safe-area-inset-top))' }}
+          >
             {children}
           </div>
         </div>
@@ -43,7 +51,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Navegación inferior estilo app (solo móvil/tablet) + FAB.
           Se oculta mientras el menú off-canvas está abierto para no solaparse. */}
-      {!mobileMenuOpen && <BottomNav userName={userName} onAdd={() => setAddOpen(true)} />}
+      {!mobileMenuOpen && <BottomNav onAdd={() => setAddOpen(true)} onMenuClick={() => setMobileMenuOpen(true)} />}
 
       {/* Bottom sheet / dialog global de "Agregar gasto" disparado por el FAB */}
       <GlobalAddExpense open={addOpen} onOpenChange={setAddOpen} />

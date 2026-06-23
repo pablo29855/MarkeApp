@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Trash2, Calendar, FileText, ChevronDown, ChevronUp, Pencil, AlertTriangle, Clock } from "lucide-react"
+import { Trash2, Calendar, FileText, ChevronDown, ChevronUp, Pencil, AlertTriangle, Clock, CreditCard, Landmark, Home, Car, GraduationCap, User, ShoppingCart, Smartphone, Stethoscope, Briefcase, Lightbulb, Building2, Receipt } from "lucide-react"
 import { PaymentForm } from "./payment-form"
 import { DebtFormWrapperUnified } from "./debt-form-wrapper-unified"
 import type { Debt, DebtPayment } from "@/lib/types"
@@ -23,30 +23,31 @@ import { format, differenceInDays } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn, parseLocalDate } from "@/lib/utils"
 
-// Categorías de deudas con emojis (debe coincidir con debt-form-unified)
+// Categorías de deudas con iconos (debe coincidir con debt-form-unified)
 const DEBT_CATEGORIES = {
-  'credit_card': { label: 'Tarjeta de Crédito', icon: '💳' },
-  'bank_loan': { label: 'Préstamo Bancario', icon: '🏦' },
-  'mortgage': { label: 'Hipoteca', icon: '🏠' },
-  'car_loan': { label: 'Préstamo Vehicular', icon: '🚗' },
-  'student_loan': { label: 'Préstamo Estudiantil', icon: '🎓' },
-  'personal_loan': { label: 'Préstamo Personal', icon: '👤' },
-  'store_credit': { label: 'Crédito Comercial', icon: '🛒' },
-  'phone_plan': { label: 'Plan Telefónico', icon: '📱' },
-  'medical': { label: 'Médico/Salud', icon: '⚕️' },
-  'business': { label: 'Empresarial', icon: '💼' },
-  'utilities': { label: 'Servicios Públicos', icon: '💡' },
-  'rent': { label: 'Arriendo/Alquiler', icon: '🏢' },
-  'other': { label: 'Otro', icon: '📋' },
+  'credit_card': { label: 'Tarjeta de Crédito', icon: CreditCard },
+  'bank_loan': { label: 'Préstamo Bancario', icon: Landmark },
+  'mortgage': { label: 'Hipoteca', icon: Home },
+  'car_loan': { label: 'Préstamo Vehicular', icon: Car },
+  'student_loan': { label: 'Préstamo Estudiantil', icon: GraduationCap },
+  'personal_loan': { label: 'Préstamo Personal', icon: User },
+  'store_credit': { label: 'Crédito Comercial', icon: ShoppingCart },
+  'phone_plan': { label: 'Plan Telefónico', icon: Smartphone },
+  'medical': { label: 'Médico/Salud', icon: Stethoscope },
+  'business': { label: 'Empresarial', icon: Briefcase },
+  'utilities': { label: 'Servicios Públicos', icon: Lightbulb },
+  'rent': { label: 'Arriendo/Alquiler', icon: Building2 },
+  'other': { label: 'Otro', icon: FileText },
 } as const
 
 interface DebtCardProps {
   debt: Debt
   payments: DebtPayment[]
   onUpdate?: () => void
+  isActive?: boolean
 }
 
-export function DebtCard({ debt, payments, onUpdate }: DebtCardProps) {
+export function DebtCard({ debt, payments, onUpdate, isActive = false }: DebtCardProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showPayments, setShowPayments] = useState(false)
@@ -223,111 +224,74 @@ export function DebtCard({ debt, payments, onUpdate }: DebtCardProps) {
 
   return (
     <>
-      <Card className={cn(
-        "transition-smooth animate-fade-in group overflow-hidden relative",
-        config.borderColor,
-        config.bgColor
-      )}>
+      <Card className="transition-smooth animate-fade-in group overflow-hidden relative rounded-[24px] shadow-[0_6px_16px_rgba(30,40,80,.07)] bg-white border-none">
         <div className={cn(
-          "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500",
+          "pointer-events-none absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500",
           config.gradientColor,
           "via-transparent to-transparent"
         )} />
         
-        {/* Vista Compacta en Móvil / Completa en Desktop */}
         <div className="relative z-10">
-          {/* Header Compacto */}
+          {/* Vista Compacta en Móvil / Completa en Desktop */}
+          {/* Header Compacto (Pop Azul Style) */}
           <div 
-            className="p-4 sm:p-5 lg:p-6 cursor-pointer"
+            className="p-5 cursor-pointer"
             onClick={(e) => {
               const target = e.target as HTMLElement
-              // No expandir si se clickeó un botón, input u otro elemento interactivo
               if (!target.closest('button') && !target.closest('a') && !target.closest('input')) {
                 setIsExpanded(!isExpanded)
               }
             }}
           >
-            <div className="flex items-start justify-between gap-3">
-              {/* Info Principal */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <h3 className="font-bold text-lg sm:text-lg lg:text-xl group-hover:text-primary transition-colors truncate">
-                    {debt.name}
-                  </h3>
-                  {isPaid ? (
-                    <Badge className="bg-green-500 hover:bg-green-600 text-sm sm:text-sm px-2 py-0.5">
-                      ✓ Pagada
-                    </Badge>
-                  ) : urgencyStatus === 'overdue' ? (
-                    <Badge className="bg-red-500 text-white text-sm sm:text-sm px-2 py-0.5">
-                      Vencida
-                    </Badge>
-                  ) : (
-                    <Badge className="bg-amber-500 text-white text-sm sm:text-sm px-2 py-0.5">
-                      Pendiente
-                    </Badge>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-[46px] w-[46px] items-center justify-center rounded-[14px] bg-[#eef1f7] shrink-0 text-primary">
+                  {(() => {
+                    const CategoryIcon = debt.category && DEBT_CATEGORIES[debt.category as keyof typeof DEBT_CATEGORIES]?.icon
+                      ? DEBT_CATEGORIES[debt.category as keyof typeof DEBT_CATEGORIES].icon
+                      : Receipt
+                    return <CategoryIcon className="h-6 w-6" strokeWidth={2} />
+                  })()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-[17px] text-[#1e2230] truncate">{debt.name}</h3>
+                  {debt.debt_date && (
+                    <p className="text-[13px] font-semibold text-[#8b93a7]">Vence {format(parseLocalDate(debt.debt_date), "d MMM", { locale: es })}</p>
                   )}
                 </div>
-
-                {/* Alerta de Vencimiento - Siempre Visible si hay urgencia */}
-                {!isPaid && urgencyStatus !== 'normal' && config.message && UrgencyIcon && (
-                  <div className={cn(
-                    "flex items-center gap-2 mb-3 p-2.5 rounded-lg border",
-                    config.alertBg
-                  )}>
-                    <UrgencyIcon className={cn("h-4 w-4 flex-shrink-0", config.iconColor)} />
-                    <div className="flex-1 min-w-0">
-                      <p className={cn("font-medium text-sm", config.iconColor)}>
-                        {config.message}
-                      </p>
-                      {debt.debt_date && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {urgencyStatus === 'overdue' 
-                            ? `Venció: ${format(parseLocalDate(debt.debt_date), "PP", { locale: es })}`
-                            : format(parseLocalDate(debt.debt_date), "PP", { locale: es })
-                          }
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Progreso y Monto - Siempre Visible */}
-                <div className="space-y-2 mt-3">
-                  <div className="flex items-center justify-between text-sm sm:text-sm">
-                    <span className="text-muted-foreground">
-                      ${Number(debt.paid_amount).toLocaleString()} / ${Number(debt.total_amount).toLocaleString()}
-                    </span>
-                    <span className="font-bold text-base sm:text-base">{progressPercentage.toFixed(0)}%</span>
-                  </div>
-                  <Progress value={progressPercentage} className="h-2 sm:h-2.5" />
-                  
-                  {/* Pendiente destacado */}
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-base sm:text-base text-muted-foreground">Pendiente:</span>
-                    <span className="font-bold text-lg sm:text-xl text-red-600 dark:text-red-400">
-                      ${remainingAmount.toLocaleString()}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-[#8b93a7] hover:text-primary hover:bg-primary/10" onClick={(e) => { e.stopPropagation(); setShowEditDialog(true); }}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-[#8b93a7] hover:text-destructive hover:bg-destructive/10" onClick={(e) => { e.stopPropagation(); setDeleteId(debt.id); }}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-[#8b93a7]" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
+                    {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </Button>
                 </div>
               </div>
 
-              {/* Indicador Expandir - Siempre visible */}
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="flex-shrink-0 h-8 w-8 sm:h-9 sm:w-9"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setIsExpanded(!isExpanded)
-                }}
-              >
-                {isExpanded ? (
-                  <ChevronUp className="h-5 w-5" />
-                ) : (
-                  <ChevronDown className="h-5 w-5" />
-                )}
-              </Button>
+              {/* Progress and Payment Button */}
+              <div>
+                <div className="flex justify-between items-end mb-2">
+                  <span className="text-[13px] font-bold text-[#8b93a7]">
+                    ${Number(debt.paid_amount).toLocaleString()} de ${Number(debt.total_amount).toLocaleString()}
+                  </span>
+                  <span className="text-[13px] font-black text-[#3B6EF6]">
+                    {progressPercentage.toFixed(0)}%
+                  </span>
+                </div>
+                
+                <div className="h-2 w-full rounded-full bg-[#eef1f7] overflow-hidden mb-4">
+                  <div 
+                    className={cn("h-full rounded-full transition-transform duration-1000 ease-out origin-left", isActive ? "bg-[#3B6EF6]" : "bg-[#FF7A59]")} 
+                    style={{ transform: `scaleX(${progressPercentage / 100})` }}
+                  />
+                </div>
+
+                {!isPaid && <PaymentForm debtId={debt.id} remainingAmount={remainingAmount} onUpdate={onUpdate} isActive={isActive} />}
+              </div>
             </div>
           </div>
 
@@ -345,8 +309,11 @@ export function DebtCard({ debt, payments, onUpdate }: DebtCardProps) {
                 <div className="space-y-2 text-base sm:text-base">
                   {debt.category && DEBT_CATEGORIES[debt.category as keyof typeof DEBT_CATEGORIES] && (
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <span className="text-lg">
-                        {DEBT_CATEGORIES[debt.category as keyof typeof DEBT_CATEGORIES].icon}
+                      <span className="flex items-center justify-center h-5 w-5 text-primary">
+                        {(() => {
+                          const IconComponent = DEBT_CATEGORIES[debt.category as keyof typeof DEBT_CATEGORIES].icon
+                          return <IconComponent className="h-4 w-4" strokeWidth={2} />
+                        })()}
                       </span>
                       <span className="font-medium">
                         {DEBT_CATEGORIES[debt.category as keyof typeof DEBT_CATEGORIES].label}
@@ -391,9 +358,8 @@ export function DebtCard({ debt, payments, onUpdate }: DebtCardProps) {
               </div>
 
               {/* Botones de Acción - Todos los tamaños */}
-              <div className="flex gap-2">
-                {!isPaid && <PaymentForm debtId={debt.id} remainingAmount={remainingAmount} onUpdate={onUpdate} />}
-                {payments.length > 0 && (
+              {payments.length > 0 && (
+                <div className="flex gap-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -411,34 +377,12 @@ export function DebtCard({ debt, payments, onUpdate }: DebtCardProps) {
                     ) : (
                       <>
                         <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 mr-2" />
-                        Pagos ({payments.length})
+                        Ver Pagos ({payments.length})
                       </>
                     )}
                   </Button>
-                )}
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="hover:bg-destructive/10 hover:text-destructive h-9 w-9 sm:h-10 sm:w-10 lg:h-11 lg:w-11"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setDeleteId(debt.id)
-                  }}
-                >
-                  <Trash2 className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="hover:bg-primary/10 hover:text-primary h-9 w-9 sm:h-10 sm:w-10 lg:h-11 lg:w-11"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowEditDialog(true)
-                  }}
-                >
-                  <Pencil className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
-                </Button>
-              </div>
+                </div>
+              )}
 
               {/* Historial de Pagos */}
               {showPayments && payments.length > 0 && (
@@ -516,6 +460,7 @@ export function DebtCard({ debt, payments, onUpdate }: DebtCardProps) {
           setShowEditDialog(false)
           onUpdate?.()
         }}
+        trigger={<span className="hidden" aria-hidden />}
       />
     </>
   )

@@ -194,24 +194,24 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/10 p-4 relative overflow-hidden">
-      {/* Animated background elements */}
+    <div className="flex min-h-screen items-center justify-center p-4 relative overflow-hidden">
+      {/* Background circles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute -top-10 -right-10 w-80 h-80 bg-[#6C7BFF]/20 dark:bg-[#6C7BFF]/10 rounded-full blur-[80px]" />
+        <div className="absolute top-1/3 -left-20 w-[400px] h-[400px] bg-[#FFC24B]/20 dark:bg-[#FFC24B]/10 rounded-full blur-[100px]" />
       </div>
 
-      <Card className="w-full max-w-md animate-fade-in-up shadow-2xl border-primary/20 relative z-10 overflow-hidden">
+      <Card className="w-full max-w-md animate-fade-in-up shadow-card border-border/50 relative z-10 overflow-hidden rounded-[24px] bg-card/80 backdrop-blur-md">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
         
         <CardHeader className="space-y-3 pb-6 relative z-10">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary/70 rounded-2xl flex items-center justify-center shadow-lg mb-2 transition-transform hover:scale-110">
-            <LogIn className="h-8 w-8 text-primary-foreground" />
+          <div className="mx-auto w-[72px] h-[72px] bg-brand-grad-soft rounded-[24px] flex items-center justify-center shadow-hero mb-2 transition-transform hover:scale-110">
+            <span className="text-3xl font-black text-white">M</span>
           </div>
-          <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            Bienvenido de nuevo
+          <CardTitle className="text-[26px] font-black text-center text-foreground">
+            MarkeApp
           </CardTitle>
-          <CardDescription className="text-center text-base">
+          <CardDescription className="text-center text-base font-medium">
             Ingresa tus credenciales para acceder a tu cuenta
           </CardDescription>
         </CardHeader>
@@ -248,14 +248,14 @@ export default function LoginPage() {
                           submitAttempt={submitAttempt}
                         />
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none z-10" />
-                        <Input
-                          type="text"
-                          placeholder="tu@email.com"
-                          autoComplete="email"
-                          disabled={isLoading}
-                          className="pl-10 h-11 transition-smooth bg-white dark:bg-white/5 border border-slate-200 dark:border-neutral-700 rounded-md shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                          {...field}
-                        />
+                          <Input
+                            type="text"
+                            placeholder="tu@email.com"
+                            autoComplete="email"
+                            disabled={isLoading}
+                            className="pl-10 h-[52px] rounded-[16px] border-[1.5px] border-border bg-white dark:bg-card focus:border-primary focus:ring-4 focus:ring-primary/10 transition-smooth text-foreground shadow-sm"
+                            {...field}
+                          />
                       </div>
                     </FormControl>
                   </FormItem>
@@ -273,7 +273,7 @@ export default function LoginPage() {
                       </FormLabel>
                       <Link
                         to="/auth/forgot-password"
-                        className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"
+                        className="text-[13px] font-extrabold text-[#3B6EF6] dark:text-[#4D7DFF] hover:text-[#2F5BE0] transition-colors"
                       >
                         ¿Olvidaste tu contraseña?
                       </Link>
@@ -288,13 +288,13 @@ export default function LoginPage() {
                           submitAttempt={submitAttempt}
                         />
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60 pointer-events-none z-10" />
-                        <Input
-                          type="password"
-                          autoComplete="current-password"
-                          disabled={isLoading}
-                          className="pl-10 h-11 transition-smooth bg-white dark:bg-white/5 border border-slate-200 dark:border-neutral-700 rounded-md shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                          {...field}
-                        />
+                          <Input
+                            type="password"
+                            autoComplete="current-password"
+                            disabled={isLoading}
+                            className="pl-10 h-[52px] rounded-[16px] border-[1.5px] border-border bg-white dark:bg-card focus:border-primary focus:ring-4 focus:ring-primary/10 transition-smooth text-foreground shadow-sm"
+                            {...field}
+                          />
                       </div>
                     </FormControl>
                   </FormItem>
@@ -318,7 +318,7 @@ export default function LoginPage() {
 
               <Button 
                 type="submit" 
-                className="w-full h-11 text-base font-semibold transition-smooth hover:shadow-lg hover:scale-[1.02]" 
+                className="w-full h-[56px] rounded-[18px] bg-brand-grad text-white font-black text-base shadow-button-pop transition-transform hover:scale-[1.02] active:scale-[0.98]" 
                 disabled={isLoading || (isCaptchaEnabled && !captchaVerified)}
               >
                 {isLoading ? (

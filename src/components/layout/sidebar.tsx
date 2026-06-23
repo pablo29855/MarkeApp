@@ -37,27 +37,30 @@ interface SidebarProps {
   onCollapse?: (collapsed: boolean) => void
   /** Notifica al layout cuando se abre/cierra el menú off-canvas en móvil */
   onMobileMenuChange?: (open: boolean) => void
+  mobileMenuOpen?: boolean
 }
 
-export function Sidebar({ userName, onCollapse, onMobileMenuChange }: SidebarProps) {
+export function Sidebar({ userName, onCollapse, onMobileMenuChange, mobileMenuOpen }: SidebarProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const pathname = location.pathname
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [internalMobileMenuOpen, setInternalMobileMenuOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarVersion, setAvatarVersion] = useState(Date.now())
 
+  const isMobileMenuOpen = mobileMenuOpen !== undefined ? mobileMenuOpen : internalMobileMenuOpen
+
+  const setIsMobileMenuOpen = (open: boolean) => {
+    setInternalMobileMenuOpen(open)
+    onMobileMenuChange?.(open)
+  }
+
   // Notificar al layout cuando cambia el estado de colapso
   useEffect(() => {
     onCollapse?.(isCollapsed)
   }, [isCollapsed, onCollapse])
-
-  // Notificar al layout cuando se abre/cierra el menú móvil (para ocultar el BottomNav)
-  useEffect(() => {
-    onMobileMenuChange?.(isMobileMenuOpen)
-  }, [isMobileMenuOpen, onMobileMenuChange])
 
   // Cerrar menú móvil cuando cambia el tamaño de pantalla a escritorio
   useEffect(() => {
@@ -185,29 +188,9 @@ export function Sidebar({ userName, onCollapse, onMobileMenuChange }: SidebarPro
 
   return (
     <>
-      {/* Mobile Header Bar - Sólido sin blur */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-[100] bg-background border-b border-border">
-        <div className="h-16 flex items-center justify-between px-4">
-          <button 
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="flex items-center gap-2.5 hover:opacity-80 transition-all duration-200 active:scale-[0.98]"
-          >
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground font-bold text-sm shadow-md">
-              M
-            </div>
-            <h1 className="font-bold text-base bg-gradient-to-r from-primary via-primary to-primary/80 bg-clip-text text-transparent tracking-tight">
-              MarketApp
-            </h1>
-          </button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="h-9 w-9 border-border/60 hover:bg-accent hover:border-border transition-all duration-200 active:scale-[0.98]"
-          >
-            {isMobileMenuOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
-          </Button>
-        </div>
+      {/* Mobile Header Bar - Sólido sin blur (Oculto para dar "aire" a la app y usar bottom nav) */}
+      <div className="hidden">
+        {/* Header content removed to give a full-screen feel */}
       </div>
 
       {/* Overlay para cerrar el menú en móvil */}

@@ -88,36 +88,16 @@ export function SkeletonGrid({ count = 6, className }: SkeletonListProps) {
 
 export function SkeletonShoppingGrid({ count = 6, className }: SkeletonListProps) {
   return (
-    <div className={cn("grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3", className)}>
+    <div className={cn("space-y-3", className)}>
       {Array.from({ length: count }).map((_, i) => (
-        <Card key={i} className="animate-pulse overflow-hidden h-full">
-          <CardContent className="p-3 sm:p-4 lg:p-5 h-full flex flex-col">
-            {/* Header con título y badge */}
-            <div className="flex items-start justify-between gap-2 mb-3">
-              <div className="flex-1 min-w-0 space-y-2">
-                {/* Título (producto) */}
-                <div className="h-5 sm:h-6 lg:h-7 w-full bg-muted rounded" />
-                {/* Badge de categoría */}
-                <div className="h-5 sm:h-6 w-20 sm:w-24 bg-muted rounded-full" />
-              </div>
-              {/* Botones de acción (eliminar y editar) */}
-              <div className="flex items-center gap-1 shrink-0">
-                <div className="h-8 w-8 sm:h-9 sm:w-9 bg-muted rounded" />
-                <div className="h-8 w-8 sm:h-9 sm:w-9 bg-muted rounded" />
-              </div>
-            </div>
-
-            {/* Información de cantidad */}
-            <div className="flex-1 mb-3">
-              <div className="inline-flex items-center px-3 py-2 bg-muted rounded-lg w-32 sm:w-36">
-                <div className="h-5 sm:h-6 w-full bg-muted-foreground/20 rounded" />
-              </div>
-            </div>
-
-            {/* Botón de comprado al final */}
-            <div className="h-10 sm:h-11 w-full bg-primary/20 rounded mt-auto" />
-          </CardContent>
-        </Card>
+        <div key={i} className="flex items-center gap-[14px] rounded-[22px] bg-card p-[18px] shadow-sm animate-pulse">
+          <div className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[8px] bg-muted" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-4 w-3/4 bg-muted rounded" />
+            <div className="h-3 w-1/2 bg-muted rounded" />
+          </div>
+          <div className="h-[34px] w-[80px] shrink-0 rounded-full bg-muted" />
+        </div>
       ))}
     </div>
   )

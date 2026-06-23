@@ -11,13 +11,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { IncomeForm } from './income-form'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { IncomeFormWrapper } from './income-form-wrapper'
 import { formatCurrency, parseLocalDate } from '@/lib/utils'
 import { Pencil, Trash2, TrendingUp, Briefcase, Landmark, Banknote, Wallet, type LucideIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -135,28 +129,19 @@ export function IncomeList({ incomes, onUpdate }: IncomeListProps) {
         })}
       </div>
 
-      {/* Dialog para editar */}
-      <Dialog open={!!editingIncome} onOpenChange={() => setEditingIncome(null)}>
-        <DialogContent className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
-          <div className="no-ios-zoom">
-            <DialogHeader>
-              <DialogTitle className="text-lg sm:text-xl">Editar Ingreso</DialogTitle>
-              <DialogDescription className="text-xs sm:text-sm">
-                Modifica los detalles del ingreso
-              </DialogDescription>
-            </DialogHeader>
-            {editingIncome && (
-              <IncomeForm
-                income={editingIncome}
-                onSuccess={() => {
-                  setEditingIncome(null)
-                  onUpdate()
-                }}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Form Wrapper unificado para editar */}
+      <IncomeFormWrapper
+        open={!!editingIncome}
+        onOpenChange={(open) => {
+          if (!open) setEditingIncome(null)
+        }}
+        income={editingIncome || undefined}
+        onSuccess={() => {
+          setEditingIncome(null)
+          onUpdate()
+        }}
+        trigger={<span className="hidden" aria-hidden />}
+      />
 
       {/* Dialog para eliminar */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
