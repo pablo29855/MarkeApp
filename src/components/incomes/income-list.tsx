@@ -10,7 +10,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { IncomeForm } from './income-form'
 import { IncomeFormWrapper } from './income-form-wrapper'
 import { formatCurrency, parseLocalDate } from '@/lib/utils'
 import { Pencil, Trash2, TrendingUp, Briefcase, Landmark, Banknote, Wallet, type LucideIcon } from 'lucide-react'

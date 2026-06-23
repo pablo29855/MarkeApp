@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { formatCurrency } from '@/lib/utils'
 import { TrendingUp, TrendingDown, Wallet, DollarSign, CreditCard, ArrowRight, ChevronDown } from 'lucide-react'
@@ -21,8 +21,7 @@ interface FinancialBalanceCardProps {
 export function FinancialBalanceCard({ 
   totalIncome, 
   totalExpenses, 
-  totalDebts, 
-  periodLabel,
+  totalDebts,
   compareData 
 }: FinancialBalanceCardProps) {
   const balance = totalIncome - totalExpenses - totalDebts
@@ -38,24 +37,6 @@ export function FinancialBalanceCard({
   const debtsDiff = compareData ? totalDebts - compareData.totalDebts : 0
   const balanceDiff = compareData ? balance - compareBalance : 0
 
-  const getBalanceStatus = () => {
-    if (balance > totalIncome * 0.3) return { 
-      text: 'Excelente', 
-      color: 'text-green-600 dark:text-green-400',
-      icon: TrendingUp 
-    }
-    if (balance > 0) return { 
-      text: 'Bueno', 
-      color: 'text-blue-600 dark:text-blue-400',
-      icon: TrendingUp 
-    }
-    return { 
-      text: 'Atención', 
-      color: 'text-red-600 dark:text-red-400',
-      icon: TrendingDown 
-    }
-  }
-
   const getDifferenceColor = (diff: number, isIncome = false) => {
     if (diff === 0) return 'text-gray-600 dark:text-gray-400'
     // Para ingresos, más es mejor. Para gastos/deudas, menos es mejor
@@ -65,10 +46,7 @@ export function FinancialBalanceCard({
     return diff > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
   }
 
-  const status = getBalanceStatus()
-  const StatusIcon = status.icon
   const [isOpen, setIsOpen] = useState(false)
-
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="col-span-full">
       <Card className="border-0 shadow-[0_6px_20px_rgba(91,123,254,0.3)] rounded-[24px] bg-[#5B7BFE] text-white overflow-hidden transition-all duration-300">

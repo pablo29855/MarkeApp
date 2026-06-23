@@ -7,9 +7,8 @@ import { SkeletonGrid } from '@/components/ui/skeleton-card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { FiltersSection } from '@/components/ui/filters-section'
 import { formatCurrency, parseLocalDate } from '@/lib/utils'
-import { ChevronLeft, Briefcase, Landmark, Banknote } from 'lucide-react'
+import { Briefcase, Landmark, Banknote } from 'lucide-react'
 import { useCountUp } from '@/hooks/use-count-up'
-import { Button } from '@/components/ui/button'
 import type { Income } from '@/lib/types'
 
 export default function IncomesPage() {

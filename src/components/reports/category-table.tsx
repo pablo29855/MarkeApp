@@ -32,7 +32,7 @@ export function CategoryTable({ data, title, isLoading }: CategoryTableProps) {
       </CardHeader>
       <CardContent className="p-6 pt-4 space-y-6">
         {data.length > 0 ? (
-          data.map((item, index) => {
+          data.map((item, _index) => {
             const percentage = total > 0 ? Math.round((item.total / total) * 100) : 0
             const color = item.color || "#3B6EF6"
             

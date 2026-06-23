@@ -7,7 +7,7 @@ import { BalanceCard } from '@/components/dashboard/balance-card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { formatDateLocal } from '@/lib/utils'
 import { TrendingUp, CreditCard, ShoppingCart, Landmark } from 'lucide-react'
-import type { Expense, ExpensesByCategory, IncomesByType } from '@/lib/types'
+import type { ExpensesByCategory, IncomesByType } from '@/lib/types'
 import { ProfileDialog } from '@/components/profile/profile-dialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
