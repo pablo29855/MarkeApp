@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StatsCard } from '@/components/dashboard/stats-card'
 import { ExpenseChart } from '@/components/dashboard/expense-chart'
@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [userName, setUserName] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string>('')
   const [dashboardData, setDashboardData] = useState({
     totalExpenses: 0,
     totalIncome: 0,
@@ -26,18 +27,18 @@ export default function DashboardPage() {
     balance: 0,
   })
 
-  useEffect(() => {
-    async function fetchDashboardData() {
-      try {
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
 
-        if (!user) return
+      if (!user) return
 
-        setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario')
-        setAvatarUrl(user.user_metadata?.avatar_url || null)
+      setUserId(user.id)
+      setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario')
+      setAvatarUrl(user.user_metadata?.avatar_url || null)
 
-        const currentDate = new Date()
+      const currentDate = new Date()
         const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
         const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
 
@@ -158,13 +159,14 @@ export default function DashboardPage() {
           totalDebts,
           balance,
         })
-      } catch (error) {
-        console.error('[Dashboard] Error fetching data:', error)
-      } finally {
-        setLoading(false)
-      }
+    } catch (error) {
+      console.error('[Dashboard] Error fetching data:', error)
+    } finally {
+      setLoading(false)
     }
+  }, [])
 
+  useEffect(() => {
     fetchDashboardData()
 
     // Listeners para actualizar el avatar inmediatamente
@@ -186,7 +188,30 @@ export default function DashboardPage() {
       window.removeEventListener('avatar-upload-end', handleAvatarUpdate)
       window.removeEventListener('avatar-preview', handleAvatarPreview)
     }
-  }, [])
+  }, [fetchDashboardData])
+
+  // Suscripción en tiempo real
+  useEffect(() => {
+    if (!userId) return
+
+    const supabase = createClient()
+    const channel = supabase.channel('dashboard-changes')
+
+    const handleRefresh = () => {
+      fetchDashboardData()
+    }
+
+    channel
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses', filter: `user_id=eq.${userId}` }, handleRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'incomes', filter: `user_id=eq.${userId}` }, handleRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'debts', filter: `user_id=eq.${userId}` }, handleRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'shopping_list', filter: `user_id=eq.${userId}` }, handleRefresh)
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId, fetchDashboardData])
 
   if (loading) {
     return <LoadingCheckOverlay message="Cargando dashboard..." />
