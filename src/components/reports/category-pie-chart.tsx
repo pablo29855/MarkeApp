@@ -9,17 +9,18 @@ interface CategoryPieChartProps {
   title: string
 }
 
+// Paleta Pop Azul (coincide con --chart-* de index.css)
 const COLORS = [
-  "#10b981",
-  "#3b82f6",
-  "#f59e0b",
-  "#8b5cf6",
-  "#06b6d4",
-  "#ef4444",
-  "#6366f1",
-  "#ec4899",
-  "#14b8a6",
-  "#64748b",
+  "hsl(221 83% 60%)",   // azul
+  "hsl(11 100% 67%)",   // coral
+  "hsl(41 100% 64%)",   // amarillo
+  "hsl(232 100% 71%)",  // violeta-azul
+  "hsl(221 70% 75%)",   // azul claro
+  "hsl(190 90% 50%)",   // cian
+  "hsl(262 70% 65%)",   // violeta
+  "hsl(330 80% 65%)",   // rosa
+  "hsl(160 70% 45%)",   // verde azulado
+  "hsl(220 14% 60%)",   // gris
 ]
 
 export function CategoryPieChart({ data, title }: CategoryPieChartProps) {

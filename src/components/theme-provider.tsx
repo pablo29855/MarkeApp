@@ -36,12 +36,17 @@ export function ThemeProvider({
     const root = window.document.documentElement
     root.classList.remove('light', 'dark')
 
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-      root.classList.add(systemTheme)
-    } else {
-      root.classList.add(theme)
-    }
+    const resolved =
+      theme === 'system'
+        ? window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light'
+        : theme
+    root.classList.add(resolved)
+
+    // Sincronizar el color de la barra del navegador (PWA) con el modo
+    const meta = document.getElementById('theme-color-meta') as HTMLMetaElement | null
+    if (meta) meta.content = resolved === 'dark' ? '#0e1119' : '#EDF2FF'
 
     localStorage.setItem(storageKey, theme)
   }, [theme, storageKey])

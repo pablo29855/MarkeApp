@@ -4,14 +4,14 @@ import { StatsCard } from '@/components/dashboard/stats-card'
 import { ExpenseChart } from '@/components/dashboard/expense-chart'
 import { RecentExpenses } from '@/components/dashboard/recent-expenses'
 import { BalanceCard } from '@/components/dashboard/balance-card'
-import { IncomeChart } from '@/components/dashboard/income-chart'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
-import { formatCurrency, formatDateLocal } from '@/lib/utils'
-import { DollarSign, TrendingUp, ShoppingCart, CreditCard } from 'lucide-react'
+import { formatDateLocal } from '@/lib/utils'
+import { TrendingUp, CreditCard, ShoppingCart, Landmark } from 'lucide-react'
 import type { Expense, ExpensesByCategory, IncomesByType } from '@/lib/types'
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
+  const [userName, setUserName] = useState('')
   const [dashboardData, setDashboardData] = useState({
     totalExpenses: 0,
     totalIncome: 0,
@@ -30,6 +30,8 @@ export default function DashboardPage() {
         const { data: { user } } = await supabase.auth.getUser()
 
         if (!user) return
+
+        setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario')
 
         const currentDate = new Date()
         const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
@@ -137,60 +139,81 @@ export default function DashboardPage() {
     return <LoadingCheckOverlay message="Cargando dashboard..." />
   }
 
+  const initials = (userName || 'U')
+    .split(' ')
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+
   return (
-    <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6 pb-4">
-      {/* Header fijo profesional - Sticky en mobile y desktop */}
-      <div className="sticky top-16 lg:top-0 z-10 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b border-border/50 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-3 sm:py-4">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
-          Dashboard
-        </h1>
-        <p className="text-sm sm:text-base text-muted-foreground">Resumen de tus finanzas personales</p>
-      </div>
+    <div className="mx-auto max-w-7xl space-y-4 lg:space-y-6">
+      {/* Saludo + avatar */}
+      <header className="flex items-center justify-between pt-1">
+        <div>
+          <p className="text-sm font-semibold text-muted-foreground">¡Hola de nuevo! 👋</p>
+          <h1 className="text-[21px] font-black tracking-tight text-foreground">{userName}</h1>
+        </div>
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-grad text-sm font-black text-white shadow-button-pop">
+          {initials}
+        </div>
+      </header>
 
-      {/* Stats Cards Grid - Responsivo: 2 col en móvil, 4 en desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
-        <StatsCard
-          title="Ingresos del Mes"
-          value={formatCurrency(dashboardData.totalIncome)}
-          icon={TrendingUp}
-          description="Total de ingresos"
-        />
-        <StatsCard
-          title="Gastos del Mes"
-          value={formatCurrency(dashboardData.totalExpenses)}
-          icon={DollarSign}
-          description="Total gastado este mes"
-        />
-        <StatsCard
-          title="Lista de Compras"
-          value={dashboardData.shoppingCount.toString()}
-          icon={ShoppingCart}
-          description="Items pendientes"
-        />
-        <StatsCard
-          title="Deudas Pendientes"
-          value={formatCurrency(dashboardData.totalDebts)}
-          icon={CreditCard}
-          description="Total por pagar"
-        />
-      </div>
-
-      {/* Charts Grid - Stack en móvil, lado a lado en desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-        <ExpenseChart data={dashboardData.expensesByCategoryData} />
-        <RecentExpenses expenses={dashboardData.recentExpenses} />
-      </div>
-
-      {/* Balance Financiero - Al final */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-        <BalanceCard 
+      {/* Hero balance + tiles */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <BalanceCard
+          className="lg:col-span-2"
           totalIncome={dashboardData.totalIncome}
           totalExpenses={dashboardData.totalExpenses}
           totalDebts={dashboardData.totalDebts}
         />
-        <IncomeChart 
-          data={dashboardData.incomesByTypeData}
-          totalIncome={dashboardData.totalIncome}
+        <div className="grid grid-cols-2 gap-3 lg:col-span-1">
+          <StatsCard
+            title="Ingresos"
+            numericValue={dashboardData.totalIncome}
+            icon={TrendingUp}
+            accent="blue"
+            description="Este mes"
+            style={{ animationDelay: '60ms' }}
+          />
+          <StatsCard
+            title="Gastos"
+            numericValue={dashboardData.totalExpenses}
+            icon={CreditCard}
+            accent="coral"
+            description="Este mes"
+            style={{ animationDelay: '120ms' }}
+          />
+          <StatsCard
+            title="Compras"
+            numericValue={dashboardData.shoppingCount}
+            plain
+            icon={ShoppingCart}
+            accent="amber"
+            description="Pendientes"
+            style={{ animationDelay: '180ms' }}
+          />
+          <StatsCard
+            title="Deudas"
+            numericValue={dashboardData.totalDebts}
+            icon={Landmark}
+            accent="violet"
+            description="Por pagar"
+            style={{ animationDelay: '240ms' }}
+          />
+        </div>
+      </div>
+
+      {/* Categorías + movimientos */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <ExpenseChart
+          className="lg:col-span-2"
+          data={dashboardData.expensesByCategoryData}
+          style={{ animationDelay: '120ms' }}
+        />
+        <RecentExpenses
+          expenses={dashboardData.recentExpenses}
+          style={{ animationDelay: '180ms' }}
         />
       </div>
     </div>

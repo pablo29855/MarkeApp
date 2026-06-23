@@ -8,8 +8,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { scrollbarClasses } from '@/lib/styles'
 import type { Expense, Category } from '@/lib/types'
 
 interface ExpenseFormWrapperUnifiedProps {
@@ -22,17 +32,18 @@ interface ExpenseFormWrapperUnifiedProps {
   onOpenChange?: (open: boolean) => void
 }
 
-export function ExpenseFormWrapperUnified({ 
-  categories, 
-  userId, 
-  onSuccess, 
+export function ExpenseFormWrapperUnified({
+  categories,
+  userId,
+  onSuccess,
   expense,
   trigger,
   open: controlledOpen,
-  onOpenChange: controlledOnOpenChange
+  onOpenChange: controlledOnOpenChange,
 }: ExpenseFormWrapperUnifiedProps) {
   const [internalOpen, setInternalOpen] = useState(false)
-  
+  const isMobile = useIsMobile()
+
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen
   const setOpen = controlledOnOpenChange || setInternalOpen
 
@@ -45,6 +56,11 @@ export function ExpenseFormWrapperUnified({
     setOpen(false)
   }
 
+  const title = expense ? 'Editar Gasto' : 'Nuevo Gasto'
+  const description = expense
+    ? 'Modifica los detalles de tu gasto registrado'
+    : 'Completa el formulario para registrar un nuevo gasto'
+
   const defaultTrigger = (
     <Button className="w-auto">
       <Plus className="h-4 w-4 sm:mr-2" />
@@ -53,34 +69,47 @@ export function ExpenseFormWrapperUnified({
     </Button>
   )
 
+  const form = (
+    <ExpenseFormUnified
+      expense={expense}
+      categories={categories}
+      userId={userId}
+      onSuccess={handleSuccess}
+      onClose={handleClose}
+    />
+  )
+
+  // Móvil → bottom sheet (vaul). Escritorio → dialog centrado.
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>{trigger || defaultTrigger}</DrawerTrigger>
+        <DrawerContent className="rounded-t-[32px]">
+          <div className={`no-ios-zoom max-h-[82vh] overflow-y-auto px-4 pb-8 ${scrollbarClasses}`}>
+            <DrawerHeader className="px-0">
+              <DrawerTitle className="text-xl font-black">{title}</DrawerTitle>
+              <DrawerDescription className="text-sm">{description}</DrawerDescription>
+            </DrawerHeader>
+            {form}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    )
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || defaultTrigger}
-      </DialogTrigger>
-      <DialogContent 
-        className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-secondary hover:scrollbar-thumb-secondary/80" 
+      <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
+      <DialogContent
+        className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-secondary hover:scrollbar-thumb-secondary/80"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <div className="no-ios-zoom">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">
-              {expense ? 'Editar Gasto' : 'Nuevo Gasto'}
-            </DialogTitle>
-            <DialogDescription className="text-xs sm:text-sm">
-              {expense 
-                ? 'Modifica los detalles de tu gasto registrado' 
-                : 'Completa el formulario para registrar un nuevo gasto'
-              }
-            </DialogDescription>
+            <DialogTitle className="text-lg sm:text-xl">{title}</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">{description}</DialogDescription>
           </DialogHeader>
-          <ExpenseFormUnified 
-            expense={expense}
-            categories={categories}
-            userId={userId}
-            onSuccess={handleSuccess}
-            onClose={handleClose}
-          />
+          {form}
         </div>
       </DialogContent>
     </Dialog>
