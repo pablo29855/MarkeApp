@@ -5,8 +5,7 @@ import { ShoppingItemCard } from '@/components/shopping/shopping-item'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { SkeletonShoppingGrid } from '@/components/ui/skeleton-card'
 import type { ShoppingItem, Category } from '@/lib/types'
-import { ShoppingCart, Plus, ChevronLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ShoppingCart, Plus } from 'lucide-react'
 
 export default function ShoppingPage() {
   const [loading, setLoading] = useState(true)

@@ -106,7 +106,7 @@ export default function RegisterPage() {
     setCaptchaVerified(true)
   }
 
-  const handleTurnstileError = (error?: any) => {
+  const handleTurnstileError = (_error?: any) => {
     setCaptchaToken('')
     setCaptchaVerified(false)
   }

@@ -4,7 +4,7 @@ import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
+// import { Progress } from "@/components/ui/progress"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -193,7 +193,6 @@ export function DebtCard({ debt, payments, onUpdate, isActive = false }: DebtCar
   }
 
   const config = urgencyConfig[urgencyStatus]
-  const UrgencyIcon = config.icon
 
   const handleDelete = async () => {
     if (!deleteId) return
@@ -247,9 +246,8 @@ export function DebtCard({ debt, payments, onUpdate, isActive = false }: DebtCar
               <div className="flex items-center gap-3">
                 <div className="flex h-[46px] w-[46px] items-center justify-center rounded-[14px] bg-[#eef1f7] shrink-0 text-primary">
                   {(() => {
-                    const CategoryIcon = debt.category && DEBT_CATEGORIES[debt.category as keyof typeof DEBT_CATEGORIES]?.icon
-                      ? DEBT_CATEGORIES[debt.category as keyof typeof DEBT_CATEGORIES].icon
-                      : Receipt
+                    const cat = debt.category ? DEBT_CATEGORIES[debt.category as keyof typeof DEBT_CATEGORIES] : undefined
+                    const CategoryIcon = cat?.icon ?? Receipt
                     return <CategoryIcon className="h-6 w-6" strokeWidth={2} />
                   })()}
                 </div>
@@ -311,7 +309,8 @@ export function DebtCard({ debt, payments, onUpdate, isActive = false }: DebtCar
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <span className="flex items-center justify-center h-5 w-5 text-primary">
                         {(() => {
-                          const IconComponent = DEBT_CATEGORIES[debt.category as keyof typeof DEBT_CATEGORIES].icon
+                          const cat = DEBT_CATEGORIES[debt.category as keyof typeof DEBT_CATEGORIES]
+                          const IconComponent = cat?.icon ?? Receipt
                           return <IconComponent className="h-4 w-4" strokeWidth={2} />
                         })()}
                       </span>

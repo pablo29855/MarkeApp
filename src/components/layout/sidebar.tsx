@@ -12,8 +12,6 @@ import {
   CreditCard,
   TrendingUp,
   LogOut,
-  Menu,
-  X,
   ChevronLeft,
   ChevronRight,
   Moon,

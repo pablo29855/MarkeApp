@@ -5,8 +5,7 @@ import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { scrollbarClasses } from "@/lib/styles"
 import {
@@ -20,10 +19,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Trash2, MapPin, ShoppingBag, Pencil, Loader2, Check } from "lucide-react"
+import { Trash2, MapPin, Loader2, Check } from "lucide-react"
 import type { ShoppingItem, Category } from "@/lib/types"
 import { formatCurrency } from "@/lib/utils"
-import { ShoppingFormWrapper } from "./shopping-form-wrapper"
+
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
   Drawer,
@@ -41,11 +40,11 @@ interface ShoppingItemProps {
   userId: string
 }
 
-export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories, userId }: ShoppingItemProps) {
+export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories }: ShoppingItemProps) {
   const isMobile = useIsMobile()
   const [showPriceDialog, setShowPriceDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [showEditDialog, setShowEditDialog] = useState(false)
+
   const [unitPrice, setUnitPrice] = useState("")
   const [quantity, setQuantity] = useState(item.quantity.toString())
   const [isLoading, setIsLoading] = useState(false)
@@ -309,7 +308,7 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories,
         />
         
         {/* Content */}
-        <div className="min-w-0 flex-1" onClick={() => setShowEditDialog(true)}>
+        <div className="min-w-0 flex-1">
           <p className="truncate text-[17px] font-black text-foreground cursor-pointer">
             {item.product_name} {item.quantity > 1 ? `x${item.quantity}` : ''}
           </p>
