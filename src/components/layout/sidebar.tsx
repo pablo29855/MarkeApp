@@ -202,7 +202,7 @@ export function Sidebar({ userName, onCollapse, onMobileMenuChange, mobileMenuOp
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 bg-card border-r border-border shadow-2xl transition-transform duration-300 ease-out z-50 lg:z-40 lg:bg-card pb-6 lg:pb-0",
+          "fixed inset-y-0 left-0 bg-card border-r border-border shadow-2xl transition-transform duration-300 ease-out z-50 lg:z-40 lg:bg-card pb-6 lg:pb-0 pt-[env(safe-area-inset-top)] lg:pt-0",
           isMobileMenuOpen 
             ? "translate-x-0" 
             : "-translate-x-full lg:translate-x-0",

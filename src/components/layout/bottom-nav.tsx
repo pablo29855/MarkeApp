@@ -35,7 +35,7 @@ export function BottomNav({ onAdd, onMenuClick }: BottomNavProps) {
       {/* Floating Action Button (+) - Centrado y elevado por encima del navbar */}
       <div 
         className="lg:hidden fixed left-1/2 -translate-x-1/2 z-[100] pointer-events-auto"
-        style={{ bottom: '52px' }}
+        style={{ bottom: 'calc(60px + env(safe-area-inset-bottom))' }}
       >
         <button
           type="button"
@@ -48,13 +48,13 @@ export function BottomNav({ onAdd, onMenuClick }: BottomNavProps) {
       </div>
 
       <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-[90] border-t border-border bg-[rgba(255,255,255,0.94)] dark:bg-[rgba(12,14,22,0.86)] backdrop-blur-xl"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-[90] border-t border-border bg-[rgba(255,255,255,0.94)] dark:bg-[rgba(12,14,22,0.86)] backdrop-blur-xl pb-[env(safe-area-inset-bottom)]"
         style={{ 
           WebkitMaskImage: 'radial-gradient(circle at 50% -4px, transparent 28px, black 29px)',
           maskImage: 'radial-gradient(circle at 50% -4px, transparent 28px, black 29px)'
         }}
       >
-        <div className="mx-auto grid grid-cols-6 h-[72px] max-w-md items-stretch justify-items-center px-1">
+        <div className="mx-auto grid grid-cols-6 h-[76px] pb-1 max-w-md items-stretch justify-items-center px-1">
           {/* Inicio */}
           <NavLink to={items[0].href} className={slot(pathname === items[0].href)}>
             <LayoutGrid className="h-[22px] w-[22px]" strokeWidth={2.4} />
