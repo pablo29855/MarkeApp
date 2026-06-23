@@ -12,7 +12,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
-import { Camera, Lock, AlertCircle, User, Phone, CheckCircle2 } from "lucide-react"
+import { Camera, Lock, AlertCircle, User, Phone, CheckCircle2, LogOut, Moon, Sun } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { useTheme } from "@/components/theme-provider"
 import Cropper from 'react-easy-crop'
 import { Area } from 'react-easy-crop/types'
 import { format } from "date-fns"
@@ -70,6 +72,31 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
   const [isDragging, setIsDragging] = useState(false)
   const { toast } = useToast()
   const supabase = useMemo(() => createClient(), [])
+  const navigate = useNavigate()
+  const { theme, setTheme } = useTheme()
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark'
+    setTheme(newTheme, { userInitiated: true })
+  }
+
+  const handleLogout = async () => {
+    try {
+      setLoading(true)
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      setIsOpen(false)
+      navigate("/auth/login")
+    } catch (error) {
+      toast({
+        title: "Error al cerrar sesión",
+        description: "Inténtalo de nuevo.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Form para el perfil
   const profileForm = useForm<ProfileFormData>({
@@ -1158,6 +1185,37 @@ export function ProfileDialog({ userName, children }: ProfileDialogProps) {
                   disabled
                   className="bg-muted"
                 />
+              </div>
+
+              <div className="pt-4 border-t border-border space-y-3">
+                <Label className="text-muted-foreground text-xs uppercase tracking-wider">Ajustes de la aplicación</Label>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2 h-11"
+                  onClick={toggleTheme}
+                >
+                  {theme === 'dark' ? (
+                    <>
+                      <Sun className="h-5 w-5 text-yellow-500" />
+                      Cambiar a Modo Claro
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="h-5 w-5 text-blue-500" />
+                      Cambiar a Modo Oscuro
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2 h-11 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={handleLogout}
+                  disabled={loading}
+                >
+                  <LogOut className="h-5 w-5" />
+                  Cerrar Sesión
+                </Button>
               </div>
             </div>
           </TabsContent>

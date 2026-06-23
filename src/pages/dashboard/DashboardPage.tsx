@@ -233,7 +233,7 @@ export default function DashboardPage() {
           <h1 className="text-[21px] font-black tracking-tight text-foreground">{userName}</h1>
         </div>
         <ProfileDialog userName={userName}>
-          <button className="focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 rounded-full overflow-hidden shrink-0 transition-transform active:scale-95">
+          <button className="lg:hidden focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 rounded-full overflow-hidden shrink-0 transition-transform active:scale-95">
             <Avatar className="h-11 w-11 border border-border shadow-button-pop">
               {avatarUrl && (
                 <AvatarImage src={avatarUrl} alt={userName} className="object-cover" />
