@@ -1,13 +1,21 @@
-import type { Expense } from "@/lib/types"
 import { formatDistanceToNow } from "date-fns"
 import { parseLocalDate, formatCurrency } from '@/lib/utils'
 import { es } from "date-fns/locale"
 import { categoryIcon, chartColor, tintColor } from "@/lib/category-visuals"
-import { Wallet } from "lucide-react"
+import { Wallet, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+export interface Movement {
+  id: string
+  name: string
+  amount: number
+  date: string
+  type: 'income' | 'expense'
+  categoryName?: string
+}
+
 interface RecentExpensesProps {
-  expenses: Expense[]
+  expenses: Movement[]
   isLoading?: boolean
   className?: string
   style?: React.CSSProperties
@@ -26,32 +34,35 @@ export function RecentExpenses({ expenses, isLoading, className, style }: Recent
         </div>
       ) : expenses.length > 0 ? (
         <div className="space-y-2.5">
-          {expenses.map((expense, index) => {
-            const Icon = categoryIcon(expense.category?.name)
-            const color = chartColor(index)
+          {expenses.map((movement, index) => {
+            const isIncome = movement.type === 'income'
+            const Icon = isIncome ? TrendingUp : categoryIcon(movement.categoryName)
+            const color = isIncome ? '#3B6EF6' : chartColor(index)
+            const bgTintColor = isIncome ? 'rgba(59,110,246,0.14)' : tintColor(index)
+
             return (
               <div
-                key={expense.id}
+                key={`${movement.type}-${movement.id}`}
                 className="flex items-center gap-3 rounded-[20px] bg-card p-3 shadow-card transition-transform active:scale-[.98]"
               >
                 <div
                   className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-2xl"
-                  style={{ backgroundColor: tintColor(index) }}
+                  style={{ backgroundColor: bgTintColor }}
                 >
                   <Icon className="h-5 w-5" style={{ color }} strokeWidth={2.6} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-extrabold text-foreground">{expense.name}</p>
+                  <p className="truncate text-sm font-extrabold text-foreground">{movement.name}</p>
                   <p className="truncate text-[11.5px] text-muted-foreground">
-                    {expense.category?.name ? `${expense.category.name} · ` : ""}
-                    {formatDistanceToNow(parseLocalDate(expense.purchase_date), {
+                    {movement.categoryName ? `${movement.categoryName} · ` : ""}
+                    {formatDistanceToNow(parseLocalDate(movement.date), {
                       addSuffix: true,
                       locale: es,
                     })}
                   </p>
                 </div>
-                <span className="shrink-0 text-sm font-black text-coral">
-                  −{formatCurrency(expense.amount)}
+                <span className={cn("shrink-0 text-sm font-black", isIncome ? "text-[#3B6EF6]" : "text-coral")}>
+                  {isIncome ? '+' : '−'}{formatCurrency(movement.amount)}
                 </span>
               </div>
             )

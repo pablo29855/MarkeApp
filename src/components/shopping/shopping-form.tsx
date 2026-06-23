@@ -26,14 +26,10 @@ interface ShoppingFormProps {
   onOpenChange?: (open: boolean) => void
 }
 
-export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpenChange }: ShoppingFormProps) {
-  const [internalOpen, setInternalOpen] = useState(false)
+export function ShoppingForm({ userId, categories, onSuccess, item }: ShoppingFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { showCreated, showError, showSuccess } = useNotification()
-
-  const isOpen = open !== undefined ? open : internalOpen
-  const setIsOpen = onOpenChange || setInternalOpen
 
   // Referencias para los campos del formulario (contenedores con relative)
   const productNameRef = useRef<HTMLDivElement>(null)
@@ -162,7 +158,6 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
         category_id: "",
         purchased_at: "",
       })
-      setIsOpen(false)
       onSuccess?.()
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : `Error al ${item ? "actualizar" : "agregar"} el item`
@@ -174,25 +169,8 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {!item && (
-        <DialogTrigger asChild>
-          <Button className="text-sm sm:text-base h-9 sm:h-10">
-            <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-            Agregar Item
-          </Button>
-        </DialogTrigger>
-      )}
-      <DialogContent className={`w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto ${scrollbarClasses}`} onOpenAutoFocus={(e) => e.preventDefault()}>
-        <div className="no-ios-zoom">
-          <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">{item ? "Editar Item" : "Nuevo Item"}</DialogTitle>
-            <DialogDescription className="text-xs sm:text-sm">
-              {item ? "Edita el producto de tu lista de compras" : "Agrega un producto a tu lista de compras"}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-6">
-          <div className="space-y-1.5 sm:space-y-2">
+    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-2">
+      <div className="space-y-1.5 sm:space-y-2">
             <Label htmlFor="product_name" className="text-xs sm:text-sm">Nombre del Producto *</Label>
             <div ref={productNameRef} className="relative">
               <FormFieldError 
@@ -287,7 +265,7 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
             <Button
               type="button"
               variant="outline"
-              onClick={() => setIsOpen(false)}
+              onClick={() => onSuccess?.()}
               className="flex-1 text-sm sm:text-base h-9 sm:h-10"
               disabled={isLoading}
             >
@@ -298,9 +276,6 @@ export function ShoppingForm({ userId, categories, onSuccess, item, open, onOpen
               {isLoading ? "Guardando..." : (item ? "Actualizar" : "Agregar")}
             </Button>
           </div>
-        </form>
-        </div>
-      </DialogContent>
-    </Dialog>
+    </form>
   )
 }

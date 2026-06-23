@@ -15,24 +15,24 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DateInput } from "@/components/ui/date-input"
 import { FormFieldError } from "@/components/ui/form-field-error"
 import { getValidationMessage } from "@/lib/validation-messages"
-import { Loader2 } from "lucide-react"
+import { Loader2, CreditCard, Landmark, Home, Car, GraduationCap, User, ShoppingCart, Smartphone, Stethoscope, Briefcase, Lightbulb, Building2, FileText } from "lucide-react"
 import type { Debt } from "@/lib/types"
 
-// Categorías de deudas predefinidas con emojis coloridos
+// Categorías de deudas predefinidas con iconos
 const DEBT_CATEGORIES = [
-  { value: 'credit_card', label: 'Tarjeta de Crédito', icon: '💳' },
-  { value: 'bank_loan', label: 'Préstamo Bancario', icon: '🏦' },
-  { value: 'mortgage', label: 'Hipoteca', icon: '🏠' },
-  { value: 'car_loan', label: 'Préstamo Vehicular', icon: '🚗' },
-  { value: 'student_loan', label: 'Préstamo Estudiantil', icon: '🎓' },
-  { value: 'personal_loan', label: 'Préstamo Personal', icon: '👤' },
-  { value: 'store_credit', label: 'Crédito Comercial', icon: '🛒' },
-  { value: 'phone_plan', label: 'Plan Telefónico', icon: '📱' },
-  { value: 'medical', label: 'Médico/Salud', icon: '⚕️' },
-  { value: 'business', label: 'Empresarial', icon: '💼' },
-  { value: 'utilities', label: 'Servicios Públicos', icon: '💡' },
-  { value: 'rent', label: 'Arriendo/Alquiler', icon: '🏢' },
-  { value: 'other', label: 'Otro', icon: '📋' },
+  { value: 'credit_card', label: 'Tarjeta de Crédito', icon: CreditCard },
+  { value: 'bank_loan', label: 'Préstamo Bancario', icon: Landmark },
+  { value: 'mortgage', label: 'Hipoteca', icon: Home },
+  { value: 'car_loan', label: 'Préstamo Vehicular', icon: Car },
+  { value: 'student_loan', label: 'Préstamo Estudiantil', icon: GraduationCap },
+  { value: 'personal_loan', label: 'Préstamo Personal', icon: User },
+  { value: 'store_credit', label: 'Crédito Comercial', icon: ShoppingCart },
+  { value: 'phone_plan', label: 'Plan Telefónico', icon: Smartphone },
+  { value: 'medical', label: 'Médico/Salud', icon: Stethoscope },
+  { value: 'business', label: 'Empresarial', icon: Briefcase },
+  { value: 'utilities', label: 'Servicios Públicos', icon: Lightbulb },
+  { value: 'rent', label: 'Arriendo/Alquiler', icon: Building2 },
+  { value: 'other', label: 'Otro', icon: FileText },
 ]
 
 interface DebtFormUnifiedProps {
@@ -311,7 +311,9 @@ export function DebtFormUnified({ userId, debt, onSuccess, onClose }: DebtFormUn
             {DEBT_CATEGORIES.map((category) => (
               <SelectItem key={category.value} value={category.value} className="cursor-pointer text-sm sm:text-base">
                 <span className="flex items-center gap-2">
-                  <span>{category.icon}</span>
+                  <span className="text-primary">
+                    <category.icon className="h-4 w-4" />
+                  </span>
                   <span>{category.label}</span>
                 </span>
               </SelectItem>

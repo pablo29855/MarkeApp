@@ -7,8 +7,9 @@ import { SkeletonGrid } from '@/components/ui/skeleton-card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { FiltersSection } from '@/components/ui/filters-section'
 import { formatCurrency, parseLocalDate } from '@/lib/utils'
-import { TrendingUp } from 'lucide-react'
+import { ChevronLeft, Briefcase, Landmark, Banknote } from 'lucide-react'
 import { useCountUp } from '@/hooks/use-count-up'
+import { Button } from '@/components/ui/button'
 import type { Income } from '@/lib/types'
 
 export default function IncomesPage() {
@@ -172,9 +173,9 @@ export default function IncomesPage() {
 
   const filterOptions = [
     { value: 'all', label: 'Todos los tipos' },
-    { value: 'nomina', label: '💼 Nómina' },
-    { value: 'transferencia', label: '🏦 Transferencia' },
-    { value: 'efectivo', label: '💵 Efectivo' },
+    { value: 'nomina', label: 'Nómina', icon: <Briefcase className="h-4 w-4" /> },
+    { value: 'transferencia', label: 'Transferencia', icon: <Landmark className="h-4 w-4" /> },
+    { value: 'efectivo', label: 'Efectivo', icon: <Banknote className="h-4 w-4" /> },
   ]
 
   const totalIncome = getTotalIncome()
@@ -185,31 +186,36 @@ export default function IncomesPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4 lg:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight">Ingresos</h1>
-          <p className="text-sm text-muted-foreground">Gestiona y registra tus ingresos</p>
+    <div className="max-w-7xl mx-auto space-y-4 lg:space-y-6 pb-20">
+      {/* Header Gastos Style */}
+      <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <h1 className="text-[26px] font-black tracking-tight text-[#1e2230]">Ingresos</h1>
+            <p className="text-[15px] font-extrabold text-[#8b93a7]">Tus entradas del mes</p>
+          </div>
         </div>
-        <div className="flex gap-2 self-end sm:self-auto">
+        <div className="flex gap-2 items-center">
           <ExportIncomesButton incomes={filteredIncomes} />
-          <IncomeFormWrapper onSuccess={handleRefresh} />
+          <div className="hidden lg:block">
+            <IncomeFormWrapper onSuccess={handleRefresh} />
+          </div>
         </div>
       </div>
 
-      {/* Card de Total — degradado Pop Azul */}
-      <div className="fade-up relative overflow-hidden rounded-[26px] bg-brand-grad p-5 sm:p-6 text-white shadow-hero">
-        <div className="pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full bg-[#6C7BFF]/30" />
+      {/* Card de Total — Pop Azul Exacto */}
+      <div className="fade-up relative overflow-hidden rounded-[26px] bg-[#3a61ff] p-5 sm:p-6 text-white shadow-hero">
+        <div className="pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full bg-[#5b7fff] opacity-60" />
         <div className="relative flex items-center justify-between">
           <div className="min-w-0 flex-1">
-            <p className="mb-1 text-sm font-semibold text-white/80">Total de ingresos</p>
-            <span className="block truncate text-[34px] font-black leading-tight">{formatCurrency(animatedTotal)}</span>
-            <p className="mt-1 text-xs font-semibold text-white/80">
+            <p className="mb-1 text-[15px] font-extrabold text-white/80">
+              Total de ingresos · {months.find(m => m.value === selectedMonth)?.label?.toLowerCase() || 'este mes'}
+            </p>
+            <span className="block truncate text-[34px] font-black leading-tight mb-1">{formatCurrency(animatedTotal)}</span>
+            <p className="text-[15px] font-extrabold text-white/80">
               {filteredIncomes.length} registro{filteredIncomes.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <TrendingUp className="ml-3 h-16 w-16 shrink-0 opacity-20" />
         </div>
       </div>
 
@@ -243,7 +249,48 @@ export default function IncomesPage() {
       {isRefreshing ? (
         <SkeletonGrid count={filteredIncomes.length || 6} />
       ) : (
-        <IncomeList incomes={filteredIncomes} onUpdate={handleRefresh} />
+        <>
+          <IncomeList incomes={filteredIncomes} onUpdate={handleRefresh} />
+          
+          {/* Ingresos por tipo */}
+          {filteredIncomes.length > 0 && (
+            <div className="rounded-[24px] bg-white p-5 shadow-sm mt-4">
+              <h3 className="text-[15px] font-black text-[#1e2230] mb-4">Ingresos por tipo</h3>
+              <div className="space-y-4">
+                {Object.entries(
+                  filteredIncomes.reduce((acc, income) => {
+                    const type = income.income_type
+                    acc[type] = (acc[type] || 0) + Number(income.amount)
+                    return acc
+                  }, {} as Record<string, number>)
+                ).map(([type, amount]) => {
+                  const percentage = Math.round((amount / totalIncome) * 100)
+                  const filterOption = filterOptions.find(opt => opt.value === type)
+                  
+                  return (
+                    <div key={type} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2 font-bold text-[#1e2230]">
+                          <div className="text-[#8b93a7]">
+                            {filterOption?.icon}
+                          </div>
+                          <span>{filterOption?.label || type}</span>
+                        </div>
+                        <span className="font-bold text-[#1e2230]">{percentage}%</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-[#e6eaf3]">
+                        <div 
+                          className="h-full rounded-full bg-primary" 
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

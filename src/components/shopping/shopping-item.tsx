@@ -20,10 +20,18 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Trash2, MapPin, ShoppingBag, Pencil, Loader2 } from "lucide-react"
+import { Trash2, MapPin, ShoppingBag, Pencil, Loader2, Check } from "lucide-react"
 import type { ShoppingItem, Category } from "@/lib/types"
 import { formatCurrency } from "@/lib/utils"
-import { ShoppingForm } from "./shopping-form"
+import { ShoppingFormWrapper } from "./shopping-form-wrapper"
+import { useIsMobile } from "@/hooks/use-mobile"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer"
 
 interface ShoppingItemProps {
   item: ShoppingItem
@@ -34,6 +42,7 @@ interface ShoppingItemProps {
 }
 
 export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories, userId }: ShoppingItemProps) {
+  const isMobile = useIsMobile()
   const [showPriceDialog, setShowPriceDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
@@ -201,10 +210,7 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories,
 
       if (expenseError) throw expenseError
 
-      // Delete from shopping list
-      const { error: deleteError } = await supabase.from("shopping_list").delete().eq("id", item.id)
-
-      if (deleteError) throw deleteError
+      // Removed delete from shopping list to keep it as purchased
 
       setShowPriceDialog(false)
       showSuccess("Producto comprado y agregado a gastos")
@@ -245,229 +251,410 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories,
 
   const categoryInfo = getCategoryInfo()
 
+  if (item.is_purchased) {
+    return (
+      <>
+        <div className="flex items-center gap-[14px] rounded-[22px] bg-card p-[18px] shadow-[0_6px_16px_rgba(30,40,80,.07)]">
+          {/* Checkbox (28px) */}
+          <div className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[8px] bg-primary text-white">
+            <Check className="h-[18px] w-[18px] stroke-[3]" />
+          </div>
+          
+          {/* Content */}
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[17px] font-extrabold text-[#aab1c2] line-through decoration-2">
+              {item.product_name} {item.quantity > 1 ? `x${item.quantity}` : ''}
+            </p>
+            <p className="truncate text-[13px] font-extrabold text-[#aab1c2]">
+              {categoryInfo?.name || 'Categoría'}
+            </p>
+          </div>
+          
+          {/* Acciones */}
+          <div className="flex shrink-0 items-center">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-[#aab1c2] hover:text-destructive" onClick={confirmDelete}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent className="w-[calc(100%-2rem)] sm:w-full">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-base sm:text-lg">¿Estás seguro?</AlertDialogTitle>
+              <AlertDialogDescription className="text-xs sm:text-sm">
+                Esta acción eliminará "{item.product_name}" de tu lista de compras. Esta acción no se puede deshacer.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="text-sm sm:text-base h-9 sm:h-10">Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-sm sm:text-base h-9 sm:h-10">
+                Eliminar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
+    )
+  }
+
   return (
     <>
-      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group h-full">
-        <div className="p-3 sm:p-4 lg:p-5 bg-card h-full flex flex-col">
-          {/* Header con título y botones */}
-          <div className="flex items-start justify-between gap-2 mb-3">
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-base sm:text-lg lg:text-xl leading-tight mb-2 line-clamp-2">
-                {item.product_name}
-              </h3>
-              {categoryInfo && (
-                <Badge 
-                  variant="secondary"
-                  className="inline-flex items-center text-xs sm:text-sm"
-                  style={{ backgroundColor: categoryInfo.color + "20", color: categoryInfo.color }}
-                >
-                  <span className="mr-1">{categoryInfo.icon}</span>
-                  <span className="truncate">{categoryInfo.name}</span>
-                </Badge>
-              )}
-            </div>
-            
-            {/* Botones de acción */}
-            <div className="flex items-center gap-1 shrink-0">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={confirmDelete} 
-                className="h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                onClick={() => setShowEditDialog(true)}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
-          {/* Información de cantidad */}
-          <div className="flex-1 mb-3">
-            <div className="inline-flex items-center px-3 py-2 bg-muted rounded-lg">
-              <span className="text-xs sm:text-sm text-muted-foreground mr-2">Cantidad:</span>
-              <span className="text-lg sm:text-xl lg:text-2xl font-bold text-primary">
-                {item.quantity.toLocaleString('es-CO')}
-              </span>
-            </div>
-          </div>
-          
-          {/* Botón de comprado al final */}
-          <Button 
-            onClick={handlePurchaseClick}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm sm:text-base h-10 sm:h-11 mt-auto"
-            size="sm"
-          >
-            <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-            Comprado
+      <div className="flex items-center gap-[14px] rounded-[22px] bg-card p-[18px] shadow-[0_6px_16px_rgba(30,40,80,.07)] transition-transform active:scale-[.99]">
+        {/* Checkbox (28px) */}
+        <button 
+          onClick={handlePurchaseClick} 
+          className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[8px] border-[2px] border-[#d3dae8] bg-transparent hover:border-primary transition-colors focus:outline-none"
+          aria-label="Marcar como comprado"
+        />
+        
+        {/* Content */}
+        <div className="min-w-0 flex-1" onClick={() => setShowEditDialog(true)}>
+          <p className="truncate text-[17px] font-black text-foreground cursor-pointer">
+            {item.product_name} {item.quantity > 1 ? `x${item.quantity}` : ''}
+          </p>
+          <p className="truncate text-[13px] font-extrabold text-[#aab1c2]">
+            {categoryInfo?.name || 'Categoría'}
+          </p>
+        </div>
+        
+        {/* Chip "→ Gasto" */}
+        <Button 
+          variant="secondary" 
+          size="sm" 
+          onClick={handlePurchaseClick} 
+          className="h-[34px] shrink-0 rounded-full bg-[#eef1f7] px-[14px] text-[13px] font-black text-primary hover:bg-primary/10"
+        >
+          → Gasto
+        </Button>
+
+        {/* Acciones */}
+        <div className="flex shrink-0 items-center ml-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-[#aab1c2] hover:text-destructive" onClick={confirmDelete}>
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
-      </Card>
+      </div>
 
-      <Dialog open={showPriceDialog} onOpenChange={(open) => {
-        setShowPriceDialog(open)
-        if (!open) {
-          // Limpiar estados cuando se cierra el diálogo
-          setError(null)
-          setUnitPrice("")
-          setLocation(null)
-          setLocationName("")
-        }
-      }}>
-        <DialogContent className={`w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto ${scrollbarClasses}`} onOpenAutoFocus={(e) => e.preventDefault()}>
-          <div className="no-ios-zoom">
-            <DialogHeader>
-              <DialogTitle className="text-lg sm:text-xl">Comprado</DialogTitle>
-              <DialogDescription className="text-xs sm:text-sm">
-                Ingresa el precio unitario para registrar esta compra
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3 sm:space-y-4">
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label className="text-xs sm:text-sm">Producto</Label>
-              <p className="text-sm font-medium truncate">{item.product_name}</p>
-            </div>
+      {isMobile ? (
+        <Drawer open={showPriceDialog} onOpenChange={(open) => {
+          setShowPriceDialog(open)
+          if (!open) {
+            setError(null)
+            setUnitPrice("")
+            setLocation(null)
+            setLocationName("")
+          }
+        }}>
+          <DrawerContent className="rounded-t-[32px]">
+            <div className={`no-ios-zoom max-h-[82vh] overflow-y-auto px-4 pb-8 ${scrollbarClasses}`}>
+              <DrawerHeader className="px-0">
+                <DrawerTitle className="text-xl font-black">Comprado</DrawerTitle>
+                <DrawerDescription className="text-sm">
+                  Ingresa el precio unitario para registrar esta compra
+                </DrawerDescription>
+              </DrawerHeader>
+              
+              <div className="space-y-3 sm:space-y-4 pt-2">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label className="text-xs sm:text-sm">Producto</Label>
+                  <p className="text-sm font-medium truncate">{item.product_name}</p>
+                </div>
 
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="quantity" className="text-xs sm:text-sm">Cantidad Comprada</Label>
-              <Input
-                id="quantity"
-                type="text"
-                inputMode="numeric"
-                value={quantity}
-                onChange={(e) => setQuantity(formatNumber(e.target.value))}
-                placeholder="0"
-                required
-                disabled={isLoading}
-                className="text-sm sm:text-base h-9 sm:h-10"
-              />
-              <p className="text-[10px] sm:text-xs text-muted-foreground">
-                Cantidad original en la lista: {item.quantity.toLocaleString('es-CO')}
-              </p>
-            </div>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="quantity" className="text-xs sm:text-sm">Cantidad Comprada</Label>
+                  <Input
+                    id="quantity"
+                    type="text"
+                    inputMode="numeric"
+                    value={quantity}
+                    onChange={(e) => setQuantity(formatNumber(e.target.value))}
+                    placeholder="0"
+                    required
+                    disabled={isLoading}
+                    className="text-sm sm:text-base h-9 sm:h-10"
+                  />
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    Cantidad original en la lista: {item.quantity.toLocaleString('es-CO')}
+                  </p>
+                </div>
 
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="unitPrice" className="text-xs sm:text-sm">Precio Unitario (COP)</Label>
-              <Input
-                id="unitPrice"
-                type="text"
-                inputMode="numeric"
-                value={unitPrice}
-                onChange={(e) => setUnitPrice(formatNumber(e.target.value))}
-                placeholder="0"
-                required
-                disabled={isLoading}
-                className="text-sm sm:text-base h-9 sm:h-10"
-              />
-            </div>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="unitPrice" className="text-xs sm:text-sm">Precio Unitario (COP)</Label>
+                  <Input
+                    id="unitPrice"
+                    type="text"
+                    inputMode="numeric"
+                    value={unitPrice}
+                    onChange={(e) => setUnitPrice(formatNumber(e.target.value))}
+                    placeholder="0"
+                    required
+                    disabled={isLoading}
+                    className="text-sm sm:text-base h-9 sm:h-10"
+                  />
+                </div>
 
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label className="text-xs sm:text-sm">Ubicación del Supermercado</Label>
-              <div className="relative">
-                <Input
-                  id="purchase_location"
-                  value={locationName}
-                  onChange={(e) => {
-                    setLocationName(e.target.value)
-                  }}
-                  placeholder="Ej: Supermercado XYZ, Calle 123"
-                  disabled={isLoading}
-                  className="text-sm sm:text-base h-9 sm:h-10 pr-10"
-                />
-                {isGeocoding && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label className="text-xs sm:text-sm">Ubicación del Supermercado</Label>
+                  <div className="relative">
+                    <Input
+                      id="purchase_location"
+                      value={locationName}
+                      onChange={(e) => {
+                        setLocationName(e.target.value)
+                      }}
+                      placeholder="Ej: Supermercado XYZ, Calle 123"
+                      disabled={isLoading}
+                      className="text-sm sm:text-base h-9 sm:h-10 pr-10"
+                    />
+                    {isGeocoding && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
+
+                  <div className="mt-2">
+                    {!location ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={getLocation}
+                        disabled={isGettingLocation}
+                        className="w-full bg-transparent text-sm sm:text-base h-9 sm:h-10"
+                      >
+                        <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
+                        {isGettingLocation ? "Obteniendo ubicación..." : "Obtener Ubicación Actual"}
+                      </Button>
+                    ) : (
+                      <div className="space-y-2">
+                        {/* Mapa simple con OpenStreetMap */}
+                        <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+                          <iframe
+                            title="Mapa de ubicacion"
+                            width="100%"
+                            height="100%"
+                            frameBorder="0"
+                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.01},${location.lat - 0.01},${location.lng + 0.01},${location.lat + 0.01}&layer=mapnik&marker=${location.lat},${location.lng}`}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setLocation(null)
+                            setLocationName("")
+                          }}
+                          className="w-full"
+                        >
+                          Cambiar ubicación
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {unitPrice && quantity && (
+                  <div className="p-3 sm:p-4 bg-primary/10 rounded-lg border border-primary/20">
+                    <p className="text-xs sm:text-sm text-muted-foreground">Total a pagar</p>
+                    <p className="text-xl sm:text-2xl font-bold">
+                      {formatCurrency(Number.parseInt(getNumericValue(unitPrice)) * Number.parseInt(getNumericValue(quantity)))}
+                    </p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                      {quantity} × {formatCurrency(Number.parseInt(getNumericValue(unitPrice)))}
+                    </p>
+                  </div>
                 )}
-              </div>
 
-              <div className="mt-2">
-                {!location ? (
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="flex gap-2 pt-2">
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={getLocation}
-                    disabled={isGettingLocation}
-                    className="w-full bg-transparent text-sm sm:text-base h-9 sm:h-10"
+                    onClick={() => {
+                      setShowPriceDialog(false)
+                      setLocation(null)
+                      setLocationName("")
+                      setUnitPrice("")
+                      setQuantity(formatNumber(item.quantity.toString()))
+                    }}
+                    className="flex-1 text-sm sm:text-base h-9 sm:h-10"
+                    disabled={isLoading}
                   >
-                    <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
-                    {isGettingLocation ? "Obteniendo ubicación..." : "Obtener Ubicación Actual"}
+                    Cancelar
                   </Button>
-                ) : (
-                  <div className="space-y-2">
-                    {/* Mapa simple con OpenStreetMap */}
-                    <div className="relative w-full h-48 rounded-lg overflow-hidden border">
-                      <iframe
-                        title="Mapa de ubicacion"
-                        width="100%"
-                        height="100%"
-                        frameBorder="0"
-                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.01},${location.lat - 0.01},${location.lng + 0.01},${location.lat + 0.01}&layer=mapnik&marker=${location.lat},${location.lng}`}
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setLocation(null)
-                        setLocationName("")
+                  <Button onClick={handleMarkAsPurchased} className="flex-1 text-sm sm:text-base h-9 sm:h-10" disabled={isLoading || !unitPrice || !quantity}>
+                    {isLoading ? "Procesando..." : "Confirmar"}
+                  </Button>
+                </div>
+              </div>
+
+            </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={showPriceDialog} onOpenChange={(open) => {
+          setShowPriceDialog(open)
+          if (!open) {
+            setError(null)
+            setUnitPrice("")
+            setLocation(null)
+            setLocationName("")
+          }
+        }}>
+          <DialogContent className={`w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto ${scrollbarClasses}`} onOpenAutoFocus={(e) => e.preventDefault()}>
+            <div className="no-ios-zoom">
+              <DialogHeader>
+                <DialogTitle className="text-lg sm:text-xl">Comprado</DialogTitle>
+                <DialogDescription className="text-xs sm:text-sm">
+                  Ingresa el precio unitario para registrar esta compra
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3 sm:space-y-4 pt-2">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label className="text-xs sm:text-sm">Producto</Label>
+                  <p className="text-sm font-medium truncate">{item.product_name}</p>
+                </div>
+
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="quantity" className="text-xs sm:text-sm">Cantidad Comprada</Label>
+                  <Input
+                    id="quantity"
+                    type="text"
+                    inputMode="numeric"
+                    value={quantity}
+                    onChange={(e) => setQuantity(formatNumber(e.target.value))}
+                    placeholder="0"
+                    required
+                    disabled={isLoading}
+                    className="text-sm sm:text-base h-9 sm:h-10"
+                  />
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    Cantidad original en la lista: {item.quantity.toLocaleString('es-CO')}
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="unitPrice" className="text-xs sm:text-sm">Precio Unitario (COP)</Label>
+                  <Input
+                    id="unitPrice"
+                    type="text"
+                    inputMode="numeric"
+                    value={unitPrice}
+                    onChange={(e) => setUnitPrice(formatNumber(e.target.value))}
+                    placeholder="0"
+                    required
+                    disabled={isLoading}
+                    className="text-sm sm:text-base h-9 sm:h-10"
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label className="text-xs sm:text-sm">Ubicación del Supermercado</Label>
+                  <div className="relative">
+                    <Input
+                      id="purchase_location"
+                      value={locationName}
+                      onChange={(e) => {
+                        setLocationName(e.target.value)
                       }}
-                      className="w-full"
-                    >
-                      Cambiar ubicación
-                    </Button>
+                      placeholder="Ej: Supermercado XYZ, Calle 123"
+                      disabled={isLoading}
+                      className="text-sm sm:text-base h-9 sm:h-10 pr-10"
+                    />
+                    {isGeocoding && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
+
+                  <div className="mt-2">
+                    {!location ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={getLocation}
+                        disabled={isGettingLocation}
+                        className="w-full bg-transparent text-sm sm:text-base h-9 sm:h-10"
+                      >
+                        <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
+                        {isGettingLocation ? "Obteniendo ubicación..." : "Obtener Ubicación Actual"}
+                      </Button>
+                    ) : (
+                      <div className="space-y-2">
+                        {/* Mapa simple con OpenStreetMap */}
+                        <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+                          <iframe
+                            title="Mapa de ubicacion"
+                            width="100%"
+                            height="100%"
+                            frameBorder="0"
+                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.01},${location.lat - 0.01},${location.lng + 0.01},${location.lat + 0.01}&layer=mapnik&marker=${location.lat},${location.lng}`}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setLocation(null)
+                            setLocationName("")
+                          }}
+                          className="w-full"
+                        >
+                          Cambiar ubicación
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {unitPrice && quantity && (
+                  <div className="p-3 sm:p-4 bg-primary/10 rounded-lg border border-primary/20">
+                    <p className="text-xs sm:text-sm text-muted-foreground">Total a pagar</p>
+                    <p className="text-xl sm:text-2xl font-bold">
+                      {formatCurrency(Number.parseInt(getNumericValue(unitPrice)) * Number.parseInt(getNumericValue(quantity)))}
+                    </p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                      {quantity} × {formatCurrency(Number.parseInt(getNumericValue(unitPrice)))}
+                    </p>
                   </div>
                 )}
+
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowPriceDialog(false)
+                      setLocation(null)
+                      setLocationName("")
+                      setUnitPrice("")
+                      setQuantity(formatNumber(item.quantity.toString()))
+                    }}
+                    className="flex-1 text-sm sm:text-base h-9 sm:h-10"
+                    disabled={isLoading}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleMarkAsPurchased} className="flex-1 text-sm sm:text-base h-9 sm:h-10" disabled={isLoading || !unitPrice || !quantity}>
+                    {isLoading ? "Procesando..." : "Confirmar"}
+                  </Button>
+                </div>
               </div>
             </div>
-
-            {unitPrice && quantity && (
-              <div className="p-3 sm:p-4 bg-primary/10 rounded-lg border border-primary/20">
-                <p className="text-xs sm:text-sm text-muted-foreground">Total a pagar</p>
-                <p className="text-xl sm:text-2xl font-bold">
-                  {formatCurrency(Number.parseInt(getNumericValue(unitPrice)) * Number.parseInt(getNumericValue(quantity)))}
-                </p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
-                  {quantity} × {formatCurrency(Number.parseInt(getNumericValue(unitPrice)))}
-                </p>
-              </div>
-            )}
-
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="flex gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setShowPriceDialog(false)
-                  setLocation(null)
-                  setLocationName("")
-                  setUnitPrice("")
-                  setQuantity(formatNumber(item.quantity.toString()))
-                }}
-                className="flex-1 text-sm sm:text-base h-9 sm:h-10"
-                disabled={isLoading}
-              >
-                Cancelar
-              </Button>
-              <Button onClick={handleMarkAsPurchased} className="flex-1 text-sm sm:text-base h-9 sm:h-10" disabled={isLoading || !unitPrice || !quantity}>
-                {isLoading ? "Procesando..." : "Confirmar"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent className="w-[calc(100%-2rem)] sm:w-full">
@@ -486,17 +673,6 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories,
         </AlertDialogContent>
       </AlertDialog>
 
-      <ShoppingForm
-        item={item}
-        categories={categories}
-        userId={userId}
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        onSuccess={() => {
-          setShowEditDialog(false)
-          onUpdate?.()
-        }}
-      />
     </>
   )
 }

@@ -29,9 +29,14 @@ export function ExportIncomesButton({ incomes }: ExportIncomesButtonProps) {
   }
 
   return (
-    <Button onClick={handleExport} variant="outline" disabled={incomes.length === 0}>
-      <Download className="h-4 w-4 mr-2" />
-      Exportar Excel
+    <Button 
+      onClick={handleExport} 
+      variant="outline" 
+      disabled={incomes.length === 0}
+      className="h-[34px] rounded-full px-4 text-xs font-bold text-primary border-primary/20 bg-primary/5 hover:bg-primary/10"
+    >
+      <Download className="mr-1.5 h-3.5 w-3.5" />
+      CSV
     </Button>
   )
 }

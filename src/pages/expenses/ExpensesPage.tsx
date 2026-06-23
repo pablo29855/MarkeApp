@@ -8,7 +8,6 @@ import type { Expense, Category } from '@/lib/types'
 import { ExpenseListWrapper } from '@/components/expenses/expense-list-wrapper'
 import { ExportButton } from '@/components/expenses/export-button'
 import { FiltersSection } from '@/components/ui/filters-section'
-import { Receipt } from 'lucide-react'
 import { useCountUp } from '@/hooks/use-count-up'
 
 export default function ExpensesPage() {
@@ -192,33 +191,35 @@ export default function ExpensesPage() {
   if (loading) {
     return <LoadingCheckOverlay message="Cargando gastos..." />
   }
-
   return (
-    <div className="max-w-7xl mx-auto space-y-4 lg:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
+    <div className="max-w-7xl mx-auto space-y-4 lg:space-y-6 pb-20">
+      {/* Header Gastos Style */}
+      <div className="flex items-center justify-between pt-1">
         <div>
-          <h1 className="text-2xl font-black tracking-tight">Gastos</h1>
-          <p className="text-sm text-muted-foreground">Gestiona y controla tus gastos</p>
+          <h1 className="text-[26px] font-black tracking-tight text-[#1e2230]">Gastos</h1>
+          <p className="text-[15px] font-extrabold text-[#8b93a7]">Gestiona y controla</p>
         </div>
-        <div className="flex gap-2 self-end sm:self-auto">
+        <div className="flex gap-2 items-center">
           <ExportButton expenses={filteredExpenses} />
-          <ExpenseFormWrapperUnified categories={categories} userId={userId} onSuccess={handleRefresh} />
+          <div className="hidden lg:block">
+            <ExpenseFormWrapperUnified categories={categories} userId={userId} onSuccess={handleRefresh} />
+          </div>
         </div>
       </div>
 
-      {/* Card de Total — degradado Pop Azul */}
-      <div className="fade-up relative overflow-hidden rounded-[26px] bg-brand-grad p-5 sm:p-6 text-white shadow-hero">
-        <div className="pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full bg-[#FFC24B]/25" />
+      {/* Card de Total — Pop Azul Exacto */}
+      <div className="fade-up relative overflow-hidden rounded-[26px] bg-[#3a61ff] p-5 sm:p-6 text-white shadow-hero">
+        <div className="pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full bg-[#5b7fff] opacity-60" />
         <div className="relative flex items-center justify-between">
           <div className="min-w-0 flex-1">
-            <p className="mb-1 text-sm font-semibold text-white/80">Total de gastos</p>
-            <span className="block truncate text-[34px] font-black leading-tight">{formatCurrency(animatedTotal)}</span>
-            <p className="mt-1 text-xs font-semibold text-white/80">
+            <p className="mb-1 text-[15px] font-extrabold text-white/80">
+              Total de gastos · {months.find(m => m.value === selectedMonth)?.label?.toLowerCase() || 'este mes'}
+            </p>
+            <span className="block truncate text-[34px] font-black leading-tight mb-1">{formatCurrency(animatedTotal)}</span>
+            <p className="text-[15px] font-extrabold text-white/80">
               {filteredExpenses.length} registro{filteredExpenses.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <Receipt className="ml-3 h-16 w-16 shrink-0 opacity-20" />
         </div>
       </div>
 

@@ -2,22 +2,25 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StatsCard } from '@/components/dashboard/stats-card'
 import { ExpenseChart } from '@/components/dashboard/expense-chart'
-import { RecentExpenses } from '@/components/dashboard/recent-expenses'
+import { RecentExpenses, type Movement } from '@/components/dashboard/recent-expenses'
 import { BalanceCard } from '@/components/dashboard/balance-card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { formatDateLocal } from '@/lib/utils'
 import { TrendingUp, CreditCard, ShoppingCart, Landmark } from 'lucide-react'
 import type { Expense, ExpensesByCategory, IncomesByType } from '@/lib/types'
+import { ProfileDialog } from '@/components/profile/profile-dialog'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [userName, setUserName] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [dashboardData, setDashboardData] = useState({
     totalExpenses: 0,
     totalIncome: 0,
     expensesByCategoryData: [] as ExpensesByCategory[],
     incomesByTypeData: [] as IncomesByType[],
-    recentExpenses: [] as Expense[],
+    recentExpenses: [] as Movement[],
     shoppingCount: 0,
     totalDebts: 0,
     balance: 0,
@@ -32,6 +35,7 @@ export default function DashboardPage() {
         if (!user) return
 
         setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario')
+        setAvatarUrl(user.user_metadata?.avatar_url || null)
 
         const currentDate = new Date()
         const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
@@ -56,6 +60,13 @@ export default function DashboardPage() {
           .select('*, category:categories(*)')
           .eq('user_id', user.id)
           .order('purchase_date', { ascending: false })
+          .limit(5)
+
+        const { data: recentIncomesData } = await supabase
+          .from('incomes')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('income_date', { ascending: false })
           .limit(5)
 
         const { count: shoppingCount } = await supabase
@@ -115,12 +126,34 @@ export default function DashboardPage() {
         const totalDebts = debts?.reduce((sum, debt) => sum + Number(debt.total_amount) - Number(debt.paid_amount), 0) || 0
         const balance = totalIncome - totalExpenses - totalDebts
 
+        const rawExpenses = (recentExpenses || [])
+        const rawIncomes = (recentIncomesData || [])
+
+        const movements: Movement[] = [
+          ...rawExpenses.map(e => ({
+            id: e.id,
+            name: e.name,
+            amount: Number(e.amount),
+            date: e.purchase_date,
+            type: 'expense' as const,
+            categoryName: e.category?.name
+          })),
+          ...rawIncomes.map(i => ({
+            id: i.id,
+            name: i.description,
+            amount: Number(i.amount),
+            date: i.income_date,
+            type: 'income' as const,
+            categoryName: i.income_type
+          }))
+        ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5)
+
         setDashboardData({
           totalExpenses,
           totalIncome,
           expensesByCategoryData,
           incomesByTypeData,
-          recentExpenses: (recentExpenses || []) as Expense[],
+          recentExpenses: movements,
           shoppingCount: shoppingCount || 0,
           totalDebts,
           balance,
@@ -133,6 +166,26 @@ export default function DashboardPage() {
     }
 
     fetchDashboardData()
+
+    // Listeners para actualizar el avatar inmediatamente
+    const handleAvatarUpdate = (e: any) => {
+      if (e.detail?.success && e.detail?.url) {
+        setAvatarUrl(e.detail.url)
+      }
+    }
+    const handleAvatarPreview = (e: any) => {
+      if (e.detail?.url) {
+        setAvatarUrl(e.detail.url)
+      }
+    }
+
+    window.addEventListener('avatar-upload-end', handleAvatarUpdate)
+    window.addEventListener('avatar-preview', handleAvatarPreview)
+
+    return () => {
+      window.removeEventListener('avatar-upload-end', handleAvatarUpdate)
+      window.removeEventListener('avatar-preview', handleAvatarPreview)
+    }
   }, [])
 
   if (loading) {
@@ -154,9 +207,18 @@ export default function DashboardPage() {
           <p className="text-sm font-semibold text-muted-foreground">¡Hola de nuevo! 👋</p>
           <h1 className="text-[21px] font-black tracking-tight text-foreground">{userName}</h1>
         </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-grad text-sm font-black text-white shadow-button-pop">
-          {initials}
-        </div>
+        <ProfileDialog userName={userName}>
+          <button className="focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 rounded-full overflow-hidden shrink-0 transition-transform active:scale-95">
+            <Avatar className="h-11 w-11 border border-border shadow-button-pop">
+              {avatarUrl && (
+                <AvatarImage src={avatarUrl} alt={userName} className="object-cover" />
+              )}
+              <AvatarFallback className="bg-brand-grad text-white font-black text-sm">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+          </button>
+        </ProfileDialog>
       </header>
 
       {/* Hero balance + tiles */}

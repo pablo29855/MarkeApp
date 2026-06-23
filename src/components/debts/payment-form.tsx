@@ -4,35 +4,49 @@ import type React from "react"
 import { useState, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useNotification } from "@/hooks/use-notification"
-import { getTodayLocal } from "@/lib/utils"
+import { getTodayLocal, cn } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription 
+} from "@/components/ui/dialog"
+import { 
+  Drawer, 
+  DrawerContent, 
+  DrawerHeader, 
+  DrawerTitle, 
+  DrawerDescription 
+} from "@/components/ui/drawer"
+import { scrollbarClasses } from "@/lib/styles"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DateInput } from "@/components/ui/date-input"
 import { FormFieldError } from "@/components/ui/form-field-error"
 import { getValidationMessage } from "@/lib/validation-messages"
-import { DollarSign, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 
 interface PaymentFormProps {
   debtId: string
   remainingAmount: number
   onUpdate?: () => void
+  isActive?: boolean
 }
 
-export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormProps) {
+export function PaymentForm({ debtId, remainingAmount, onUpdate, isActive = false }: PaymentFormProps) {
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { showSaved, showError: showErrorNotif, showWarning } = useNotification()
 
-  // Referencias para los campos del formulario (contenedores con relative)
   const amountRef = useRef<HTMLDivElement>(null)
   const paymentDateRef = useRef<HTMLDivElement>(null)
 
-  // Estados para errores de validación
   const [fieldErrors, setFieldErrors] = useState({
     amount: '',
     payment_date: '',
@@ -40,15 +54,9 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
   const [showFieldError, setShowFieldError] = useState<string | null>(null)
   const [submitAttempt, setSubmitAttempt] = useState(0)
 
-  // Función para formatear el monto con puntos de mil (formato colombiano)
   const formatAmount = (value: string) => {
-    // Remover todo excepto números
     const cleanValue = value.replace(/\D/g, '')
-    
-    // Si está vacío, retornar vacío
     if (!cleanValue) return ''
-    
-    // Formatear con puntos de mil
     return cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
   }
 
@@ -65,10 +73,8 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Incrementar el contador de intentos de envío
     setSubmitAttempt(prev => prev + 1)
 
-    // Limpiar errores previos
     setFieldErrors({
       amount: '',
       payment_date: '',
@@ -76,7 +82,6 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
     setShowFieldError(null)
     setError(null)
 
-    // Validaciones personalizadas
     const errors = {
       amount: '',
       payment_date: '',
@@ -90,7 +95,6 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
       errors.payment_date = getValidationMessage('payment_date')
     }
 
-    // Si hay errores, mostrar el primero
     const firstError = Object.entries(errors).find(([_, value]) => value !== '')
     if (firstError) {
       const [field] = firstError
@@ -115,7 +119,6 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
 
     try {
       const { formatDateLocal, parseLocalDate } = await import("@/lib/utils")
-      // Insert payment record
       const { error: paymentError } = await supabase.from("debt_payments").insert({
         debt_id: debtId,
         amount: paymentAmount,
@@ -125,12 +128,10 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
 
       if (paymentError) throw paymentError
 
-      // Get current paid amount
       const { data: debt } = await supabase.from("debts").select("paid_amount").eq("id", debtId).single()
 
       if (!debt) throw new Error("Deuda no encontrada")
 
-      // Update debt paid amount
       const newPaidAmount = Number(debt.paid_amount) + paymentAmount
       const { error: updateError } = await supabase
         .from("debts")
@@ -148,7 +149,6 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
       })
       setOpen(false)
       
-      // Trigger update callback to refresh parent component
       onUpdate?.()
       
     } catch (error: unknown) {
@@ -160,24 +160,143 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
     }
   }
 
+  const isMobile = useIsMobile()
+
+  const triggerButton = (
+    <Button 
+      className={cn(
+        "w-full h-[46px] rounded-[14px] font-bold text-[15px]",
+        isActive 
+          ? "bg-[#3B6EF6] text-white hover:bg-[#3B6EF6]/90" 
+          : "bg-[#eef1f7] text-[#3B6EF6] hover:bg-[#eef1f7]/80"
+      )}
+      onClick={(e) => {
+        e.stopPropagation()
+        setOpen(true)
+      }}
+    >
+      + Abonar
+    </Button>
+  )
+
+  const formContent = (
+    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+      <div className="p-3 sm:p-4 bg-muted rounded-lg">
+        <p className="text-xs sm:text-sm text-muted-foreground">Saldo Pendiente</p>
+        <p className="text-xl sm:text-2xl font-bold">${remainingAmount.toLocaleString()}</p>
+      </div>
+
+      <div className="space-y-1.5 sm:space-y-2">
+        <Label htmlFor="amount" className="text-xs sm:text-sm">Monto a Abonar *</Label>
+        <div ref={amountRef} className="relative">
+          <FormFieldError 
+            error={fieldErrors.amount}
+            show={showFieldError === 'amount'}
+            fieldRef={amountRef}
+            submitAttempt={submitAttempt}
+          />
+          <Input
+            id="amount"
+            type="text"
+            inputMode="numeric"
+            value={formData.amount}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setFormData({ ...formData, amount: formatAmount(e.target.value) })
+              if (fieldErrors.amount) {
+                setFieldErrors({ ...fieldErrors, amount: '' })
+                setShowFieldError(null)
+              }
+            }}
+            placeholder="0"
+            disabled={isLoading}
+            className="text-sm"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1.5 sm:space-y-2">
+        <Label htmlFor="payment_date" className="text-xs sm:text-sm">Fecha del Abono *</Label>
+        <div ref={paymentDateRef} className="relative">
+          <FormFieldError 
+            error={fieldErrors.payment_date}
+            show={showFieldError === 'payment_date'}
+            fieldRef={paymentDateRef}
+            submitAttempt={submitAttempt}
+          />
+          <DateInput
+            id="payment_date"
+            value={formData.payment_date}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setFormData({ ...formData, payment_date: e.target.value })
+              if (fieldErrors.payment_date) {
+                setFieldErrors({ ...fieldErrors, payment_date: '' })
+                setShowFieldError(null)
+              }
+            }}
+            disabled={isLoading}
+            className="text-sm"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1.5 sm:space-y-2">
+        <Label htmlFor="notes" className="text-xs sm:text-sm">Notas (opcional)</Label>
+        <Textarea
+          id="notes"
+          value={formData.notes}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, notes: e.target.value })}
+          placeholder="Agrega notas sobre este abono..."
+          rows={3}
+          disabled={isLoading}
+          className="text-sm resize-none"
+        />
+      </div>
+
+      {error && (
+        <Alert variant="destructive" className="py-2">
+          <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="flex gap-2 pt-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setOpen(false)}
+          className="flex-1 text-xs sm:text-sm"
+          disabled={isLoading}
+        >
+          Cancelar
+        </Button>
+        <Button type="submit" className="flex-1 text-xs sm:text-sm" disabled={isLoading}>
+          {isLoading && <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />}
+          {isLoading ? "Guardando..." : "Abonar"}
+        </Button>
+      </div>
+    </form>
+  )
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={setOpen}>
+        {triggerButton}
+        <DrawerContent>
+          <div className={`max-h-[90vh] overflow-y-auto px-4 pb-8 ${scrollbarClasses}`}>
+            <DrawerHeader className="px-0">
+              <DrawerTitle className="text-xl font-black">Abonar a Deuda</DrawerTitle>
+              <DrawerDescription className="text-sm">Registra un pago para reducir el saldo pendiente de esta deuda</DrawerDescription>
+            </DrawerHeader>
+            {formContent}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    )
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <div onClick={(e) => e.stopPropagation()} className="contents">
-        <DialogTrigger asChild>
-          <Button 
-            size="sm" 
-            className="text-xs sm:text-sm lg:text-base flex-1 xs:flex-none h-9 sm:h-10 lg:h-11"
-            variant="default"
-            onClick={(e) => {
-              e.stopPropagation()
-            }}
-          >
-            <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 mr-1 sm:mr-2" />
-            <span>Abonar</span>
-          </Button>
-        </DialogTrigger>
-      </div>
-      <DialogContent className="max-w-md w-[calc(100%-2rem)] sm:w-full" onOpenAutoFocus={(e) => e.preventDefault()}>
+      {triggerButton}
+      <DialogContent className={`max-w-md w-[calc(100%-2rem)] sm:w-full max-h-[90vh] overflow-y-auto ${scrollbarClasses}`} onOpenAutoFocus={(e) => e.preventDefault()}>
         <div className="no-ios-zoom">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl">Abonar a Deuda</DialogTitle>
@@ -185,101 +304,7 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate }: PaymentFormPr
               Registra un pago para reducir el saldo pendiente de esta deuda
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-
-          <div className="p-3 sm:p-4 bg-muted rounded-lg">
-            <p className="text-xs sm:text-sm text-muted-foreground">Saldo Pendiente</p>
-            <p className="text-xl sm:text-2xl font-bold">${remainingAmount.toLocaleString()}</p>
-          </div>
-
-          <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="amount" className="text-xs sm:text-sm">Monto a Abonar *</Label>
-            <div ref={amountRef} className="relative">
-              <FormFieldError 
-                error={fieldErrors.amount}
-                show={showFieldError === 'amount'}
-                fieldRef={amountRef}
-                submitAttempt={submitAttempt}
-              />
-              <Input
-                id="amount"
-                type="text"
-                inputMode="numeric"
-                value={formData.amount}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setFormData({ ...formData, amount: formatAmount(e.target.value) })
-                  if (fieldErrors.amount) {
-                    setFieldErrors({ ...fieldErrors, amount: '' })
-                    setShowFieldError(null)
-                  }
-                }}
-                placeholder="0"
-                disabled={isLoading}
-                className="text-sm"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="payment_date" className="text-xs sm:text-sm">Fecha del Abono *</Label>
-            <div ref={paymentDateRef} className="relative">
-              <FormFieldError 
-                error={fieldErrors.payment_date}
-                show={showFieldError === 'payment_date'}
-                fieldRef={paymentDateRef}
-                submitAttempt={submitAttempt}
-              />
-              <DateInput
-                id="payment_date"
-                value={formData.payment_date}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setFormData({ ...formData, payment_date: e.target.value })
-                  if (fieldErrors.payment_date) {
-                    setFieldErrors({ ...fieldErrors, payment_date: '' })
-                    setShowFieldError(null)
-                  }
-                }}
-                disabled={isLoading}
-                className="text-sm"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="notes" className="text-xs sm:text-sm">Notas (opcional)</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Agrega notas sobre este abono..."
-              rows={3}
-              disabled={isLoading}
-              className="text-sm resize-none"
-            />
-          </div>
-
-          {error && (
-            <Alert variant="destructive" className="py-2">
-              <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="flex gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              className="flex-1 text-xs sm:text-sm"
-              disabled={isLoading}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" className="flex-1 text-xs sm:text-sm" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />}
-              {isLoading ? "Guardando..." : "Abonar"}
-            </Button>
-          </div>
-        </form>
+          {formContent}
         </div>
       </DialogContent>
     </Dialog>

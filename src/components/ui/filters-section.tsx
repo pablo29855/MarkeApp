@@ -15,12 +15,13 @@ import { formatCurrency } from '@/lib/utils'
 interface CategoryOption {
   id: string
   name: string
-  icon?: string
+  icon?: string | React.ReactNode
 }
 
 interface TypeOption {
   value: string
   label: string
+  icon?: React.ReactNode
 }
 
 type FilterOption = CategoryOption | TypeOption
@@ -80,7 +81,7 @@ export function FiltersSection({
         <Button
           variant="outline"
           onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-          className="text-sm sm:text-base"
+          className="text-sm sm:text-base h-[46px] rounded-[14px]"
         >
           <Filter className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
           Filtros
@@ -90,7 +91,7 @@ export function FiltersSection({
             variant="ghost"
             size="sm"
             onClick={clearFilters}
-            className="text-sm sm:text-base"
+            className="text-sm sm:text-base h-[46px] rounded-[14px]"
           >
             <X className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
             Limpiar
@@ -111,7 +112,7 @@ export function FiltersSection({
                   placeholder={searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 h-[46px] rounded-[14px]"
                 />
               </div>
             </div>
@@ -130,8 +131,16 @@ export function FiltersSection({
                         key={'id' in option ? option.id : option.value}
                         value={'id' in option ? option.id : option.value}
                       >
-                        {'icon' in option && option.icon ? `${option.icon} ` : ''}
-                        {'name' in option ? option.name : option.label}
+                        <div className="flex items-center gap-2">
+                          {'icon' in option && option.icon ? (
+                            typeof option.icon === 'string' ? (
+                              <span>{option.icon}</span>
+                            ) : (
+                              option.icon
+                            )
+                          ) : null}
+                          <span>{'name' in option ? option.name : option.label}</span>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
