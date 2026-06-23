@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { createClient } from '@/lib/supabase/client'
 import { ReportFilters } from '@/components/reports/report-filters'
@@ -26,17 +26,18 @@ export default function ReportsPage() {
   const [compareTotalDebts, setCompareTotalDebts] = useState(0)
   const [compareIncomesByType, setCompareIncomesByType] = useState<IncomesByType[]>([])
   const [incomesByType, setIncomesByType] = useState<IncomesByType[]>([])
+  const [userId, setUserId] = useState<string>('')
   
   // Obtener el tipo de reporte: 'expenses', 'incomes' o null (mostrar todo)
   const reportType = searchParams.get('type')
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
+  const fetchData = useCallback(async () => {
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
 
-        if (!user) return
+      if (!user) return
+      setUserId(user.id)
 
         const currentDate = new Date()
         const month = searchParams.get('month') ? Number.parseInt(searchParams.get('month')!) : currentDate.getMonth() + 1
@@ -145,10 +146,33 @@ export default function ReportsPage() {
       } finally {
         setLoading(false)
       }
+    }, [searchParams])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  // Suscripción en tiempo real
+  useEffect(() => {
+    if (!userId) return
+
+    const supabase = createClient()
+    const channel = supabase.channel('reports-changes')
+
+    const handleRefresh = () => {
+      fetchData()
     }
 
-    fetchData()
-  }, [searchParams])
+    channel
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses', filter: `user_id=eq.${userId}` }, handleRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'incomes', filter: `user_id=eq.${userId}` }, handleRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'debts', filter: `user_id=eq.${userId}` }, handleRefresh)
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId, fetchData])
 
   async function getExpensesByCategory(
     userId: string,
