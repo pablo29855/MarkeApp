@@ -199,10 +199,20 @@ export function Sidebar({ userName, onCollapse, onMobileMenuChange, mobileMenuOp
         />
       )}
 
+      {/* Estilos para el recorte (cutout) de la sidebar */}
+      <style>{`
+        @media (min-width: 1024px) {
+          .sidebar-desktop-mask {
+            -webkit-mask-image: radial-gradient(circle at 100% 36px, transparent 22px, black 23px);
+            mask-image: radial-gradient(circle at 100% 36px, transparent 22px, black 23px);
+          }
+        }
+      `}</style>
+
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 bg-card border-r border-border shadow-2xl transition-transform duration-300 ease-out z-50 lg:z-40 lg:bg-card pb-6 lg:pb-0 pt-[env(safe-area-inset-top)] lg:pt-0",
+          "fixed inset-y-0 left-0 bg-card border-r border-border drop-shadow-2xl transition-all duration-300 ease-out z-50 lg:z-40 lg:bg-card pb-6 lg:pb-0 pt-[env(safe-area-inset-top)] lg:pt-0 sidebar-desktop-mask",
           isMobileMenuOpen 
             ? "translate-x-0" 
             : "-translate-x-full lg:translate-x-0",
@@ -215,23 +225,21 @@ export function Sidebar({ userName, onCollapse, onMobileMenuChange, mobileMenuOp
           
           {/* Logo and User Info */}
           <div className="px-4 py-4 border-b border-border relative z-10">
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
+            <div className={cn("flex items-center cursor-pointer transition-all duration-300", isCollapsed ? "justify-center pr-4" : "gap-3")} onClick={() => setIsMobileMenuOpen(false)}>
               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-bold text-xl shrink-0 shadow-lg transition-transform hover:scale-110">
                 M
               </div>
-              {!isCollapsed && (
-                <div className="min-w-0 flex-1">
-                  <h1 className="font-bold text-lg bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                    MarketApp
-                  </h1>
-                  <p className="text-xs text-muted-foreground">Control de Gastos</p>
-                </div>
-              )}
+              <div className={cn("flex flex-col overflow-hidden transition-all duration-300 whitespace-nowrap", isCollapsed ? "opacity-0 w-0" : "opacity-100 w-[140px]")}>
+                <h1 className="font-bold text-lg bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  MarketApp
+                </h1>
+                <p className="text-xs text-muted-foreground">Control de Gastos</p>
+              </div>
             </div>
 
-            {!isCollapsed && (
+            <div className={cn("transition-all duration-300 overflow-hidden", isCollapsed ? "opacity-0 max-h-0" : "opacity-100 max-h-[100px] mt-5")}>
               <ProfileDialog userName={userName}>
-                <div className="mt-5 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 transition-smooth hover:shadow-md cursor-pointer">
+                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 transition-smooth hover:shadow-md cursor-pointer">
                   <div className="relative">
                     <div className="h-7 w-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 bg-primary/20">
                       {avatarUrl ? (
@@ -255,7 +263,7 @@ export function Sidebar({ userName, onCollapse, onMobileMenuChange, mobileMenuOp
                   <span className="text-xs font-medium truncate">{userName}</span>
                 </div>
               </ProfileDialog>
-            )}
+            </div>
           </div>
 
           {/* Navigation */}
@@ -268,11 +276,13 @@ export function Sidebar({ userName, onCollapse, onMobileMenuChange, mobileMenuOp
                   to={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
-                    "flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group relative overflow-hidden",
+                    "flex items-center transition-all duration-200 group relative overflow-hidden",
+                    isCollapsed 
+                      ? "justify-center w-11 h-11 mx-auto rounded-full" 
+                      : "gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium",
                     isActive
                       ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-md"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-sm",
-                    isCollapsed && "justify-center px-2",
                     "animate-fade-in"
                   )}
                   style={{ animationDelay: `${index * 50}ms` }}
@@ -285,72 +295,71 @@ export function Sidebar({ userName, onCollapse, onMobileMenuChange, mobileMenuOp
                     "h-4.5 w-4.5 shrink-0 transition-transform group-hover:scale-110",
                     isActive && "drop-shadow-sm"
                   )} />
-                  {!isCollapsed && (
-                    <span className="truncate relative z-10">{item.name}</span>
-                  )}
-                  {isActive && !isCollapsed && (
-                    <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary-foreground animate-pulse" />
-                  )}
+                  <span className={cn("truncate relative z-10 transition-all duration-300", isCollapsed ? "opacity-0 w-0" : "opacity-100 w-auto flex-1")}>
+                    {item.name}
+                  </span>
+                  <div className={cn("transition-all duration-300 rounded-full bg-primary-foreground animate-pulse", isActive && !isCollapsed ? "opacity-100 h-1.5 w-1.5 ml-auto" : "opacity-0 h-0 w-0")} />
                 </Link>
               )
             })}
           </nav>
 
           {/* Bottom actions */}
-          <div className="p-3 border-t border-border space-y-1.5 relative z-10">
+          <div className={cn("p-3 border-t border-border space-y-1.5 relative z-10", isCollapsed && "flex flex-col items-center")}>
             <Button
               variant="outline"
-              size="sm"
+              size={isCollapsed ? "icon" : "sm"}
               className={cn(
-                "w-full gap-2 transition-smooth hover:bg-primary/10 hover:border-primary/50",
-                isCollapsed ? "justify-center px-0" : "justify-start"
+                "transition-smooth hover:bg-primary/10 hover:border-primary/50",
+                isCollapsed ? "w-10 h-10 p-0" : "w-full gap-2 justify-start"
               )}
               onClick={toggleTheme}
               title={isCollapsed ? (theme === 'dark' ? "Modo Claro" : "Modo Oscuro") : undefined}
             >
               {theme === 'dark' ? (
-                <>
-                  <Sun className="h-4 w-4 shrink-0 text-yellow-500" />
-                  {!isCollapsed && <span className="text-xs">Modo Claro</span>}
-                </>
+                <Sun className="h-4 w-4 shrink-0 text-yellow-500" />
               ) : (
-                <>
-                  <Moon className="h-4 w-4 shrink-0 text-blue-500" />
-                  {!isCollapsed && <span className="text-xs">Modo Oscuro</span>}
-                </>
+                <Moon className="h-4 w-4 shrink-0 text-blue-500" />
               )}
+              <span className={cn("text-xs whitespace-nowrap overflow-hidden transition-all duration-300", isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100")}>
+                {theme === 'dark' ? "Modo Claro" : "Modo Oscuro"}
+              </span>
             </Button>
 
             <Button
               variant="outline"
-              size="sm"
+              size={isCollapsed ? "icon" : "sm"}
               className={cn(
-                "w-full gap-2 transition-smooth hover:bg-destructive/10 hover:border-destructive/50 hover:text-destructive lg:mb-0 mb-2",
-                isCollapsed ? "justify-center px-0" : "justify-start"
+                "transition-smooth hover:bg-destructive/10 hover:border-destructive/50 hover:text-destructive lg:mb-0 mb-2",
+                isCollapsed ? "w-10 h-10 p-0" : "w-full gap-2 justify-start"
               )}
               onClick={handleLogout}
               title={isCollapsed ? "Cerrar Sesión" : undefined}
             >
               <LogOut className="h-4 w-4 shrink-0" />
-              {!isCollapsed && <span className="text-xs">Cerrar Sesión</span>}
+              <span className={cn("text-xs whitespace-nowrap overflow-hidden transition-all duration-300", isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100")}>
+                Cerrar Sesión
+              </span>
             </Button>
           </div>
-
-          {/* Botón de colapsar/expandir */}
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden lg:flex absolute -right-3.5 top-20 w-8 h-8 items-center justify-center rounded-full bg-primary text-primary-foreground border-4 border-background shadow-xl hover:scale-110 transition-all duration-200 hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            style={{ zIndex: 100 }}
-            aria-label={isCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
-          >
-            {isCollapsed ? (
-              <ChevronRight className="h-5 w-5 flex-shrink-0" />
-            ) : (
-              <ChevronLeft className="h-5 w-5 flex-shrink-0" />
-            )}
-          </button>
         </div>
       </aside>
+
+      {/* Botón de colapsar/expandir (fuera del aside para no ser cortado) */}
+      <button
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className={cn(
+          "hidden lg:flex fixed top-[18px] z-[60] w-[36px] h-[36px] items-center justify-center rounded-full bg-brand-grad-soft text-white shadow-xl hover:scale-110 transition-all duration-300 ease-out hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-95",
+          isCollapsed ? "left-[calc(5rem-18px)]" : "left-[calc(16rem-18px)]"
+        )}
+        aria-label={isCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
+      >
+        {isCollapsed ? (
+          <ChevronRight className="h-5 w-5 flex-shrink-0" />
+        ) : (
+          <ChevronLeft className="h-5 w-5 flex-shrink-0" />
+        )}
+      </button>
     </>
   )
 }
