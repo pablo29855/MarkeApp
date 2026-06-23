@@ -1,11 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { DebtCard } from '@/components/debts/debt-card'
-import { Card, CardContent } from '@/components/ui/card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { SkeletonDebtList } from '@/components/ui/skeleton-debt'
 import { formatCurrency } from '@/lib/utils'
-import { CreditCard, CircleCheck, AlertCircle } from 'lucide-react'
+import { Landmark, CircleCheck, AlertCircle } from 'lucide-react'
 import type { Debt, DebtPayment } from '@/lib/types'
 import { DebtFormWrapperUnified } from '@/components/debts/debt-form-wrapper-unified'
 
@@ -169,69 +168,43 @@ export default function DebtsPage() {
   const totalRemaining = totalDebt - totalPaid
 
   return (
-    <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6">
-      {/* Header fijo profesional - Sticky en mobile y desktop */}
-      <div className="sticky top-16 lg:top-0 z-10 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b border-border/50 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-3 sm:py-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-          <div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">Deudas</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Gestiona tus deudas y pagos parciales</p>
-          </div>
-          <div className="flex gap-2 self-end sm:self-auto">
-            <DebtFormWrapperUnified userId={userId} onSuccess={handleRefresh} />
-          </div>
+    <div className="max-w-7xl mx-auto space-y-4 lg:space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight">Deudas</h1>
+          <p className="text-sm text-muted-foreground">Gestiona tus deudas y pagos parciales</p>
+        </div>
+        <div className="flex gap-2 self-end sm:self-auto">
+          <DebtFormWrapperUnified userId={userId} onSuccess={handleRefresh} />
         </div>
       </div>
 
-      {/* Stats Cards - Siempre visibles */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
-        {/* Total de Deudas */}
-        <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg overflow-hidden">
-          <CardContent className="p-3 sm:p-4 lg:p-5">
-            <div className="flex flex-col sm:flex-row items-center sm:gap-2 lg:gap-3">
-              <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full bg-white/20 flex items-center justify-center mb-1 sm:mb-0">
-                <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
-              </div>
-              <div className="flex-1 min-w-0 text-center sm:text-left">
-                <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 uppercase tracking-wide mb-0.5 sm:mb-1">Total</p>
-                <p className="text-base sm:text-xl lg:text-2xl font-bold truncate">{formatCurrency(totalDebt)}</p>
-                <p className="text-[10px] sm:text-xs opacity-75 mt-0.5">{debts.length} deuda{debts.length !== 1 ? 's' : ''}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats — tiles Pop Azul */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="fade-up rounded-[22px] bg-card p-3 sm:p-4 shadow-card">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[hsl(var(--chart-2)/0.16)]">
+            <AlertCircle className="h-5 w-5 text-[hsl(var(--chart-2))]" strokeWidth={2.4} />
+          </div>
+          <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Pendiente</p>
+          <p className="truncate text-base sm:text-lg font-black text-foreground">{formatCurrency(totalRemaining)}</p>
+        </div>
 
-        {/* Total Pagado */}
-        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-lg overflow-hidden">
-          <CardContent className="p-3 sm:p-4 lg:p-5">
-            <div className="flex flex-col sm:flex-row items-center sm:gap-2 lg:gap-3">
-              <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full bg-white/20 flex items-center justify-center mb-1 sm:mb-0">
-                <CircleCheck className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
-              </div>
-              <div className="flex-1 min-w-0 text-center sm:text-left">
-                <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 uppercase tracking-wide mb-0.5 sm:mb-1">Pagado</p>
-                <p className="text-base sm:text-xl lg:text-2xl font-bold truncate">{formatCurrency(totalPaid)}</p>
-                <p className="text-[10px] sm:text-xs opacity-75 mt-0.5">Acumulado</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="fade-up rounded-[22px] bg-card p-3 sm:p-4 shadow-card" style={{ animationDelay: '80ms' }}>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[hsl(var(--chart-1)/0.14)]">
+            <CircleCheck className="h-5 w-5 text-[hsl(var(--chart-1))]" strokeWidth={2.4} />
+          </div>
+          <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Pagado</p>
+          <p className="truncate text-base sm:text-lg font-black text-foreground">{formatCurrency(totalPaid)}</p>
+        </div>
 
-        {/* Saldo Pendiente */}
-        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0 shadow-lg overflow-hidden">
-          <CardContent className="p-3 sm:p-4 lg:p-5">
-            <div className="flex flex-col sm:flex-row items-center sm:gap-2 lg:gap-3">
-              <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full bg-white/20 flex items-center justify-center mb-1 sm:mb-0">
-                <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
-              </div>
-              <div className="flex-1 min-w-0 text-center sm:text-left">
-                <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 uppercase tracking-wide mb-0.5 sm:mb-1">Pendiente</p>
-                <p className="text-base sm:text-xl lg:text-2xl font-bold truncate">{formatCurrency(totalRemaining)}</p>
-                <p className="text-[10px] sm:text-xs opacity-75 mt-0.5">Por pagar</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="fade-up rounded-[22px] bg-card p-3 sm:p-4 shadow-card" style={{ animationDelay: '160ms' }}>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[hsl(var(--chart-4)/0.16)]">
+            <Landmark className="h-5 w-5 text-[hsl(var(--chart-4))]" strokeWidth={2.4} />
+          </div>
+          <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Total</p>
+          <p className="truncate text-base sm:text-lg font-black text-foreground">{formatCurrency(totalDebt)}</p>
+        </div>
       </div>
 
       {/* Lista de Deudas */}
@@ -244,17 +217,13 @@ export default function DebtsPage() {
           ))}
         </div>
       ) : (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 px-4">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-muted flex items-center justify-center mb-4">
-              <CreditCard className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
-            </div>
-            <p className="text-lg sm:text-xl font-medium text-center">No tienes deudas registradas</p>
-            <p className="text-sm sm:text-base text-muted-foreground text-center mt-2">
-              Agrega una deuda para comenzar a hacer seguimiento
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center rounded-[24px] bg-card py-14 shadow-card">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
+            <Landmark className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <p className="text-lg font-extrabold">No tienes deudas registradas</p>
+          <p className="mt-1 text-sm text-muted-foreground">Agrega una deuda para comenzar a hacer seguimiento</p>
+        </div>
       )}
     </div>
   )

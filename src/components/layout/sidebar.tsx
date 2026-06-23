@@ -35,9 +35,11 @@ const navigation = [
 interface SidebarProps {
   userName: string
   onCollapse?: (collapsed: boolean) => void
+  /** Notifica al layout cuando se abre/cierra el menú off-canvas en móvil */
+  onMobileMenuChange?: (open: boolean) => void
 }
 
-export function Sidebar({ userName, onCollapse }: SidebarProps) {
+export function Sidebar({ userName, onCollapse, onMobileMenuChange }: SidebarProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const pathname = location.pathname
@@ -51,6 +53,11 @@ export function Sidebar({ userName, onCollapse }: SidebarProps) {
   useEffect(() => {
     onCollapse?.(isCollapsed)
   }, [isCollapsed, onCollapse])
+
+  // Notificar al layout cuando se abre/cierra el menú móvil (para ocultar el BottomNav)
+  useEffect(() => {
+    onMobileMenuChange?.(isMobileMenuOpen)
+  }, [isMobileMenuOpen, onMobileMenuChange])
 
   // Cerrar menú móvil cuando cambia el tamaño de pantalla a escritorio
   useEffect(() => {

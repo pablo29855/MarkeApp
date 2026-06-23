@@ -1,76 +1,93 @@
-import { Card, CardContent } from "@/components/ui/card"
 import type { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { formatCurrency } from "@/lib/utils"
+import { useCountUp } from "@/hooks/use-count-up"
+
+type Accent = "blue" | "coral" | "amber" | "violet"
 
 interface StatsCardProps {
   title: string
-  value: string
+  /** Texto a mostrar cuando no hay valor numérico (p.ej. conteos) */
+  value?: string
+  /** Valor numérico a animar (conteo). Si se pasa, se formatea como moneda. */
+  numericValue?: number
   icon: LucideIcon
   description?: string
-  trend?: {
-    value: string
-    isPositive: boolean
-  }
+  accent?: Accent
+  /** Si es true y hay numericValue, se muestra como número entero (no moneda) */
+  plain?: boolean
   isLoading?: boolean
+  style?: React.CSSProperties
+  className?: string
 }
 
-export function StatsCard({ title, value, icon: Icon, description, trend, isLoading }: StatsCardProps) {
+const ACCENTS: Record<Accent, { box: string; icon: string }> = {
+  blue: { box: "bg-[hsl(var(--chart-1)/0.14)]", icon: "text-[hsl(var(--chart-1))]" },
+  coral: { box: "bg-[hsl(var(--chart-2)/0.16)]", icon: "text-[hsl(var(--chart-2))]" },
+  amber: { box: "bg-[hsl(var(--chart-3)/0.18)]", icon: "text-[hsl(var(--chart-3))]" },
+  violet: { box: "bg-[hsl(var(--chart-4)/0.16)]", icon: "text-[hsl(var(--chart-4))]" },
+}
+
+export function StatsCard({
+  title,
+  value,
+  numericValue,
+  icon: Icon,
+  description,
+  accent = "blue",
+  plain = false,
+  isLoading,
+  style,
+  className,
+}: StatsCardProps) {
+  const animated = useCountUp(numericValue ?? 0)
+  const a = ACCENTS[accent]
+
   if (isLoading) {
     return (
-      <Card className="animate-fade-in overflow-hidden">
-        <CardContent className="p-2 sm:p-3 lg:p-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="h-10 w-10 skeleton-shimmer rounded-lg" />
-            <div className="flex-1">
-              <div className="h-3 w-20 skeleton-shimmer mb-1" />
-              <div className="h-5 w-24 skeleton-shimmer mb-1" />
-              <div className="h-2 w-16 skeleton-shimmer" />
-            </div>
+      <div className="rounded-[22px] bg-card p-3 sm:p-4 shadow-card animate-fade-in">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 skeleton-shimmer rounded-2xl" />
+          <div className="flex-1">
+            <div className="h-3 w-20 skeleton-shimmer mb-1.5" />
+            <div className="h-5 w-24 skeleton-shimmer" />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     )
   }
 
+  const displayValue =
+    numericValue !== undefined
+      ? plain
+        ? Math.round(animated).toLocaleString("es-CO")
+        : formatCurrency(animated)
+      : value
+
   return (
-    <Card className="overflow-hidden border-muted/40">
-      {/* Layout vertical en móvil, horizontal en desktop */}
-      <CardContent className="p-2 sm:p-3 lg:p-4">
-        <div className="flex flex-col lg:flex-row items-center lg:items-center gap-2 lg:gap-3">
-          {/* Icono */}
-          <div className="flex-shrink-0 p-2 sm:p-2.5 rounded-lg bg-primary/10">
-            <Icon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-6 lg:w-6 text-primary" />
-          </div>
-          
-          {/* Contenido */}
-          <div className="flex-1 min-w-0 text-center lg:text-left w-full">
-            <p className="text-[10px] sm:text-xs lg:text-sm font-medium text-muted-foreground uppercase tracking-wide truncate">
-              {title}
-            </p>
-            <div className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">
-              {value}
-            </div>
-            {description && (
-              <p className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-0.5 truncate line-clamp-1">
-                {description}
-              </p>
-            )}
-            {trend && (
-              <div className="flex items-center justify-center lg:justify-start gap-1 mt-1">
-                <span className={cn(
-                  "text-[10px] sm:text-xs lg:text-sm font-medium px-1.5 py-0.5 rounded-full flex items-center gap-0.5",
-                  trend.isPositive 
-                    ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400" 
-                    : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-                )}>
-                  <span>{trend.isPositive ? "↑" : "↓"}</span>
-                  <span>{trend.value}</span>
-                </span>
-              </div>
-            )}
-          </div>
+    <div
+      className={cn(
+        "fade-up rounded-[22px] bg-card p-3 sm:p-4 shadow-card transition-transform active:scale-[.98]",
+        className,
+      )}
+      style={style}
+    >
+      <div className="flex items-center gap-3">
+        <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl", a.box)}>
+          <Icon className={cn("h-[22px] w-[22px]", a.icon)} strokeWidth={2.4} />
         </div>
-      </CardContent>
-    </Card>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+            {title}
+          </p>
+          <div className="truncate text-lg sm:text-xl font-black text-foreground">
+            {displayValue}
+          </div>
+          {description && (
+            <p className="truncate text-[11px] text-muted-foreground">{description}</p>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }

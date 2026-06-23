@@ -4,58 +4,83 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    /* === Pop Azul — modo claro === */
+    --background: 222 60% 97%;        /* #EDF2FF azulado muy claro */
+    --foreground: 222 33% 14%;        /* #1e2230 */
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 222 33% 14%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
-    --chart-1: 221 83% 53%;
-    --chart-2: 142 76% 36%;
-    --chart-3: 262 83% 58%;
-    --chart-4: 32 95% 44%;
-    --chart-5: 340 82% 52%;
-    --radius: 0.75rem;
+    --popover-foreground: 222 33% 14%;
+    --primary: 221 83% 60%;           /* #3B6EF6 azul de marca */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 47% 96%;         /* #eef1f7 tracks/chips */
+    --secondary-foreground: 222 33% 14%;
+    --muted: 222 47% 96%;
+    --muted-foreground: 220 14% 60%;  /* #8b93a7 */
+    --accent: 222 47% 96%;
+    --accent-foreground: 222 33% 14%;
+    --destructive: 11 100% 67%;       /* #FF7A59 coral = gastos */
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 38% 93%;            /* #e6eaf3 */
+    --input: 222 38% 93%;
+    --ring: 221 83% 60%;
+    /* charts / categorías */
+    --chart-1: 221 83% 60%;   /* #3B6EF6 azul */
+    --chart-2: 11 100% 67%;   /* #FF7A59 coral */
+    --chart-3: 41 100% 64%;   /* #FFC24B amarillo */
+    --chart-4: 232 100% 71%;  /* #6C7BFF violeta-azul */
+    --chart-5: 221 70% 75%;   /* #93b0f7 azul claro */
+    --radius: 1.25rem;        /* 20px — más redondeado */
+    /* acentos extra */
+    --accent-coral: 11 100% 67%;   /* #FF7A59 */
+    --accent-amber: 41 100% 64%;   /* #FFC24B */
+    --accent-violet: 232 100% 71%; /* #6C7BFF */
+    /* degradado de marca */
+    --brand-grad: linear-gradient(135deg, #3B6EF6, #2F5BE0);
+    --brand-grad-soft: linear-gradient(135deg, #3B6EF6, #6C7BFF);
+    /* sombras */
+    --shadow-card: 0 6px 16px rgba(30, 40, 80, 0.07);
+    --shadow-hero: 0 16px 34px -10px rgba(59, 110, 246, 0.55);
+    --shadow-button: 0 12px 26px -8px rgba(59, 110, 246, 0.6);
+    /* fondo de página */
+    --page-bg: linear-gradient(180deg, #EDF2FF, #F7F9FE);
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --card: 217 33% 17%;
-    --card-foreground: 210 40% 98%;
-    --popover: 217 33% 17%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 223 47% 11%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84% 65%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 224 76% 48%;
-    --chart-1: 217 91% 60%;
-    --chart-2: 142 76% 36%;
-    --chart-3: 262 83% 58%;
-    --chart-4: 32 95% 44%;
-    --chart-5: 340 82% 52%;
+    /* === Pop Azul — modo oscuro === */
+    --background: 228 35% 7%;         /* #0e1119 */
+    --foreground: 0 0% 100%;
+    --card: 225 25% 13%;
+    --card-foreground: 0 0% 100%;
+    --popover: 225 25% 13%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 221 100% 65%;          /* #4D7DFF */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 225 20% 18%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 225 20% 18%;
+    --muted-foreground: 227 13% 62%;  /* #8e95ad */
+    --accent: 225 20% 18%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 11 100% 67%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 225 20% 22%;
+    --input: 225 20% 22%;
+    --ring: 221 100% 65%;
+    --chart-1: 221 100% 65%;  /* #4D7DFF */
+    --chart-2: 11 100% 67%;
+    --chart-3: 41 100% 64%;
+    --chart-4: 232 100% 71%;
+    --chart-5: 221 70% 75%;
+    --accent-coral: 11 100% 67%;
+    --accent-amber: 41 100% 64%;
+    --accent-violet: 232 100% 71%;
+    --brand-grad: linear-gradient(135deg, #4D7DFF, #2F5BE0);
+    --brand-grad-soft: linear-gradient(135deg, #4D7DFF, #6C7BFF);
+    --shadow-card: 0 6px 16px rgba(0, 0, 0, 0.35);
+    --shadow-hero: 0 16px 34px -10px rgba(59, 110, 246, 0.45);
+    --shadow-button: 0 12px 26px -8px rgba(59, 110, 246, 0.5);
+    --page-bg: radial-gradient(120% 80% at 12% -5%, #16203f, #0e1119 46%, #0a0c12);
   }
 }
 
@@ -65,6 +90,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Nunito', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    background-image: var(--page-bg);
+    background-repeat: no-repeat;
+    min-height: 100vh;
   }
   
   /* Asegurar que el contenido de las páginas tenga el z-index correcto */
@@ -118,13 +147,85 @@
   .fade-in {
     @apply animate-fade-in;
   }
-  
+
   .fade-in-up {
     @apply animate-fade-in-up;
   }
-  
+
   .scale-in {
     @apply animate-scale-in;
+  }
+
+  /* === Pop Azul utilities === */
+  /* Degradado de marca (hero, FAB, botón primario) */
+  .bg-brand-grad {
+    background-image: var(--brand-grad);
+  }
+  .bg-brand-grad-soft {
+    background-image: var(--brand-grad-soft);
+  }
+  .bg-coral-grad {
+    background-image: linear-gradient(135deg, #FF7A59, #FF5C7A);
+  }
+  /* Sombras tematizadas */
+  .shadow-card-soft {
+    box-shadow: var(--shadow-card);
+  }
+  .shadow-hero {
+    box-shadow: var(--shadow-hero);
+  }
+  .shadow-button-pop {
+    box-shadow: var(--shadow-button);
+  }
+  /* Acentos cálidos como colores de texto/fondo */
+  .text-coral { color: hsl(var(--accent-coral)); }
+  .text-amber-pop { color: hsl(var(--accent-amber)); }
+  .text-violet-pop { color: hsl(var(--accent-violet)); }
+
+  /* Entrada fade-up escalonada para tarjetas */
+  .fade-up {
+    opacity: 0;
+    animation: fade-up 0.5s ease-out forwards;
+  }
+
+  /* FAB con pulso continuo en la sombra */
+  .animate-pulse-fab {
+    animation: pulse-fab 2.4s ease-in-out infinite;
+  }
+
+  /* Barra de progreso animada (scaleX desde la izquierda) */
+  .progress-fill {
+    transform-origin: left;
+    animation: grow-x 0.9s ease forwards;
+  }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-fab {
+  0%, 100% { box-shadow: 0 10px 24px -6px rgba(59, 110, 246, 0.6); }
+  50% { box-shadow: 0 14px 30px -4px rgba(59, 110, 246, 0.85); }
+}
+
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Respetar prefers-reduced-motion: desactivar animaciones de entrada/conteo */
+@media (prefers-reduced-motion: reduce) {
+  .fade-up,
+  .progress-fill,
+  .animate-pulse-fab,
+  .animate-fade-in,
+  .animate-fade-in-up,
+  .animate-scale-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 

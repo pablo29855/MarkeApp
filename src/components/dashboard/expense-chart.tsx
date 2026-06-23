@@ -1,113 +1,74 @@
-"use client"
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
 import type { ExpensesByCategory } from "@/lib/types"
-import { ChartSkeleton } from "@/components/ui/skeleton-loader"
+import { formatCurrency } from "@/lib/utils"
+import { chartColor, categoryIcon } from "@/lib/category-visuals"
+import { BarChart3 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface ExpenseChartProps {
   data: ExpensesByCategory[]
   isLoading?: boolean
+  className?: string
+  style?: React.CSSProperties
 }
 
-const COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-  "#10b981",
-  "#3b82f6",
-  "#f59e0b",
-  "#8b5cf6",
-  "#06b6d4",
-]
-
-export function ExpenseChart({ data, isLoading }: ExpenseChartProps) {
-  if (isLoading) {
-    return <ChartSkeleton className="col-span-full lg:col-span-2" />
-  }
-
-  const chartData = data.map((item, index) => ({
-    name: item.category,
-    value: item.total,
-    color: item.color || COLORS[index % COLORS.length],
-  }))
+export function ExpenseChart({ data, isLoading, className, style }: ExpenseChartProps) {
+  const sorted = [...data].sort((a, b) => b.total - a.total)
+  const max = sorted.length ? Math.max(...sorted.map((d) => d.total)) : 0
 
   return (
-    <Card className="col-span-full lg:col-span-2 border-muted/40">
-      <CardHeader className="p-3 sm:p-4 lg:p-6 pb-2 sm:pb-3 border-b">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl font-semibold">
-            Gastos por Categoría
-          </CardTitle>
-          {chartData.length > 0 && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50">
-              <span className="text-xs sm:text-sm font-medium text-muted-foreground">
-                {chartData.length} {chartData.length === 1 ? 'categoría' : 'categorías'}
-              </span>
-            </div>
-          )}
+    <div
+      className={cn("fade-up rounded-[24px] bg-card p-4 sm:p-5 shadow-card", className)}
+      style={style}
+    >
+      <h3 className="mb-4 text-base font-black text-foreground">Gastos por categoría</h3>
+
+      {isLoading ? (
+        <div className="space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-8 skeleton-shimmer rounded-xl" />
+          ))}
         </div>
-      </CardHeader>
-      <CardContent className="p-3 sm:p-4 lg:p-6 pt-3 sm:pt-4">
-        {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={250} className="sm:!h-[300px] lg:!h-[350px]">
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={(props: any) => {
-                  const { name, percent } = props
-                  // En móvil, solo mostrar porcentaje si es mayor al 10%
-                  if (typeof window !== 'undefined' && window.innerWidth < 640 && percent < 0.1) {
-                    return null
-                  }
-                  return `${name} ${(percent * 100).toFixed(0)}%`
-                }}
-                outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 65 : 100}
-                innerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 35 : 60}
-                fill="#8884d8"
-                dataKey="value"
-                animationBegin={0}
-                animationDuration={800}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={entry.color}
+      ) : sorted.length > 0 ? (
+        <div className="space-y-4">
+          {sorted.map((item, index) => {
+            const pct = max > 0 ? (item.total / max) * 100 : 0
+            const Icon = categoryIcon(item.category)
+            const color = chartColor(index)
+            return (
+              <div key={item.category}>
+                <div className="mb-1.5 flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Icon className="h-4 w-4 shrink-0" style={{ color }} strokeWidth={2.6} />
+                    <span className="truncate text-[13px] font-bold text-foreground">
+                      {item.category}
+                    </span>
+                  </div>
+                  <span className="shrink-0 text-[13px] font-black text-foreground">
+                    {formatCurrency(item.total)}
+                  </span>
+                </div>
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-secondary">
+                  <div
+                    className="progress-fill h-full rounded-full"
+                    style={{
+                      width: `${pct}%`,
+                      backgroundColor: color,
+                      animationDelay: `${0.3 + index * 0.08}s`,
+                    }}
                   />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value: number) => `$${value.toLocaleString()}`}
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--popover))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '0.5rem',
-                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                  fontSize: '12px',
-                }}
-              />
-              <Legend 
-                verticalAlign="bottom"
-                height={36}
-                iconType="circle"
-                wrapperStyle={{ fontSize: '11px' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-[300px] sm:h-[350px] text-muted-foreground gap-3">
-            <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-2xl sm:text-3xl">📊</span>
-            </div>
-            <p className="text-xs sm:text-sm">No hay datos de gastos para mostrar</p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted-foreground">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
+            <BarChart3 className="h-7 w-7" />
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <p className="text-sm">No hay gastos este mes</p>
+        </div>
+      )}
+    </div>
   )
 }

@@ -1,116 +1,61 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency } from '@/lib/utils'
-import { TrendingUp, TrendingDown, Wallet } from 'lucide-react'
+import { useCountUp } from '@/hooks/use-count-up'
+import { cn } from '@/lib/utils'
 
 interface BalanceCardProps {
   totalIncome: number
   totalExpenses: number
   totalDebts: number
+  className?: string
+  style?: React.CSSProperties
 }
 
-export function BalanceCard({ totalIncome, totalExpenses, totalDebts }: BalanceCardProps) {
+export function BalanceCard({ totalIncome, totalExpenses, totalDebts, className, style }: BalanceCardProps) {
   const balance = totalIncome - totalExpenses - totalDebts
   const spent = totalExpenses + totalDebts
-  const spentPercentage = totalIncome > 0 ? (spent / totalIncome) * 100 : 0
-  const balancePercentage = totalIncome > 0 ? (balance / totalIncome) * 100 : 0
+  const animated = useCountUp(balance)
 
-  const getBalanceColor = () => {
-    if (balance > 0) return 'text-green-600 dark:text-green-400'
-    if (balance < 0) return 'text-red-600 dark:text-red-400'
-    return 'text-gray-600 dark:text-gray-400'
-  }
-
-  const getProgressColor = () => {
-    if (spentPercentage <= 50) return 'bg-green-500'
-    if (spentPercentage <= 75) return 'bg-yellow-500'
-    return 'bg-red-500'
-  }
+  const chip =
+    balance > 0
+      ? '🎉 ¡Vas genial este mes!'
+      : balance === 0
+        ? '✨ Sin movimientos aún'
+        : '⚠️ Cuida tu balance'
 
   return (
-    <Card className="col-span-full lg:col-span-2">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Wallet className="h-5 w-5" />
-              Balance Financiero
-            </CardTitle>
-            <CardDescription>Resumen de tu situación financiera actual</CardDescription>
+    <div
+      className={cn(
+        'fade-up relative overflow-hidden rounded-[28px] bg-brand-grad p-5 sm:p-6 text-white shadow-hero',
+        className,
+      )}
+      style={style}
+    >
+      {/* Círculos decorativos */}
+      <div className="pointer-events-none absolute -right-10 -top-12 h-44 w-44 rounded-full bg-[#FFC24B]/30 blur-[2px]" />
+      <div className="pointer-events-none absolute -bottom-16 -left-8 h-40 w-40 rounded-full bg-[#FF7A59]/30" />
+
+      <div className="relative">
+        <p className="text-[13px] font-semibold text-white/80">Tu balance disponible</p>
+        <p className="mt-1 text-[34px] sm:text-[39px] font-black leading-tight tracking-tight">
+          {formatCurrency(animated)}
+        </p>
+
+        <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold backdrop-blur-sm">
+          {chip}
+        </span>
+
+        {/* Desglose ingresos / gastos */}
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-white/10 px-3 py-2.5 backdrop-blur-sm">
+            <p className="text-[11px] font-semibold text-white/75">Ingresos</p>
+            <p className="text-base font-black">{formatCurrency(totalIncome)}</p>
+          </div>
+          <div className="rounded-2xl bg-white/10 px-3 py-2.5 backdrop-blur-sm">
+            <p className="text-[11px] font-semibold text-white/75">Gastos + Deudas</p>
+            <p className="text-base font-black">{formatCurrency(spent)}</p>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Balance Principal */}
-        <div className="text-center space-y-2 p-4 rounded-lg bg-muted/50">
-          <p className="text-sm text-muted-foreground">Balance Disponible</p>
-          <p className={`text-4xl font-bold ${getBalanceColor()}`}>
-            {formatCurrency(balance)}
-          </p>
-          <div className="flex items-center justify-center gap-2 text-sm">
-            {balance > 0 ? (
-              <>
-                <TrendingUp className="h-4 w-4 text-green-600" />
-                <span className="text-green-600">Saldo positivo</span>
-              </>
-            ) : balance < 0 ? (
-              <>
-                <TrendingDown className="h-4 w-4 text-red-600" />
-                <span className="text-red-600">Saldo negativo</span>
-              </>
-            ) : (
-              <span className="text-gray-600">Sin movimientos</span>
-            )}
-          </div>
-        </div>
-
-        {/* Desglose */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Ingresos</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {formatCurrency(totalIncome)}
-              </p>
-            </div>
-            <div className="text-right space-y-1">
-              <p className="text-sm font-medium">Gastos + Deudas</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {formatCurrency(spent)}
-              </p>
-            </div>
-          </div>
-
-          {/* Barra de progreso */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Gastado: {spentPercentage.toFixed(1)}%</span>
-              <span>Disponible: {balancePercentage.toFixed(1)}%</span>
-            </div>
-            <div className="relative h-3 w-full overflow-hidden rounded-full bg-muted">
-              <div 
-                className={`h-full transition-all ${getProgressColor()}`}
-                style={{ width: `${Math.min(spentPercentage, 100)}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Detalles */}
-          <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-            <div>
-              <p className="text-xs text-muted-foreground">Solo Gastos</p>
-              <p className="text-lg font-semibold text-orange-600 dark:text-orange-400">
-                {formatCurrency(totalExpenses)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Solo Deudas</p>
-              <p className="text-lg font-semibold text-purple-600 dark:text-purple-400">
-                {formatCurrency(totalDebts)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

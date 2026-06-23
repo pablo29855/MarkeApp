@@ -11,6 +11,15 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Nunito', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Nunito', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
+      boxShadow: {
+        card: 'var(--shadow-card)',
+        hero: 'var(--shadow-hero)',
+        'button-pop': 'var(--shadow-button)',
+      },
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',

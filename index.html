@@ -4,23 +4,27 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" id="theme-color-meta" content="#EDF2FF" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="MarkeApp" />
     <meta name="description" content="Aplicación para gestionar gastos, ingresos y deudas personales" />
     <link rel="manifest" href="/manifest.json" />
+    <!-- Fuente Nunito (Pop Azul): títulos y montos 700/800/900 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <title>MarkeApp - Gestión de Gastos</title>
     <!-- Estilos inline para evitar flash de tema oscuro -->
     <style>
       html, body {
-        background-color: #fafbfc;
-        color: #0f172a;
+        background-color: #EDF2FF;
+        color: #1e2230;
       }
       html.dark, html.dark body {
-        background-color: #0f172a;
-        color: #fafbfc;
+        background-color: #0e1119;
+        color: #ffffff;
       }
     </style>
     <!-- Script inline para aplicar el tema antes de que React monte y evitar flash de tema -->

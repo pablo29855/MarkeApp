@@ -45,3 +45,6 @@ dist-ssr
 *.tsbuildinfo
 next-env.d.ts
 tsconfig.tsbuildinfo
+
+# Others
+design_handoff_pop_azul

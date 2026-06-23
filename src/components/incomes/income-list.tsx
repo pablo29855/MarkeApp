@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -21,7 +19,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { formatCurrency, parseLocalDate } from '@/lib/utils'
-import { Pencil, Trash2, FileText, TrendingUp } from 'lucide-react'
+import { Pencil, Trash2, TrendingUp, Briefcase, Landmark, Banknote, Wallet, type LucideIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useNotification } from '@/hooks/use-notification'
 import { format } from 'date-fns'
@@ -64,103 +62,75 @@ export function IncomeList({ incomes, onUpdate }: IncomeListProps) {
     }
   }
 
-  const getIncomeTypeInfo = (type: string) => {
+  const getIncomeTypeInfo = (type: string): { label: string; Icon: LucideIcon } => {
     switch (type) {
       case 'nomina':
-        return { label: 'Nómina', icon: '💼', color: 'bg-blue-500/10 text-blue-700 dark:text-blue-400' }
+        return { label: 'Nómina', Icon: Briefcase }
       case 'transferencia':
-        return { label: 'Transferencia', icon: '🏦', color: 'bg-green-500/10 text-green-700 dark:text-green-400' }
+        return { label: 'Transferencia', Icon: Landmark }
       case 'efectivo':
-        return { label: 'Efectivo', icon: '💵', color: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400' }
+        return { label: 'Efectivo', Icon: Banknote }
       default:
-        return { label: type, icon: '💰', color: 'bg-gray-500/10 text-gray-700 dark:text-gray-400' }
+        return { label: type, Icon: Wallet }
     }
   }
 
   if (incomes.length === 0) {
     return (
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-muted flex items-center justify-center mb-4">
-            <TrendingUp className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
-          </div>
-          <p className="text-lg sm:text-xl font-medium text-center">No tienes ingresos registrados</p>
-          <p className="text-sm sm:text-base text-muted-foreground text-center mt-2">
-            Agrega tu primer ingreso para comenzar a hacer seguimiento
-          </p>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col items-center justify-center rounded-[24px] bg-card py-14 shadow-card">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
+          <TrendingUp className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <p className="text-lg font-extrabold">No tienes ingresos registrados</p>
+        <p className="mt-1 text-sm text-muted-foreground">Agrega tu primer ingreso para comenzar</p>
+      </div>
     )
   }
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-2.5">
         {incomes.map((income) => {
-          const typeInfo = getIncomeTypeInfo(income.income_type)
-          
+          const { label, Icon } = getIncomeTypeInfo(income.income_type)
+
           return (
-            <Card key={income.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 h-full">
-              <CardContent className="p-3 sm:p-4 lg:p-5 h-full flex flex-col">
-                {/* Header con título, tipo y botones */}
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-base sm:text-lg lg:text-xl leading-tight line-clamp-2 mb-2">
-                      {income.description}
-                    </h3>
-                    <Badge 
-                      variant="secondary" 
-                      className={`text-xs sm:text-sm inline-flex items-center ${typeInfo.color}`}
-                    >
-                      <span className="hidden sm:inline mr-1">{typeInfo.icon}</span>
-                      <span className="truncate">{typeInfo.label}</span>
-                    </Badge>
-                  </div>
-                  
-                  {/* Botones de acción en el header */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => setDeleteId(income.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                      onClick={() => setEditingIncome(income)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+            <div
+              key={income.id}
+              className="fade-up flex items-center gap-3 rounded-[20px] bg-card p-3 shadow-card transition-transform active:scale-[.99]"
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[hsl(var(--chart-1)/0.14)]">
+                <Icon className="h-5 w-5 text-[hsl(var(--chart-1))]" strokeWidth={2.6} />
+              </div>
 
-                {/* Información adicional */}
-                <div className="space-y-1 text-xs sm:text-sm text-muted-foreground mb-3 flex-1">
-                  <p className="truncate">
-                    {format(parseLocalDate(income.income_date), "PPP", {
-                      locale: es,
-                    })}
-                  </p>
-                  {income.notes && (
-                    <p className="flex items-center gap-1 truncate">
-                      <FileText className="h-3.5 w-3.5 shrink-0" />
-                      <span className="truncate">{income.notes}</span>
-                    </p>
-                  )}
-                </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-extrabold text-foreground">{income.description}</p>
+                <p className="truncate text-[11.5px] text-muted-foreground">
+                  {label} · {format(parseLocalDate(income.income_date), "d MMM", { locale: es })}
+                </p>
+              </div>
 
-                {/* Monto al final del card */}
-                <div className="mt-auto pt-3 border-t">
-                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-600 dark:text-blue-400 break-all">
-                    {formatCurrency(Number(income.amount))}
-                  </p>
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-sm font-black text-primary">+{formatCurrency(Number(income.amount))}</span>
+                <div className="flex items-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-primary"
+                    onClick={() => setEditingIncome(income)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    onClick={() => setDeleteId(income.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )
         })}
       </div>

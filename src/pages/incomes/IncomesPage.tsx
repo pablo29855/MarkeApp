@@ -5,10 +5,10 @@ import { ExportIncomesButton } from '@/components/incomes/export-incomes-button'
 import { IncomeList } from '@/components/incomes/income-list'
 import { SkeletonGrid } from '@/components/ui/skeleton-card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
-import { Card, CardContent } from '@/components/ui/card'
 import { FiltersSection } from '@/components/ui/filters-section'
 import { formatCurrency, parseLocalDate } from '@/lib/utils'
 import { TrendingUp } from 'lucide-react'
+import { useCountUp } from '@/hooks/use-count-up'
 import type { Income } from '@/lib/types'
 
 export default function IncomesPage() {
@@ -177,43 +177,41 @@ export default function IncomesPage() {
     { value: 'efectivo', label: '💵 Efectivo' },
   ]
 
+  const totalIncome = getTotalIncome()
+  const animatedTotal = useCountUp(totalIncome)
+
   if (loading) {
     return <LoadingCheckOverlay message="Cargando ingresos..." />
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6">
-      {/* Header fijo profesional - Sticky en mobile y desktop */}
-      <div className="sticky top-16 lg:top-0 z-10 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b border-border/50 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-3 sm:py-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-          <div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">Ingresos</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">Gestiona y registra tus ingresos</p>
-          </div>
-          <div className="flex gap-2 self-end sm:self-auto">
-            <ExportIncomesButton incomes={filteredIncomes} />
-            <IncomeFormWrapper onSuccess={handleRefresh} />
-          </div>
+    <div className="max-w-7xl mx-auto space-y-4 lg:space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight">Ingresos</h1>
+          <p className="text-sm text-muted-foreground">Gestiona y registra tus ingresos</p>
+        </div>
+        <div className="flex gap-2 self-end sm:self-auto">
+          <ExportIncomesButton incomes={filteredIncomes} />
+          <IncomeFormWrapper onSuccess={handleRefresh} />
         </div>
       </div>
 
-      {/* Card de Total - Compacto en móvil */}
-      <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg overflow-hidden">
-        <CardContent className="p-4 sm:p-5 lg:p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm sm:text-base lg:text-lg opacity-90 mb-1 sm:mb-2">Total de Ingresos</p>
-              <div className="flex items-baseline gap-1 sm:gap-2">
-                <span className="text-3xl sm:text-4xl lg:text-6xl font-bold truncate">{formatCurrency(getTotalIncome())}</span>
-              </div>
-              <p className="text-xs sm:text-sm lg:text-base opacity-90 mt-1 sm:mt-2">{filteredIncomes.length} registro{filteredIncomes.length !== 1 ? 's' : ''}</p>
-            </div>
-            <div className="ml-2 sm:ml-4 flex-shrink-0">
-              <TrendingUp className="h-10 w-10 sm:h-16 sm:w-16 lg:h-20 lg:w-20 opacity-20" />
-            </div>
+      {/* Card de Total — degradado Pop Azul */}
+      <div className="fade-up relative overflow-hidden rounded-[26px] bg-brand-grad p-5 sm:p-6 text-white shadow-hero">
+        <div className="pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full bg-[#6C7BFF]/30" />
+        <div className="relative flex items-center justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="mb-1 text-sm font-semibold text-white/80">Total de ingresos</p>
+            <span className="block truncate text-[34px] font-black leading-tight">{formatCurrency(animatedTotal)}</span>
+            <p className="mt-1 text-xs font-semibold text-white/80">
+              {filteredIncomes.length} registro{filteredIncomes.length !== 1 ? 's' : ''}
+            </p>
           </div>
-        </CardContent>
-      </Card>
+          <TrendingUp className="ml-3 h-16 w-16 shrink-0 opacity-20" />
+        </div>
+      </div>
 
       {/* Filtros */}
       <FiltersSection

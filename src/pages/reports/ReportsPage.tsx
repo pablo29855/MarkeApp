@@ -8,11 +8,10 @@ import { ComparisonBarChart } from '@/components/reports/comparison-bar-chart'
 import { CategoryTable } from '@/components/reports/category-table'
 import { IncomeTable } from '@/components/reports/income-table'
 import { FinancialBalanceCard } from '@/components/reports/financial-balance-card'
-import { Card, CardContent } from '@/components/ui/card'
 import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { formatCurrency, formatDateLocal } from '@/lib/utils'
-import { BarChart3 } from 'lucide-react'
+import { BarChart3, TrendingUp } from 'lucide-react'
 import type { ExpensesByCategory, IncomesByType } from '@/lib/types'
 
 export default function ReportsPage() {
@@ -222,51 +221,27 @@ export default function ReportsPage() {
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
       <div className="flex flex-col gap-3 sm:gap-4 lg:gap-6">
-      {/* Header fijo profesional - Sticky en mobile y desktop */}
-      <div className="sticky top-16 lg:top-0 z-10 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b border-border/50 -mx-3 px-3 sm:-mx-4 sm:px-4 lg:-mx-8 lg:px-8 py-3 sm:py-4">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
-          Reportes
-        </h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Analiza tus gastos y compara períodos
-        </p>
+      {/* Header */}
+      <div className="pt-1">
+        <h1 className="text-2xl font-black tracking-tight">Reportes</h1>
+        <p className="text-sm text-muted-foreground">Analiza tus gastos y compara períodos</p>
       </div>
 
-      {/* Estadísticas */}
-      <div className="grid gap-2 sm:gap-3 lg:gap-4 grid-cols-2 lg:grid-cols-2">
-        <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg">
-          <CardContent className="p-3 sm:p-4 lg:p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 mb-1 sm:mb-2">Total de Gastos</p>
-                <div className="flex items-baseline gap-1 sm:gap-2">
-                  <span className="text-2xl sm:text-3xl lg:text-4xl font-bold truncate">{formatCurrency(totalExpenses)}</span>
-                </div>
-                <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 mt-1 sm:mt-2 truncate">{periodLabel}</p>
-              </div>
-              <div className="ml-2 sm:ml-4 shrink-0">
-                <BarChart3 className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 opacity-20" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Estadísticas — Ingresos (azul) / Gastos (coral) */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="fade-up relative overflow-hidden rounded-[24px] bg-brand-grad p-4 text-white shadow-hero">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-white/80">Ingresos</p>
+          <p className="mt-1 truncate text-2xl font-black">{formatCurrency(totalIncome)}</p>
+          <p className="mt-1 truncate text-[11px] font-semibold text-white/75">{periodLabel}</p>
+          <TrendingUp className="absolute -right-3 -top-3 h-16 w-16 opacity-15" />
+        </div>
 
-        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-lg">
-          <CardContent className="p-3 sm:p-4 lg:p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 mb-1 sm:mb-2">Total de Ingresos</p>
-                <div className="flex items-baseline gap-1 sm:gap-2">
-                  <span className="text-2xl sm:text-3xl lg:text-4xl font-bold truncate">{formatCurrency(totalIncome)}</span>
-                </div>
-                <p className="text-[10px] sm:text-xs lg:text-sm opacity-90 mt-1 sm:mt-2 truncate">{periodLabel}</p>
-              </div>
-              <div className="ml-2 sm:ml-4 shrink-0">
-                <BarChart3 className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 opacity-20" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="fade-up relative overflow-hidden rounded-[24px] bg-coral-grad p-4 text-white shadow-hero" style={{ animationDelay: '80ms' }}>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-white/80">Gastos</p>
+          <p className="mt-1 truncate text-2xl font-black">{formatCurrency(totalExpenses)}</p>
+          <p className="mt-1 truncate text-[11px] font-semibold text-white/75">{periodLabel}</p>
+          <BarChart3 className="absolute -right-3 -top-3 h-16 w-16 opacity-15" />
+        </div>
       </div>
 
       {/* Filtros */}

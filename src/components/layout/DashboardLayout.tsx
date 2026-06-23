@@ -1,5 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react'
 import { Sidebar } from '@/components/layout/sidebar'
+import { BottomNav } from '@/components/layout/bottom-nav'
+import { GlobalAddExpense } from '@/components/layout/global-add-expense'
 import { createClient } from '@/lib/supabase/client'
 import { scrollbarClasses } from '@/lib/styles'
 
@@ -10,7 +12,8 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [userName, setUserName] = useState('Usuario')
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const [isPWA, setIsPWA] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     async function getUser() {
@@ -25,25 +28,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     getUser()
   }, [])
 
-  useEffect(() => {
-    // Detectar si está en modo PWA
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                        (window.navigator as any).standalone === true
-    setIsPWA(isStandalone)
-  }, [])
-
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar userName={userName} onCollapse={setIsCollapsed} />
+      <Sidebar userName={userName} onCollapse={setIsCollapsed} onMobileMenuChange={setMobileMenuOpen} />
       <main className={`transition-all duration-300 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
         {/* Contenedor con scroll optimizado */}
         <div className={`h-[100vh] overflow-y-auto overscroll-behavior-y-contain scroll-smooth ${scrollbarClasses}`}>
-          {/* Espaciado limpio y profesional - Más espacio inferior en móvil para mejor efecto de cards */}
-          <div className={`pt-16 lg:pt-6 px-4 sm:px-5 md:px-6 lg:px-8 min-h-full ${isPWA ? 'pb-8 sm:pb-6 lg:pb-4' : 'pb-32 sm:pb-24 lg:pb-8'}`}>
+          {/* Espaciado: deja sitio para el BottomNav (~72px + safe-area) en móvil */}
+          <div className="pt-16 lg:pt-6 px-4 sm:px-5 md:px-6 lg:px-8 min-h-full pb-[104px] lg:pb-8">
             {children}
           </div>
         </div>
       </main>
+
+      {/* Navegación inferior estilo app (solo móvil/tablet) + FAB.
+          Se oculta mientras el menú off-canvas está abierto para no solaparse. */}
+      {!mobileMenuOpen && <BottomNav userName={userName} onAdd={() => setAddOpen(true)} />}
+
+      {/* Bottom sheet / dialog global de "Agregar gasto" disparado por el FAB */}
+      <GlobalAddExpense open={addOpen} onOpenChange={setAddOpen} />
     </div>
   )
 }
