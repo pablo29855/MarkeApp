@@ -22,7 +22,7 @@ const items = [
  * Barra de navegación inferior estilo app nativa (solo móvil/tablet).
  * Rediseñada sin header superior para un aire diferente.
  */
-export function BottomNav({ onAdd, onMenuClick }: BottomNavProps) {
+export function BottomNav({ onAdd }: BottomNavProps) {
   const { pathname } = useLocation()
 
   const slot = (active: boolean) =>
