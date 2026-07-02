@@ -223,7 +223,7 @@ export function DebtCard({ debt, payments, onUpdate, isActive = false }: DebtCar
 
   return (
     <>
-      <Card className="transition-smooth animate-fade-in group overflow-hidden relative rounded-[24px] shadow-[0_6px_16px_rgba(30,40,80,.07)] bg-white border-none">
+      <Card className="transition-smooth animate-fade-in group overflow-hidden relative rounded-[24px] shadow-[0_6px_16px_rgba(30,40,80,.07)] bg-card border-none">
         <div className={cn(
           "pointer-events-none absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500",
           config.gradientColor,
@@ -244,7 +244,7 @@ export function DebtCard({ debt, payments, onUpdate, isActive = false }: DebtCar
           >
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-[46px] w-[46px] items-center justify-center rounded-[14px] bg-[#eef1f7] shrink-0 text-primary">
+                <div className="flex h-[46px] w-[46px] items-center justify-center rounded-[14px] bg-secondary shrink-0 text-primary">
                   {(() => {
                     const cat = debt.category ? DEBT_CATEGORIES[debt.category as keyof typeof DEBT_CATEGORIES] : undefined
                     const CategoryIcon = cat?.icon ?? Receipt
@@ -252,19 +252,19 @@ export function DebtCard({ debt, payments, onUpdate, isActive = false }: DebtCar
                   })()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-[17px] text-[#1e2230] truncate">{debt.name}</h3>
+                  <h3 className="font-bold text-[17px] text-foreground truncate">{debt.name}</h3>
                   {debt.debt_date && (
-                    <p className="text-[13px] font-semibold text-[#8b93a7]">Vence {format(parseLocalDate(debt.debt_date), "d MMM", { locale: es })}</p>
+                    <p className="text-[13px] font-semibold text-muted-foreground">Vence {format(parseLocalDate(debt.debt_date), "d MMM", { locale: es })}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-[#8b93a7] hover:text-primary hover:bg-primary/10" onClick={(e) => { e.stopPropagation(); setShowEditDialog(true); }}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={(e) => { e.stopPropagation(); setShowEditDialog(true); }}>
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-[#8b93a7] hover:text-destructive hover:bg-destructive/10" onClick={(e) => { e.stopPropagation(); setDeleteId(debt.id); }}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={(e) => { e.stopPropagation(); setDeleteId(debt.id); }}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-[#8b93a7]" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
                     {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                   </Button>
                 </div>
@@ -273,7 +273,7 @@ export function DebtCard({ debt, payments, onUpdate, isActive = false }: DebtCar
               {/* Progress and Payment Button */}
               <div>
                 <div className="flex justify-between items-end mb-2">
-                  <span className="text-[13px] font-bold text-[#8b93a7]">
+                  <span className="text-[13px] font-bold text-muted-foreground">
                     ${Number(debt.paid_amount).toLocaleString()} de ${Number(debt.total_amount).toLocaleString()}
                   </span>
                   <span className="text-[13px] font-black text-[#3B6EF6]">
@@ -281,7 +281,7 @@ export function DebtCard({ debt, payments, onUpdate, isActive = false }: DebtCar
                   </span>
                 </div>
                 
-                <div className="h-2 w-full rounded-full bg-[#eef1f7] overflow-hidden mb-4">
+                <div className="h-2 w-full rounded-full bg-secondary overflow-hidden mb-4">
                   <div 
                     className={cn("h-full rounded-full transition-transform duration-1000 ease-out origin-left", isActive ? "bg-[#3B6EF6]" : "bg-[#FF7A59]")} 
                     style={{ transform: `scaleX(${progressPercentage / 100})` }}

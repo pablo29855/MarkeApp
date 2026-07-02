@@ -81,24 +81,24 @@ export function DistributionChart({ expenses, incomes, title }: DistributionChar
   }
 
   return (
-    <Card className="border-0 shadow-[0_6px_16px_rgba(30,40,80,.07)] rounded-[24px] bg-white overflow-hidden">
+    <Card className="border-0 shadow-[0_6px_16px_rgba(30,40,80,.07)] rounded-[24px] bg-card overflow-hidden">
       <CardHeader className="p-6 pb-4">
-        <CardTitle className="text-[17px] font-extrabold text-[#1E293B]">
+        <CardTitle className="text-[17px] font-extrabold text-foreground">
           {title || "Distribución general"}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 pt-0">
         <Tabs defaultValue="expenses" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-[#F1F5F9] rounded-xl p-1 h-auto mb-2">
+          <TabsList className="grid w-full grid-cols-2 bg-muted rounded-xl p-1 h-auto mb-2">
             <TabsTrigger 
               value="expenses"
-              className="rounded-lg py-2 text-sm font-bold data-[state=active]:bg-white data-[state=active]:text-[#1E293B] data-[state=active]:shadow-sm transition-all"
+              className="rounded-lg py-2 text-sm font-bold data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all"
             >
               Gastos
             </TabsTrigger>
             <TabsTrigger 
               value="incomes"
-              className="rounded-lg py-2 text-sm font-bold data-[state=active]:bg-white data-[state=active]:text-[#1E293B] data-[state=active]:shadow-sm transition-all"
+              className="rounded-lg py-2 text-sm font-bold data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all"
             >
               Ingresos
             </TabsTrigger>

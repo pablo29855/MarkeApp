@@ -261,17 +261,17 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories 
           
           {/* Content */}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[17px] font-extrabold text-[#aab1c2] line-through decoration-2">
+            <p className="truncate text-[17px] font-extrabold text-muted-foreground line-through decoration-2">
               {item.product_name} {item.quantity > 1 ? `x${item.quantity}` : ''}
             </p>
-            <p className="truncate text-[13px] font-extrabold text-[#aab1c2]">
+            <p className="truncate text-[13px] font-extrabold text-muted-foreground">
               {categoryInfo?.name || 'Categoría'}
             </p>
           </div>
           
           {/* Acciones */}
           <div className="flex shrink-0 items-center">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-[#aab1c2] hover:text-destructive" onClick={confirmDelete}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={confirmDelete}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
@@ -303,7 +303,7 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories 
         {/* Checkbox (28px) */}
         <button 
           onClick={handlePurchaseClick} 
-          className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[8px] border-[2px] border-[#d3dae8] bg-transparent hover:border-primary transition-colors focus:outline-none"
+          className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[8px] border-[2px] border-border bg-transparent hover:border-primary transition-colors focus:outline-none"
           aria-label="Marcar como comprado"
         />
         
@@ -312,7 +312,7 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories 
           <p className="truncate text-[17px] font-black text-foreground cursor-pointer">
             {item.product_name} {item.quantity > 1 ? `x${item.quantity}` : ''}
           </p>
-          <p className="truncate text-[13px] font-extrabold text-[#aab1c2]">
+          <p className="truncate text-[13px] font-extrabold text-muted-foreground">
             {categoryInfo?.name || 'Categoría'}
           </p>
         </div>
@@ -322,14 +322,14 @@ export function ShoppingItemCard({ item, marketCategoryId, onUpdate, categories 
           variant="secondary" 
           size="sm" 
           onClick={handlePurchaseClick} 
-          className="h-[34px] shrink-0 rounded-full bg-[#eef1f7] px-[14px] text-[13px] font-black text-primary hover:bg-primary/10"
+          className="h-[34px] shrink-0 rounded-full bg-secondary px-[14px] text-[13px] font-black text-primary hover:bg-primary/10"
         >
           → Gasto
         </Button>
 
         {/* Acciones */}
         <div className="flex shrink-0 items-center ml-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-[#aab1c2] hover:text-destructive" onClick={confirmDelete}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={confirmDelete}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>

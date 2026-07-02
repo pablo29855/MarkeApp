@@ -10,6 +10,7 @@ import { TrendingUp, CreditCard, ShoppingCart, Landmark } from 'lucide-react'
 import type { ExpensesByCategory, IncomesByType } from '@/lib/types'
 import { ProfileDialog } from '@/components/profile/profile-dialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useRealtimeRefresh } from '@/hooks/use-realtime-refresh'
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
@@ -190,28 +191,13 @@ export default function DashboardPage() {
     }
   }, [fetchDashboardData])
 
-  // Suscripción en tiempo real
-  useEffect(() => {
-    if (!userId) return
-
-    const supabase = createClient()
-    const channel = supabase.channel('dashboard-changes')
-
-    const handleRefresh = () => {
-      fetchDashboardData()
-    }
-
-    channel
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses', filter: `user_id=eq.${userId}` }, handleRefresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'incomes', filter: `user_id=eq.${userId}` }, handleRefresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'debts', filter: `user_id=eq.${userId}` }, handleRefresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'shopping_list', filter: `user_id=eq.${userId}` }, handleRefresh)
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [userId, fetchDashboardData])
+  // Refresco automático: realtime + evento global data-changed + volver de background
+  useRealtimeRefresh(
+    'dashboard-changes',
+    ['expenses', 'incomes', 'debts', 'shopping_list'],
+    userId || undefined,
+    fetchDashboardData,
+  )
 
   if (loading) {
     return <LoadingCheckOverlay message="Cargando dashboard..." />
@@ -247,7 +233,7 @@ export default function DashboardPage() {
       </header>
 
       {/* Hero balance + tiles */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
         <BalanceCard
           className="lg:col-span-2"
           totalIncome={dashboardData.totalIncome}
@@ -292,7 +278,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Categorías + movimientos */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
         <ExpenseChart
           className="lg:col-span-2"
           data={dashboardData.expensesByCategoryData}

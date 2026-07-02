@@ -168,7 +168,7 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate, isActive = fals
         "w-full h-[46px] rounded-[14px] font-bold text-[15px]",
         isActive 
           ? "bg-[#3B6EF6] text-white hover:bg-[#3B6EF6]/90" 
-          : "bg-[#eef1f7] text-[#3B6EF6] hover:bg-[#eef1f7]/80"
+          : "bg-secondary text-[#3B6EF6] hover:bg-secondary/80"
       )}
       onClick={(e) => {
         e.stopPropagation()
