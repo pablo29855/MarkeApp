@@ -318,7 +318,7 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate, isActive = fals
       <Drawer open={open} onOpenChange={setOpen}>
         {triggerButton}
         <DrawerContent onOpenAutoFocus={(e) => e.preventDefault()}>
-          <div className={`max-h-[90vh] overflow-y-auto px-4 pb-8 ${scrollbarClasses}`}>
+          <div className={`max-h-[90vh] overflow-y-auto px-4 ${scrollbarClasses}`}>
             <DrawerHeader className="px-0">
               <DrawerTitle className="text-xl font-black">Abonar a Deuda</DrawerTitle>
               <DrawerDescription className="text-sm">Registra un pago para reducir el saldo pendiente de esta deuda</DrawerDescription>
@@ -333,7 +333,7 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate, isActive = fals
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {triggerButton}
-      <DialogContent className={`max-w-md w-[calc(100%-2rem)] sm:w-full max-h-[90vh] overflow-y-auto px-4 pb-8 ${scrollbarClasses}`} onOpenAutoFocus={(e) => e.preventDefault()}>
+      <DialogContent className={`max-w-md w-[calc(100%-2rem)] sm:w-full max-h-[90vh] overflow-y-auto px-4 ${scrollbarClasses}`} onOpenAutoFocus={(e) => e.preventDefault()}>
         <div className="no-ios-zoom">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl">Abonar a Deuda</DialogTitle>

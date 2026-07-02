@@ -325,12 +325,10 @@ export function OptionalSection({
   )
 }
 
-/** Pie de formulario fijo al fondo del sheet/dialog, siempre visible sobre el teclado.
- *  Los márgenes negativos cancelan el padding del contenedor scrolleable (px-4 pb-8)
- *  para que el fondo cubra de borde a borde y el contenido no se vea detrás al scrollear. */
+/** Pie de formulario fijo al fondo del sheet/dialog, siempre visible sobre el teclado. */
 export function FormStickyFooter({ children }: { children: ReactNode }) {
   return (
-    <div className="sticky bottom-0 z-10 -mx-4 -mb-8 mt-2 border-t border-border bg-background px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+    <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-border bg-background px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-6">
       {children}
     </div>
   )
