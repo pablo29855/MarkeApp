@@ -17,7 +17,7 @@ import { getValidationMessage } from '@/lib/validation-messages'
 import { createClient } from '@/lib/supabase/client'
 import { useNotification } from '@/hooks/use-notification'
 import { getTodayLocal, formatDateLocal, parseLocalDate } from '@/lib/utils'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Briefcase, Landmark, Banknote } from 'lucide-react'
 import type { Income } from '@/lib/types'
 
 interface IncomeFormProps {
@@ -189,9 +189,9 @@ export function IncomeForm({ onSuccess, income, onClose }: IncomeFormProps) {
   }
 
   const incomeTypeOptions = [
-    { value: 'nomina', label: 'Nómina', icon: '💼' },
-    { value: 'transferencia', label: 'Transferencia Bancaria', icon: '🏦' },
-    { value: 'efectivo', label: 'Efectivo', icon: '💵' },
+    { value: 'nomina', label: 'Nómina', icon: <Briefcase className="h-4 w-4 text-primary" /> },
+    { value: 'transferencia', label: 'Transferencia Bancaria', icon: <Landmark className="h-4 w-4 text-primary" /> },
+    { value: 'efectivo', label: 'Efectivo', icon: <Banknote className="h-4 w-4 text-primary" /> },
   ]
 
   return (

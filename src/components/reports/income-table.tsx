@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CategoryGlyph } from "@/lib/category-visuals"
 import type { IncomesByType } from "@/lib/types"
 
 interface IncomeTableProps {
@@ -39,7 +40,7 @@ export function IncomeTable({ data, title, isLoading }: IncomeTableProps) {
               <div key={item.type} className="space-y-2.5">
                 <div className="flex justify-between items-center text-sm font-bold text-foreground">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{item.icon}</span>
+                    <CategoryGlyph name={item.type} className="h-4 w-4 shrink-0" style={{ color }} />
                     <span className="truncate max-w-[150px] sm:max-w-[200px]">{item.type}</span>
                   </div>
                   <div className="flex items-center gap-2">

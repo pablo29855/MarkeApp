@@ -10,6 +10,7 @@ import { ExportButton } from '@/components/expenses/export-button'
 import { FiltersSection } from '@/components/ui/filters-section'
 import { useCountUp } from '@/hooks/use-count-up'
 import { useRealtimeRefresh } from '@/hooks/use-realtime-refresh'
+import { CategoryGlyph } from '@/lib/category-visuals'
 
 export default function ExpensesPage() {
   const [loading, setLoading] = useState(true)
@@ -158,7 +159,7 @@ export default function ExpensesPage() {
     ...categories.map((category) => ({
       id: category.id,
       name: category.name,
-      icon: category.icon,
+      icon: <CategoryGlyph name={category.name} className="h-4 w-4 text-primary" />,
     }))
   ]
 

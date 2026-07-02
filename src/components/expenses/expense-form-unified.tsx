@@ -15,6 +15,7 @@ import { DateInput } from "@/components/ui/date-input"
 import { FormFieldError } from "@/components/ui/form-field-error"
 import { getValidationMessage } from "@/lib/validation-messages"
 import { Loader2, MapPin } from "lucide-react"
+import { CategoryGlyph } from "@/lib/category-visuals"
 import type { Expense, Category } from "@/lib/types"
 
 interface ExpenseFormProps {
@@ -387,7 +388,7 @@ export function ExpenseFormUnified({ expense, categories, userId, onSuccess, onC
               {categories.map((category) => (
                 <SelectItem key={category.id} value={category.id} className="text-sm sm:text-base cursor-pointer">
                   <span className="flex items-center gap-2">
-                    <span>{category.icon}</span>
+                    <CategoryGlyph name={category.name} className="h-4 w-4 text-primary" />
                     <span>{category.name}</span>
                   </span>
                 </SelectItem>

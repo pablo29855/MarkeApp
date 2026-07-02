@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { FormFieldError } from "@/components/ui/form-field-error"
 import { getValidationMessage } from "@/lib/validation-messages"
 import { Loader2 } from "lucide-react"
+import { CategoryGlyph } from "@/lib/category-visuals"
 import type { Category, ShoppingItem } from "@/lib/types"
 
 interface ShoppingFormProps {
@@ -239,7 +240,7 @@ export function ShoppingForm({ userId, categories, onSuccess, item }: ShoppingFo
                     categories.map((category) => (
                       <SelectItem key={category.id} value={category.id} className="text-sm sm:text-base cursor-pointer">
                         <span className="flex items-center gap-2">
-                          <span>{category.icon}</span>
+                          <CategoryGlyph name={category.name} className="h-4 w-4 text-primary" />
                           <span>{category.name}</span>
                         </span>
                       </SelectItem>
