@@ -36,7 +36,7 @@ export function BottomNav({ onAdd }: BottomNavProps) {
       {/* Floating Action Button (+) - Centrado y elevado por encima del navbar */}
       <div 
         className="lg:hidden fixed left-1/2 -translate-x-1/2 z-[100] pointer-events-auto"
-        style={{ bottom: 'calc(46px + max(env(safe-area-inset-bottom, 0px), 4px))' }}
+        style={{ bottom: 'calc(46px + env(safe-area-inset-bottom, 0px) * 0.3)' }}
       >
         <button
           type="button"
@@ -53,7 +53,7 @@ export function BottomNav({ onAdd }: BottomNavProps) {
         style={{ 
           WebkitMaskImage: 'radial-gradient(circle at 50% -2px, transparent 24px, black 25px)',
           maskImage: 'radial-gradient(circle at 50% -2px, transparent 24px, black 25px)',
-          paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 4px)'
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) * 0.3)'
         }}
       >
         <div className="mx-auto grid grid-cols-6 h-[56px] max-w-md items-stretch justify-items-center px-1">
