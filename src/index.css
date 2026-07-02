@@ -239,13 +239,13 @@ html, body {
 @supports (-webkit-touch-callout: none) {
   /* Solo en iOS/Safari */
   html {
-    height: 100%;
-    overflow: auto;
+    height: 100dvh;
+    height: -webkit-fill-available;
   }
   
   body {
-    height: 100%;
-    overflow: auto;
+    height: 100dvh;
+    height: -webkit-fill-available;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
   }
@@ -611,5 +611,14 @@ div:has(> iframe[src*="turnstile"]) {
     max-width: 100% !important;
     transform: scale(0.95) !important;
     transform-origin: center !important;
+  }
+}
+
+/* PWA iOS standalone: asegurar que la app ocupe toda la pantalla */
+@media all and (display-mode: standalone) {
+  html, body {
+    height: 100dvh;
+    height: -webkit-fill-available;
+    overflow: hidden;
   }
 }
