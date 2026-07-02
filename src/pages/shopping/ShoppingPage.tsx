@@ -6,6 +6,7 @@ import { LoadingCheckOverlay } from '@/components/ui/loading-check'
 import { SkeletonShoppingGrid } from '@/components/ui/skeleton-card'
 import type { ShoppingItem, Category } from '@/lib/types'
 import { ShoppingCart, Plus } from 'lucide-react'
+import { useRealtimeRefresh } from '@/hooks/use-realtime-refresh'
 
 export default function ShoppingPage() {
   const [loading, setLoading] = useState(true)
@@ -75,33 +76,8 @@ export default function ShoppingPage() {
     fetchData()
   }, [])
 
-  // Suscripción en tiempo real
-  useEffect(() => {
-    if (!userId) return
-
-    const supabase = createClient()
-    
-    const channel = supabase
-      .channel('shopping-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'shopping_list',
-          filter: `user_id=eq.${userId}`
-        },
-        () => {
-          // Usar handleRefresh para mostrar el skeleton durante la actualización
-          handleRefresh()
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [userId, handleRefresh])
+  // Refresco automático: realtime + evento global data-changed + volver de background
+  useRealtimeRefresh('shopping-changes', ['shopping_list'], userId || undefined, handleRefresh)
 
   if (loading) {
     return <LoadingCheckOverlay message="Cargando lista de compras..." />
@@ -117,7 +93,7 @@ export default function ShoppingPage() {
       <div className="flex items-center gap-4 py-2">
         <div className="flex-1">
           <h1 className="text-[26px] font-black tracking-tight text-foreground">Lista de compras</h1>
-          <p className="text-[15px] font-extrabold text-[#8b93a7]">{purchasedItems} de {totalItems} comprados</p>
+          <p className="text-[15px] font-extrabold text-muted-foreground">{purchasedItems} de {totalItems} comprados</p>
         </div>
       </div>
 
@@ -149,7 +125,7 @@ export default function ShoppingPage() {
             categories={categories} 
             onSuccess={handleRefresh} 
             trigger={
-              <div className="flex h-[72px] w-full cursor-pointer items-center justify-center rounded-[20px] border-[2px] border-dashed border-[#d3dae8] bg-transparent text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-primary active:scale-[.99]">
+              <div className="flex h-[72px] w-full cursor-pointer items-center justify-center rounded-[20px] border-[2px] border-dashed border-border bg-transparent text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-primary active:scale-[.99]">
                 <Plus className="mr-3 h-5 w-5 text-primary" />
                 <span className="text-[15px] font-extrabold">Añadir producto...</span>
               </div>

@@ -7,6 +7,7 @@ import { formatCurrency } from '@/lib/utils'
 import { Landmark } from 'lucide-react'
 import type { Debt, DebtPayment } from '@/lib/types'
 import { DebtFormWrapperUnified } from '@/components/debts/debt-form-wrapper-unified'
+import { useRealtimeRefresh } from '@/hooks/use-realtime-refresh'
 
 export default function DebtsPage() {
   const [loading, setLoading] = useState(true)
@@ -81,82 +82,14 @@ export default function DebtsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Solo al montar - fetchDebtsWithPayments está estable
 
-  // Suscripción en tiempo real para debts
-  useEffect(() => {
-    if (!userId) return
-
-    const supabase = createClient()
-    
-    const channel = supabase
-      .channel('debts-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'debts',
-        },
-        async (payload: any) => {
-          console.log('[Debts] Event detected:', payload.eventType, payload)
-          
-          // Evitar actualización si ya está refrescando
-          if (isRefreshing) return
-          
-          // Verificar si el cambio pertenece al usuario actual
-          const record = payload.new || payload.old
-          if (record && record.user_id === userId) {
-            setIsRefreshing(true)
-            await fetchDebtsWithPayments()
-            setTimeout(() => setIsRefreshing(false), 300)
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('[Debts] Subscription status:', status)
-      })
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId])
-
-  // Suscripción en tiempo real para debt_payments
-  useEffect(() => {
-    if (!userId) return
-
-    const supabase = createClient()
-    
-    const channel = supabase
-      .channel('debt-payments-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'debt_payments',
-        },
-        async (payload: any) => {
-          console.log('[Debts] Payment event detected:', payload.eventType, payload)
-          
-          // Evitar actualización si ya está refrescando
-          if (isRefreshing) return
-          
-          // Los pagos siempre activan actualización ya que están relacionados con deudas del usuario
-          setIsRefreshing(true)
-          await fetchDebtsWithPayments()
-          setTimeout(() => setIsRefreshing(false), 300)
-        }
-      )
-      .subscribe((status) => {
-        console.log('[Debts] Payments subscription status:', status)
-      })
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId])
+  // Refresco automático: realtime + evento global data-changed + volver de background.
+  // debt_payments no tiene columna user_id → sin filtro server-side (RLS limita los eventos).
+  useRealtimeRefresh(
+    'debts-changes',
+    ['debts', { table: 'debt_payments', filterByUser: false }],
+    userId || undefined,
+    handleRefresh,
+  )
 
   if (loading) {
     return <LoadingCheckOverlay message="Cargando deudas..." />
@@ -172,8 +105,8 @@ export default function DebtsPage() {
       {/* Header */}
       <div className="flex items-center gap-4 py-2">
         <div className="flex-1">
-          <h1 className="text-[26px] font-black tracking-tight text-[#1e2230]">Deudas</h1>
-          <p className="text-[15px] font-extrabold text-[#8b93a7]">Seguimiento de pagos</p>
+          <h1 className="text-[26px] font-black tracking-tight text-foreground">Deudas</h1>
+          <p className="text-[15px] font-extrabold text-muted-foreground">Seguimiento de pagos</p>
         </div>
         <div className="hidden lg:block">
           <DebtFormWrapperUnified userId={userId} onSuccess={handleRefresh} />
@@ -182,13 +115,13 @@ export default function DebtsPage() {
 
       {/* Stats — tiles Pop Azul */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <div className="fade-up rounded-[24px] bg-white p-5 shadow-[0_6px_16px_rgba(30,40,80,.07)]">
-          <p className="text-[13px] font-bold text-[#8b93a7]">Pendiente</p>
+        <div className="fade-up rounded-[24px] bg-card p-5 shadow-[0_6px_16px_rgba(30,40,80,.07)]">
+          <p className="text-[13px] font-bold text-muted-foreground">Pendiente</p>
           <p className="mt-1 truncate text-[22px] font-black text-[#FF7A59]">$ {formatCurrency(totalRemaining).replace('$', '').trim()}</p>
         </div>
 
-        <div className="fade-up rounded-[24px] bg-white p-5 shadow-[0_6px_16px_rgba(30,40,80,.07)]" style={{ animationDelay: '80ms' }}>
-          <p className="text-[13px] font-bold text-[#8b93a7]">Pagado</p>
+        <div className="fade-up rounded-[24px] bg-card p-5 shadow-[0_6px_16px_rgba(30,40,80,.07)]" style={{ animationDelay: '80ms' }}>
+          <p className="text-[13px] font-bold text-muted-foreground">Pagado</p>
           <p className="mt-1 truncate text-[22px] font-black text-[#3B6EF6]">$ {formatCurrency(totalPaid).replace('$', '').trim()}</p>
         </div>
       </div>

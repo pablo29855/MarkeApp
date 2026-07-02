@@ -9,6 +9,7 @@ import { ExpenseListWrapper } from '@/components/expenses/expense-list-wrapper'
 import { ExportButton } from '@/components/expenses/export-button'
 import { FiltersSection } from '@/components/ui/filters-section'
 import { useCountUp } from '@/hooks/use-count-up'
+import { useRealtimeRefresh } from '@/hooks/use-realtime-refresh'
 
 export default function ExpensesPage() {
   const [loading, setLoading] = useState(true)
@@ -85,32 +86,8 @@ export default function ExpensesPage() {
     fetchInitialData()
   }, [fetchExpenses])
 
-  // Suscripción en tiempo real para actualizar automáticamente
-  useEffect(() => {
-    if (!userId) return
-
-    const supabase = createClient()
-    
-    const channel = supabase
-      .channel('expenses-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'expenses',
-          filter: `user_id=eq.${userId}`
-        },
-        () => {
-          handleRefresh()
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [userId, handleRefresh])
+  // Refresco automático: realtime + evento global data-changed + volver de background
+  useRealtimeRefresh('expenses-changes', ['expenses'], userId || undefined, handleRefresh)
 
   useEffect(() => {
     applyFilters()
@@ -196,8 +173,8 @@ export default function ExpensesPage() {
       {/* Header Gastos Style */}
       <div className="flex items-center justify-between pt-1">
         <div>
-          <h1 className="text-[26px] font-black tracking-tight text-[#1e2230]">Gastos</h1>
-          <p className="text-[15px] font-extrabold text-[#8b93a7]">Gestiona y controla</p>
+          <h1 className="text-[26px] font-black tracking-tight text-foreground">Gastos</h1>
+          <p className="text-[15px] font-extrabold text-muted-foreground">Gestiona y controla</p>
         </div>
         <div className="flex gap-2 items-center">
           <ExportButton expenses={filteredExpenses} />

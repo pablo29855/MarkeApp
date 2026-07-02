@@ -13,6 +13,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { formatCurrency, formatDateLocal } from '@/lib/utils'
 import { BarChart3, TrendingUp } from 'lucide-react'
 import type { ExpensesByCategory, IncomesByType } from '@/lib/types'
+import { useRealtimeRefresh } from '@/hooks/use-realtime-refresh'
 
 export default function ReportsPage() {
   const [searchParams] = useSearchParams()
@@ -153,26 +154,8 @@ export default function ReportsPage() {
   }, [fetchData])
 
   // Suscripción en tiempo real
-  useEffect(() => {
-    if (!userId) return
-
-    const supabase = createClient()
-    const channel = supabase.channel('reports-changes')
-
-    const handleRefresh = () => {
-      fetchData()
-    }
-
-    channel
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses', filter: `user_id=eq.${userId}` }, handleRefresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'incomes', filter: `user_id=eq.${userId}` }, handleRefresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'debts', filter: `user_id=eq.${userId}` }, handleRefresh)
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [userId, fetchData])
+  // Refresco automático: realtime + evento global data-changed + volver de background
+  useRealtimeRefresh('reports-changes', ['expenses', 'incomes', 'debts'], userId || undefined, fetchData)
 
   async function getExpensesByCategory(
     userId: string,
@@ -243,13 +226,13 @@ export default function ReportsPage() {
       : ''
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+    <div className="max-w-7xl mx-auto">
       <div className="flex flex-col gap-3 sm:gap-4 lg:gap-6">
       {/* Header */}
       <div className="pt-2 flex justify-between items-center mb-2">
         <div>
-          <h1 className="text-[28px] font-black text-[#1E293B] tracking-tight">Reportes</h1>
-          <p className="text-[15px] font-bold text-[#94A3B8]">{periodLabel}</p>
+          <h1 className="text-[28px] font-black text-foreground tracking-tight">Reportes</h1>
+          <p className="text-[15px] font-bold text-muted-foreground">{periodLabel}</p>
         </div>
       </div>
 
@@ -281,7 +264,7 @@ export default function ReportsPage() {
       {isComparing ? (
         <div className="flex flex-col gap-3 sm:gap-4 lg:gap-6">
           {/* Gráficos unificados de distribución (Comparación) */}
-          <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2 [&>*]:min-w-0">
             <DistributionChart 
               title={`Distribución - ${periodLabel}`}
               expenses={expensesByCategory} 
@@ -317,7 +300,7 @@ export default function ReportsPage() {
                     </div>
                     
                     {/* Tablas de detalle lado a lado */}
-                    <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2">
+                    <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2 [&>*]:min-w-0">
                       <CategoryTable data={expensesByCategory} title={`${periodLabel}`} />
                       <CategoryTable data={compareExpensesByCategory} title={`${comparePeriodLabel}`} />
                     </div>
@@ -350,7 +333,7 @@ export default function ReportsPage() {
                     </div>
                     
                     {/* Tablas de detalle lado a lado */}
-                    <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2">
+                    <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2 [&>*]:min-w-0">
                       <IncomeTable data={incomesByType} title={`${periodLabel}`} />
                       <IncomeTable data={compareIncomesByType} title={`${comparePeriodLabel}`} />
                     </div>
@@ -369,7 +352,7 @@ export default function ReportsPage() {
           />
           
           {/* Detalles en acordeones */}
-          <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2 [&>*]:min-w-0">
             {(!reportType || reportType === 'expenses') && (
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="expenses" className="border rounded-lg bg-card shadow-sm">

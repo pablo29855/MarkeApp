@@ -5,6 +5,7 @@ import { IncomeFormWrapper } from '@/components/incomes/income-form-wrapper'
 import { ShoppingFormWrapper } from '@/components/shopping/shopping-form-wrapper'
 import { DebtFormWrapperUnified } from '@/components/debts/debt-form-wrapper-unified'
 import { useLocation } from 'react-router-dom'
+import { notifyDataChanged } from '@/hooks/use-realtime-refresh'
 import type { Category } from '@/lib/types'
 
 interface GlobalAddExpenseProps {
@@ -43,7 +44,7 @@ export function GlobalAddExpense({ open, onOpenChange }: GlobalAddExpenseProps) 
       <IncomeFormWrapper
         open={open}
         onOpenChange={onOpenChange}
-        onSuccess={() => onOpenChange(false)}
+        onSuccess={() => { notifyDataChanged('incomes'); onOpenChange(false) }}
         trigger={<span className="hidden" aria-hidden />}
       />
     )
@@ -56,7 +57,7 @@ export function GlobalAddExpense({ open, onOpenChange }: GlobalAddExpenseProps) 
         userId={userId}
         open={open}
         onOpenChange={onOpenChange}
-        onSuccess={() => onOpenChange(false)}
+        onSuccess={() => { notifyDataChanged('shopping_list'); onOpenChange(false) }}
         trigger={<span className="hidden" aria-hidden />}
       />
     )
@@ -68,7 +69,7 @@ export function GlobalAddExpense({ open, onOpenChange }: GlobalAddExpenseProps) 
         userId={userId}
         open={open}
         onOpenChange={onOpenChange}
-        onSuccess={() => onOpenChange(false)}
+        onSuccess={() => { notifyDataChanged('debts'); onOpenChange(false) }}
         trigger={<span className="hidden" aria-hidden />}
       />
     )
@@ -80,7 +81,7 @@ export function GlobalAddExpense({ open, onOpenChange }: GlobalAddExpenseProps) 
       userId={userId}
       open={open}
       onOpenChange={onOpenChange}
-      onSuccess={() => onOpenChange(false)}
+      onSuccess={() => { notifyDataChanged('expenses'); onOpenChange(false) }}
       trigger={<span className="hidden" aria-hidden />}
     />
   )

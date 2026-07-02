@@ -28,7 +28,7 @@ export function BottomNav({ onAdd }: BottomNavProps) {
   const slot = (active: boolean) =>
     cn(
       'flex flex-col items-center justify-center gap-1 pt-1.5 pb-0.5 text-[9px] sm:text-[10px] font-bold transition-colors w-full h-full',
-      active ? 'text-primary' : 'text-[#aab1c2]',
+      active ? 'text-primary' : 'text-muted-foreground',
     )
 
   return (

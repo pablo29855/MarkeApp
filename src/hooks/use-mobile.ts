@@ -1,6 +1,8 @@
 import * as React from 'react'
 
-const MOBILE_BREAKPOINT = 768
+// Alineado con el layout: BottomNav/FAB se muestran bajo `lg` (1024px),
+// así los formularios abren como drawer en el mismo rango en que la UI es "app móvil".
+const MOBILE_BREAKPOINT = 1024
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)

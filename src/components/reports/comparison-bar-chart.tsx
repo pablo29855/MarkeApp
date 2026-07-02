@@ -46,7 +46,8 @@ export function ComparisonBarChart({ data1, data2, label1, label2, isLoading }: 
       </CardHeader>
       <CardContent className="relative z-10 p-3 sm:p-4 lg:p-6 pt-2 sm:pt-3">
         {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300} className="sm:h-[400px] lg:h-[450px]">
+          <div className="h-[300px] sm:h-[400px] lg:h-[450px] w-full min-w-0">
+          <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
               <XAxis 
@@ -94,6 +95,7 @@ export function ComparisonBarChart({ data1, data2, label1, label2, isLoading }: 
               />
             </BarChart>
           </ResponsiveContainer>
+          </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-[300px] sm:h-[400px] lg:h-[450px] text-muted-foreground gap-2 sm:gap-3">
             <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-muted flex items-center justify-center">

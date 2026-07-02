@@ -39,7 +39,8 @@ export function CategoryPieChart({ data, title }: CategoryPieChartProps) {
         </CardHeader>
         <CardContent className="p-3 sm:p-4 lg:p-6 pt-2 sm:pt-3">
           {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+            <div className="h-[250px] sm:h-[300px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={chartData}
@@ -62,6 +63,7 @@ export function CategoryPieChart({ data, title }: CategoryPieChartProps) {
                 <Legend wrapperStyle={{ fontSize: '12px' }} />
               </PieChart>
             </ResponsiveContainer>
+            </div>
           ) : (
             <div className="flex items-center justify-center h-[250px] sm:h-[300px] text-xs sm:text-sm text-muted-foreground">
               No hay datos para este período

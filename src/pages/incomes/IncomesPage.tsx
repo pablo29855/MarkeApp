@@ -9,6 +9,7 @@ import { FiltersSection } from '@/components/ui/filters-section'
 import { formatCurrency, parseLocalDate } from '@/lib/utils'
 import { Briefcase, Landmark, Banknote } from 'lucide-react'
 import { useCountUp } from '@/hooks/use-count-up'
+import { useRealtimeRefresh } from '@/hooks/use-realtime-refresh'
 import type { Income } from '@/lib/types'
 
 export default function IncomesPage() {
@@ -79,32 +80,8 @@ export default function IncomesPage() {
     fetchInitialData()
   }, [fetchIncomes])
 
-  // Suscripción en tiempo real para actualizar automáticamente
-  useEffect(() => {
-    if (!userId) return
-
-    const supabase = createClient()
-    
-    const channel = supabase
-      .channel('incomes-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'incomes',
-          filter: `user_id=eq.${userId}`
-        },
-        () => {
-          handleRefresh()
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [userId, handleRefresh])
+  // Refresco automático: realtime + evento global data-changed + volver de background
+  useRealtimeRefresh('incomes-changes', ['incomes'], userId || undefined, handleRefresh)
 
   useEffect(() => {
     applyFilters()
@@ -190,8 +167,8 @@ export default function IncomesPage() {
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-3">
           <div className="flex-1">
-            <h1 className="text-[26px] font-black tracking-tight text-[#1e2230]">Ingresos</h1>
-            <p className="text-[15px] font-extrabold text-[#8b93a7]">Tus entradas del mes</p>
+            <h1 className="text-[26px] font-black tracking-tight text-foreground">Ingresos</h1>
+            <p className="text-[15px] font-extrabold text-muted-foreground">Tus entradas del mes</p>
           </div>
         </div>
         <div className="flex gap-2 items-center">
@@ -253,8 +230,8 @@ export default function IncomesPage() {
           
           {/* Ingresos por tipo */}
           {filteredIncomes.length > 0 && (
-            <div className="rounded-[24px] bg-white p-5 shadow-sm mt-4">
-              <h3 className="text-[15px] font-black text-[#1e2230] mb-4">Ingresos por tipo</h3>
+            <div className="rounded-[24px] bg-card p-5 shadow-sm mt-4">
+              <h3 className="text-[15px] font-black text-foreground mb-4">Ingresos por tipo</h3>
               <div className="space-y-4">
                 {Object.entries(
                   filteredIncomes.reduce((acc, income) => {
@@ -269,15 +246,15 @@ export default function IncomesPage() {
                   return (
                     <div key={type} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2 font-bold text-[#1e2230]">
-                          <div className="text-[#8b93a7]">
+                        <div className="flex items-center gap-2 font-bold text-foreground">
+                          <div className="text-muted-foreground">
                             {filterOption?.icon}
                           </div>
                           <span>{filterOption?.label || type}</span>
                         </div>
-                        <span className="font-bold text-[#1e2230]">{percentage}%</span>
+                        <span className="font-bold text-foreground">{percentage}%</span>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-[#e6eaf3]">
+                      <div className="h-2 w-full rounded-full bg-muted">
                         <div 
                           className="h-full rounded-full bg-primary" 
                           style={{ width: `${percentage}%` }}
