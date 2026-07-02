@@ -205,9 +205,7 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
         
         <CardHeader className="space-y-3 pb-6 relative z-10">
-          <div className="mx-auto w-[72px] h-[72px] bg-brand-grad-soft rounded-[24px] flex items-center justify-center shadow-hero mb-2 transition-transform hover:scale-110">
-            <span className="text-3xl font-black text-white">M</span>
-          </div>
+          <img src="/logo.svg" alt="MarkeApp" className="mx-auto w-[72px] h-[72px] rounded-[16px] shadow-hero mb-2 transition-transform hover:scale-110" />
           <CardTitle className="text-[26px] font-black text-center text-foreground">
             MarkeApp
           </CardTitle>
