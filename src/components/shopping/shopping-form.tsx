@@ -8,13 +8,11 @@ import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { FormFieldError } from "@/components/ui/form-field-error"
+import { CategoryChipGrid, FormStickyFooter } from "@/components/ui/form-chips"
 import { getValidationMessage } from "@/lib/validation-messages"
-import { Loader2 } from "lucide-react"
-import { CategoryGlyph } from "@/lib/category-visuals"
+import { Loader2, Minus, Plus } from "lucide-react"
 import type { Category, ShoppingItem } from "@/lib/types"
 
 interface ShoppingFormProps {
@@ -168,114 +166,136 @@ export function ShoppingForm({ userId, categories, onSuccess, item }: ShoppingFo
     }
   }
 
+  const quantityNumber = Number.parseInt(getNumericValue(formData.quantity)) || 0
+
+  const setQuantity = (next: number) => {
+    setFormData({ ...formData, quantity: formatNumber(String(Math.max(1, next))) })
+    if (fieldErrors.quantity) {
+      setFieldErrors({ ...fieldErrors, quantity: '' })
+      setShowFieldError(null)
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-2">
-      <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="product_name" className="text-xs sm:text-sm">Nombre del Producto *</Label>
-            <div ref={productNameRef} className="relative">
-              <FormFieldError 
-                error={fieldErrors.product_name}
-                show={showFieldError === 'product_name'}
-                fieldRef={productNameRef}
-                submitAttempt={submitAttempt}
-              />
-              <Input
-                id="product_name"
-                value={formData.product_name}
-                onChange={(e) => {
-                  setFormData({ ...formData, product_name: e.target.value })
-                  if (fieldErrors.product_name) {
-                    setFieldErrors({ ...fieldErrors, product_name: '' })
-                    setShowFieldError(null)
-                  }
-                }}
-                placeholder="Ej: Leche"
-                disabled={isLoading}
-                className="text-sm sm:text-base h-9 sm:h-10"
-              />
-            </div>
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+      {/* Nombre del producto */}
+      <div className="space-y-1.5">
+        <Label htmlFor="product_name" className="text-xs sm:text-sm">Nombre del Producto *</Label>
+        <div ref={productNameRef} className="relative">
+          <FormFieldError
+            error={fieldErrors.product_name}
+            show={showFieldError === 'product_name'}
+            fieldRef={productNameRef}
+            submitAttempt={submitAttempt}
+          />
+          <Input
+            id="product_name"
+            value={formData.product_name}
+            onChange={(e) => {
+              setFormData({ ...formData, product_name: e.target.value })
+              if (fieldErrors.product_name) {
+                setFieldErrors({ ...fieldErrors, product_name: '' })
+                setShowFieldError(null)
+              }
+            }}
+            placeholder="Ej: Leche"
+            disabled={isLoading}
+            className="text-sm sm:text-base h-10 sm:h-11 rounded-[14px]"
+          />
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="quantity" className="text-xs sm:text-sm">Cantidad *</Label>
-              <div ref={quantityRef} className="relative">
-                <FormFieldError 
-                  error={fieldErrors.quantity}
-                  show={showFieldError === 'quantity'}
-                  fieldRef={quantityRef}
-                  submitAttempt={submitAttempt}
-                />
-                <Input
-                  id="quantity"
-                  type="text"
-                  inputMode="numeric"
-                  value={formData.quantity}
-                  onChange={(e) => {
-                    setFormData({ ...formData, quantity: formatNumber(e.target.value) })
-                    if (fieldErrors.quantity) {
-                      setFieldErrors({ ...fieldErrors, quantity: '' })
-                      setShowFieldError(null)
-                    }
-                  }}
-                  placeholder="1"
-                  disabled={isLoading}
-                  className="text-sm sm:text-base h-9 sm:h-10"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="category_id" className="text-xs sm:text-sm">Categoría</Label>
-              <Select
-                value={formData.category_id}
-                onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-                disabled={isLoading}
-              >
-                <SelectTrigger id="category_id" className="text-sm sm:text-base h-9 sm:h-10">
-                  <SelectValue placeholder="Seleccionar" />
-                </SelectTrigger>
-                <SelectContent position="popper" sideOffset={8} align="start">
-                  {categories && categories.length > 0 ? (
-                    categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id} className="text-sm sm:text-base cursor-pointer">
-                        <span className="flex items-center gap-2">
-                          <CategoryGlyph name={category.name} className="h-4 w-4 text-primary" />
-                          <span>{category.name}</span>
-                        </span>
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="none" disabled className="text-sm sm:text-base">
-                      No hay categorías disponibles
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="flex gap-2 sm:gap-3 pt-2">
+      {/* Cantidad: stepper − / + */}
+      <div className="space-y-1.5">
+        <Label htmlFor="quantity" className="text-xs sm:text-sm">Cantidad *</Label>
+        <div ref={quantityRef} className="relative">
+          <FormFieldError
+            error={fieldErrors.quantity}
+            show={showFieldError === 'quantity'}
+            fieldRef={quantityRef}
+            submitAttempt={submitAttempt}
+          />
+          <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
-              onClick={() => onSuccess?.()}
-              className="flex-1 text-sm sm:text-base h-9 sm:h-10"
-              disabled={isLoading}
+              size="icon"
+              onClick={() => setQuantity(quantityNumber - 1)}
+              disabled={isLoading || quantityNumber <= 1}
+              aria-label="Disminuir cantidad"
+              className="h-11 w-11 rounded-[14px] shrink-0"
             >
-              Cancelar
+              <Minus className="h-4 w-4" />
             </Button>
-            <Button type="submit" className="flex-1 text-sm sm:text-base h-9 sm:h-10" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />}
-              {isLoading ? "Guardando..." : (item ? "Actualizar" : "Agregar")}
+            <Input
+              id="quantity"
+              type="text"
+              inputMode="numeric"
+              value={formData.quantity}
+              onChange={(e) => {
+                setFormData({ ...formData, quantity: formatNumber(e.target.value) })
+                if (fieldErrors.quantity) {
+                  setFieldErrors({ ...fieldErrors, quantity: '' })
+                  setShowFieldError(null)
+                }
+              }}
+              placeholder="1"
+              disabled={isLoading}
+              className="text-center text-base font-bold h-11 rounded-[14px]"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setQuantity(quantityNumber + 1)}
+              disabled={isLoading}
+              aria-label="Aumentar cantidad"
+              className="h-11 w-11 rounded-[14px] shrink-0"
+            >
+              <Plus className="h-4 w-4" />
             </Button>
           </div>
+        </div>
+      </div>
+
+      {/* Categoría: grilla de chips (opcional) */}
+      {categories && categories.length > 0 && (
+        <div className="space-y-1.5">
+          <Label className="text-xs sm:text-sm">Categoría</Label>
+          <CategoryChipGrid
+            categories={categories}
+            value={formData.category_id}
+            onChange={(id) =>
+              setFormData({ ...formData, category_id: id === formData.category_id ? '' : id })
+            }
+            disabled={isLoading}
+          />
+        </div>
+      )}
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <FormStickyFooter>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onSuccess?.()}
+            className="flex-1 h-12 rounded-[14px] text-sm sm:text-base"
+            disabled={isLoading}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" className="flex-[2] h-12 rounded-[14px] text-[15px] font-bold" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading ? "Guardando..." : (item ? "Guardar cambios" : "Agregar producto")}
+          </Button>
+        </div>
+      </FormStickyFooter>
     </form>
   )
 }

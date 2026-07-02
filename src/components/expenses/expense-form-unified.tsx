@@ -9,13 +9,17 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { DateInput } from "@/components/ui/date-input"
 import { FormFieldError } from "@/components/ui/form-field-error"
+import {
+  BigAmountInput,
+  CategoryChipGrid,
+  DateChipPicker,
+  OptionalSection,
+  FormStickyFooter,
+} from "@/components/ui/form-chips"
 import { getValidationMessage } from "@/lib/validation-messages"
 import { Loader2, MapPin } from "lucide-react"
-import { CategoryGlyph } from "@/lib/category-visuals"
 import type { Expense, Category } from "@/lib/types"
 
 interface ExpenseFormProps {
@@ -279,11 +283,34 @@ export function ExpenseFormUnified({ expense, categories, userId, onSuccess, onC
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-6">
-      <div className="space-y-1.5 sm:space-y-2">
+    <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+      {/* Monto protagonista */}
+      <div ref={amountRef} className="relative">
+        <FormFieldError
+          error={fieldErrors.amount}
+          show={showFieldError === 'amount'}
+          fieldRef={amountRef}
+          submitAttempt={submitAttempt}
+        />
+        <BigAmountInput
+          id="amount"
+          value={formData.amount}
+          onChange={(value) => {
+            setFormData({ ...formData, amount: formatAmount(value) })
+            if (fieldErrors.amount) {
+              setFieldErrors({ ...fieldErrors, amount: '' })
+              setShowFieldError(null)
+            }
+          }}
+          disabled={isLoading}
+        />
+      </div>
+
+      {/* Nombre */}
+      <div className="space-y-1.5">
         <Label htmlFor="name" className="text-xs sm:text-sm">Nombre del Gasto *</Label>
         <div ref={nameRef} className="relative">
-          <FormFieldError 
+          <FormFieldError
             error={fieldErrors.name}
             show={showFieldError === 'name'}
             fieldRef={nameRef}
@@ -301,172 +328,136 @@ export function ExpenseFormUnified({ expense, categories, userId, onSuccess, onC
             }}
             placeholder="Ej: Compra de supermercado"
             disabled={isLoading}
-            className="text-sm sm:text-base h-9 sm:h-10"
+            className="text-sm sm:text-base h-10 sm:h-11 rounded-[14px]"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <div className="space-y-1.5 sm:space-y-2">
-          <Label htmlFor="amount" className="text-xs sm:text-sm">Monto *</Label>
-          <div ref={amountRef} className="relative">
-            <FormFieldError 
-              error={fieldErrors.amount}
-              show={showFieldError === 'amount'}
-              fieldRef={amountRef}
-              submitAttempt={submitAttempt}
-            />
-            <Input
-              id="amount"
-              type="text"
-              inputMode="numeric"
-              value={formData.amount}
-              onChange={(e) => {
-                setFormData({ ...formData, amount: formatAmount(e.target.value) })
-                if (fieldErrors.amount) {
-                  setFieldErrors({ ...fieldErrors, amount: '' })
-                  setShowFieldError(null)
-                }
-              }}
-              placeholder="0"
-              disabled={isLoading}
-              className="text-sm sm:text-base h-9 sm:h-10"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-1.5 sm:space-y-2">
-          <Label htmlFor="purchase_date" className="text-xs sm:text-sm">Fecha *</Label>
-          <div ref={purchaseDateRef} className="relative">
-            <FormFieldError 
-              error={fieldErrors.purchase_date}
-              show={showFieldError === 'purchase_date'}
-              fieldRef={purchaseDateRef}
-              submitAttempt={submitAttempt}
-            />
-            <DateInput
-              id="purchase_date"
-              value={formData.purchase_date}
-              onChange={(e) => {
-                setFormData({ ...formData, purchase_date: e.target.value })
-                if (fieldErrors.purchase_date) {
-                  setFieldErrors({ ...fieldErrors, purchase_date: '' })
-                  setShowFieldError(null)
-                }
-              }}
-              disabled={isLoading}
-              className="text-sm sm:text-base h-9 sm:h-10"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-1.5 sm:space-y-2">
-        <Label htmlFor="category" className="text-xs sm:text-sm">Categoría *</Label>
+      {/* Categoría: grilla de chips, un tap */}
+      <div className="space-y-1.5">
+        <Label className="text-xs sm:text-sm">Categoría *</Label>
         <div ref={categoryRef} className="relative">
-          <FormFieldError 
+          <FormFieldError
             error={fieldErrors.category_id}
             show={showFieldError === 'category_id'}
             fieldRef={categoryRef}
             submitAttempt={submitAttempt}
           />
-          <Select
+          <CategoryChipGrid
+            categories={categories}
             value={formData.category_id}
-            onValueChange={(value) => {
-              setFormData({ ...formData, category_id: value })
+            onChange={(id) => {
+              setFormData({ ...formData, category_id: id })
               if (fieldErrors.category_id) {
                 setFieldErrors({ ...fieldErrors, category_id: '' })
                 setShowFieldError(null)
               }
             }}
             disabled={isLoading}
-          >
-            <SelectTrigger id="category" className="h-9 sm:h-10 text-sm sm:text-base">
-              <SelectValue placeholder="Selecciona una categoría" />
-            </SelectTrigger>
-            <SelectContent position="popper" sideOffset={8} align="start">
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.id} className="text-sm sm:text-base cursor-pointer">
-                  <span className="flex items-center gap-2">
-                    <CategoryGlyph name={category.name} className="h-4 w-4 text-primary" />
-                    <span>{category.name}</span>
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
         </div>
       </div>
 
-      <div className="space-y-1.5 sm:space-y-2">
-        <Label htmlFor="location" className="text-xs sm:text-sm">Ubicación (opcional)</Label>
-        <div className="relative">
-          <Input
-            id="location"
-            value={formData.location}
-            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            placeholder="Ej: Supermercado XYZ"
-            disabled={isLoading}
-            className="text-sm sm:text-base h-9 sm:h-10 pr-10"
+      {/* Fecha: chips Hoy / Ayer / Otra */}
+      <div className="space-y-1.5">
+        <Label className="text-xs sm:text-sm">Fecha *</Label>
+        <div ref={purchaseDateRef} className="relative">
+          <FormFieldError
+            error={fieldErrors.purchase_date}
+            show={showFieldError === 'purchase_date'}
+            fieldRef={purchaseDateRef}
+            submitAttempt={submitAttempt}
           />
-          {isGeocoding && (
-            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+          <DateChipPicker
+            id="purchase_date"
+            value={formData.purchase_date}
+            onChange={(value) => {
+              setFormData({ ...formData, purchase_date: value })
+              if (fieldErrors.purchase_date) {
+                setFieldErrors({ ...fieldErrors, purchase_date: '' })
+                setShowFieldError(null)
+              }
+            }}
+            disabled={isLoading}
+          />
+        </div>
+      </div>
+
+      {/* Opcionales colapsados */}
+      <OptionalSection
+        label="Ubicación y notas"
+        defaultOpen={!!(expense && (expense.location || expense.notes))}
+      >
+        <div className="space-y-1.5">
+          <Label htmlFor="location" className="text-xs sm:text-sm">Ubicación</Label>
+          <div className="relative">
+            <Input
+              id="location"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              placeholder="Ej: Supermercado XYZ"
+              disabled={isLoading}
+              className="text-sm sm:text-base h-10 rounded-[14px] pr-10"
+            />
+            {isGeocoding && (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+            )}
+          </div>
+
+          {!location ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={getLocation}
+              disabled={isGettingLocation}
+              className="w-full mt-2 text-sm sm:text-base h-10 rounded-[14px]"
+            >
+              <MapPin className="h-4 w-4 mr-2" />
+              {isGettingLocation ? "Obteniendo ubicación..." : "Obtener Ubicación Actual"}
+            </Button>
+          ) : (
+            <div className="space-y-2 mt-2">
+              <div className="flex justify-center">
+                <div className="relative w-full rounded-lg overflow-hidden border h-48 sm:h-56 min-h-[12rem] max-h-[40vh] min-w-0 max-w-full box-border mx-auto max-w-[28rem] sm:max-w-[32rem]">
+                  <iframe
+                    title="Mapa de ubicacion"
+                    className="w-full h-full block min-w-0 max-w-full box-border"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    frameBorder="0"
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.005},${location.lat - 0.005},${location.lng + 0.005},${location.lat + 0.005}&layer=mapnik&marker=${location.lat},${location.lng}`}
+                  />
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setLocation(null)
+                  setFormData((prev) => ({ ...prev, location: "" }))
+                }}
+                className="w-full"
+              >
+                Cambiar ubicación
+              </Button>
+            </div>
           )}
         </div>
 
-        {!location ? (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={getLocation}
-            disabled={isGettingLocation}
-            className="w-full mt-2 text-sm sm:text-base h-9 sm:h-10"
-          >
-            <MapPin className="h-4 w-4 mr-2" />
-            {isGettingLocation ? "Obteniendo ubicación..." : "Obtener Ubicación Actual"}
-          </Button>
-        ) : (
-          <div className="space-y-2 mt-2">
-            <div className="flex justify-center">
-              <div className="relative w-full rounded-lg overflow-hidden border h-48 sm:h-56 min-h-[12rem] max-h-[40vh] min-w-0 max-w-full box-border mx-auto max-w-[28rem] sm:max-w-[32rem]">
-                <iframe
-                  title="Mapa de ubicacion"
-                  className="w-full h-full block min-w-0 max-w-full box-border"
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  frameBorder="0"
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.005},${location.lat - 0.005},${location.lng + 0.005},${location.lat + 0.005}&layer=mapnik&marker=${location.lat},${location.lng}`}
-                />
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setLocation(null)
-                setFormData((prev) => ({ ...prev, location: "" }))
-              }}
-              className="w-full"
-            >
-              Cambiar ubicación
-            </Button>
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-1.5 sm:space-y-2">
-        <Label htmlFor="notes" className="text-xs sm:text-sm">Notas (opcional)</Label>
-        <Textarea
-          id="notes"
-          value={formData.notes}
-          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-          placeholder="Agrega notas adicionales..."
-          rows={3}
-          disabled={isLoading}
-          className="text-sm sm:text-base resize-none"
-        />
-      </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="notes" className="text-xs sm:text-sm">Notas</Label>
+          <Textarea
+            id="notes"
+            value={formData.notes}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            placeholder="Agrega notas adicionales..."
+            rows={3}
+            disabled={isLoading}
+            className="text-sm sm:text-base resize-none rounded-[14px]"
+          />
+        </div>
+      </OptionalSection>
 
       {error && (
         <Alert variant="destructive" className="animate-in fade-in-50 slide-in-from-top-2 duration-300">
@@ -474,21 +465,23 @@ export function ExpenseFormUnified({ expense, categories, userId, onSuccess, onC
         </Alert>
       )}
 
-      <div className="flex gap-2 pt-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClose}
-          className="flex-1 h-9 sm:h-10 text-sm sm:text-base"
-          disabled={isLoading}
-        >
-          Cancelar
-        </Button>
-        <Button type="submit" className="flex-1 h-9 sm:h-10 text-sm sm:text-base" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />}
-          {isLoading ? "Guardando..." : "Guardar"}
-        </Button>
-      </div>
+      <FormStickyFooter>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="flex-1 h-12 rounded-[14px] text-sm sm:text-base"
+            disabled={isLoading}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" className="flex-[2] h-12 rounded-[14px] text-[15px] font-bold" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading ? "Guardando..." : expense ? "Guardar cambios" : "Guardar gasto"}
+          </Button>
+        </div>
+      </FormStickyFooter>
     </form>
   )
 }

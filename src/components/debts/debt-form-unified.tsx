@@ -10,10 +10,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DateInput } from "@/components/ui/date-input"
 import { FormFieldError } from "@/components/ui/form-field-error"
+import { BigAmountInput, TileChipGrid, OptionalSection, FormStickyFooter } from "@/components/ui/form-chips"
 import { getValidationMessage } from "@/lib/validation-messages"
 import { Loader2, CreditCard, Landmark, Home, Car, GraduationCap, User, ShoppingCart, Smartphone, Stethoscope, Briefcase, Lightbulb, Building2, FileText } from "lucide-react"
 import type { Debt } from "@/lib/types"
@@ -215,11 +215,35 @@ export function DebtFormUnified({ userId, debt, onSuccess, onClose }: DebtFormUn
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-6">
-      <div className="space-y-1.5 sm:space-y-2">
+    <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+      {/* Monto total protagonista */}
+      <div ref={totalAmountRef} className="relative">
+        <FormFieldError
+          error={fieldErrors.total_amount}
+          show={showFieldError === 'total_amount'}
+          fieldRef={totalAmountRef}
+          submitAttempt={submitAttempt}
+        />
+        <BigAmountInput
+          id="total_amount"
+          label="Monto total"
+          value={formData.total_amount}
+          onChange={(value) => {
+            setFormData({ ...formData, total_amount: formatAmount(value) })
+            if (fieldErrors.total_amount) {
+              setFieldErrors({ ...fieldErrors, total_amount: '' })
+              setShowFieldError(null)
+            }
+          }}
+          disabled={isLoading}
+        />
+      </div>
+
+      {/* Acreedor */}
+      <div className="space-y-1.5">
         <Label htmlFor="creditor_name" className="text-xs sm:text-sm">Acreedor *</Label>
         <div ref={creditorNameRef} className="relative">
-          <FormFieldError 
+          <FormFieldError
             error={fieldErrors.creditor_name}
             show={showFieldError === 'creditor_name'}
             fieldRef={creditorNameRef}
@@ -237,103 +261,69 @@ export function DebtFormUnified({ userId, debt, onSuccess, onClose }: DebtFormUn
             }}
             placeholder="Ej: Banco XYZ"
             disabled={isLoading}
-            className="text-sm sm:text-base h-9 sm:h-10"
+            className="text-sm sm:text-base h-10 sm:h-11 rounded-[14px]"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <div className="space-y-1.5 sm:space-y-2">
-          <Label htmlFor="total_amount" className="text-xs sm:text-sm">Monto Total *</Label>
-          <div ref={totalAmountRef} className="relative">
-            <FormFieldError 
-              error={fieldErrors.total_amount}
-              show={showFieldError === 'total_amount'}
-              fieldRef={totalAmountRef}
-              submitAttempt={submitAttempt}
-            />
-            <Input
-              id="total_amount"
-              type="text"
-              inputMode="numeric"
-              value={formData.total_amount}
-              onChange={(e) => {
-                setFormData({ ...formData, total_amount: formatAmount(e.target.value) })
-                if (fieldErrors.total_amount) {
-                  setFieldErrors({ ...fieldErrors, total_amount: '' })
-                  setShowFieldError(null)
-                }
-              }}
-              placeholder="0"
-              disabled={isLoading}
-              className="text-sm sm:text-base h-9 sm:h-10"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-1.5 sm:space-y-2">
-          <Label htmlFor="due_date" className="text-xs sm:text-sm">Fecha de Vencimiento *</Label>
-          <div ref={dueDateRef} className="relative">
-            <FormFieldError 
-              error={fieldErrors.due_date}
-              show={showFieldError === 'due_date'}
-              fieldRef={dueDateRef}
-              submitAttempt={submitAttempt}
-            />
-            <DateInput
-              id="due_date"
-              value={formData.due_date}
-              onChange={(e) => {
-                setFormData({ ...formData, due_date: e.target.value })
-                if (fieldErrors.due_date) {
-                  setFieldErrors({ ...fieldErrors, due_date: '' })
-                  setShowFieldError(null)
-                }
-              }}
-              disabled={isLoading}
-              className="text-sm sm:text-base"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-1.5 sm:space-y-2">
-        <Label htmlFor="category" className="text-xs sm:text-sm">Categoría</Label>
-        <Select
+      {/* Categoría: grilla de tiles */}
+      <div className="space-y-1.5">
+        <Label className="text-xs sm:text-sm">Categoría</Label>
+        <TileChipGrid
+          items={DEBT_CATEGORIES.map((c) => ({
+            id: c.value,
+            label: c.label,
+            icon: <c.icon className="h-5 w-5" />,
+          }))}
           value={formData.category}
-          onValueChange={(value) => setFormData({ ...formData, category: value })}
+          onChange={(id) =>
+            setFormData({ ...formData, category: id === formData.category ? '' : id })
+          }
           disabled={isLoading}
-        >
-          <SelectTrigger id="category" className="h-9 sm:h-10 text-sm sm:text-base">
-            <SelectValue placeholder="Selecciona una categoría" />
-          </SelectTrigger>
-          <SelectContent position="popper" sideOffset={8} align="start">
-            {DEBT_CATEGORIES.map((category) => (
-              <SelectItem key={category.value} value={category.value} className="cursor-pointer text-sm sm:text-base">
-                <span className="flex items-center gap-2">
-                  <span className="text-primary">
-                    <category.icon className="h-4 w-4" />
-                  </span>
-                  <span>{category.label}</span>
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-1.5 sm:space-y-2">
-        <Label htmlFor="notes" className="text-xs sm:text-sm">Notas</Label>
-        <Textarea
-          id="notes"
-          value={formData.notes}
-          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-          placeholder="Agrega detalles sobre la deuda..."
-          rows={3}
-          disabled={isLoading}
-          className="text-sm sm:text-base resize-none"
         />
       </div>
+
+      {/* Fecha de vencimiento: calendario directo (es fecha futura, no aplican Hoy/Ayer) */}
+      <div className="space-y-1.5">
+        <Label htmlFor="due_date" className="text-xs sm:text-sm">Fecha de Vencimiento *</Label>
+        <div ref={dueDateRef} className="relative">
+          <FormFieldError
+            error={fieldErrors.due_date}
+            show={showFieldError === 'due_date'}
+            fieldRef={dueDateRef}
+            submitAttempt={submitAttempt}
+          />
+          <DateInput
+            id="due_date"
+            value={formData.due_date}
+            onChange={(e) => {
+              setFormData({ ...formData, due_date: e.target.value })
+              if (fieldErrors.due_date) {
+                setFieldErrors({ ...fieldErrors, due_date: '' })
+                setShowFieldError(null)
+              }
+            }}
+            disabled={isLoading}
+            className="text-sm sm:text-base h-10 rounded-[14px]"
+          />
+        </div>
+      </div>
+
+      {/* Opcionales colapsados */}
+      <OptionalSection label="Notas" defaultOpen={!!(debt && (debt.notes || debt.description))}>
+        <div className="space-y-1.5">
+          <Label htmlFor="notes" className="text-xs sm:text-sm">Notas</Label>
+          <Textarea
+            id="notes"
+            value={formData.notes}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            placeholder="Agrega detalles sobre la deuda..."
+            rows={3}
+            disabled={isLoading}
+            className="text-sm sm:text-base resize-none rounded-[14px]"
+          />
+        </div>
+      </OptionalSection>
 
       {error && (
         <Alert variant="destructive" className="py-2">
@@ -341,21 +331,23 @@ export function DebtFormUnified({ userId, debt, onSuccess, onClose }: DebtFormUn
         </Alert>
       )}
 
-      <div className="flex gap-2 pt-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClose}
-          className="flex-1 text-sm sm:text-base h-9 sm:h-10"
-          disabled={isLoading}
-        >
-          Cancelar
-        </Button>
-        <Button type="submit" className="flex-1 text-sm sm:text-base h-9 sm:h-10" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />}
-          {isLoading ? "Guardando..." : (debt ? "Actualizar" : "Guardar")}
-        </Button>
-      </div>
+      <FormStickyFooter>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="flex-1 h-12 rounded-[14px] text-sm sm:text-base"
+            disabled={isLoading}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" className="flex-[2] h-12 rounded-[14px] text-[15px] font-bold" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading ? "Guardando..." : (debt ? "Guardar cambios" : "Guardar deuda")}
+          </Button>
+        </div>
+      </FormStickyFooter>
     </form>
   )
 }
