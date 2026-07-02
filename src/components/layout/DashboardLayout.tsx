@@ -38,7 +38,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       />
       <main className={`transition-all duration-300 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
         {/* Contenedor con scroll optimizado */}
-        <div className={`h-[100dvh] overflow-y-auto overscroll-behavior-y-contain scroll-smooth ${scrollbarClasses}`}>
+        <div data-main-scroll className={`h-[100dvh] overflow-y-auto overscroll-none scroll-smooth ${scrollbarClasses}`}>
           {/* Espaciado: deja sitio para el BottomNav (~72px + safe-area) en móvil */}
           <div 
             className="px-4 sm:px-5 md:px-6 lg:px-8 min-h-full pb-[104px] lg:pb-8 lg:pt-6"
