@@ -29,7 +29,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [])
 
   return (
-    <div className="min-h-[100dvh] bg-background">
+    <div className="h-[100dvh] overflow-hidden bg-background">
       <Sidebar 
         userName={userName} 
         onCollapse={setIsCollapsed} 

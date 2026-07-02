@@ -93,7 +93,8 @@
     font-family: 'Nunito', ui-sans-serif, system-ui, -apple-system, sans-serif;
     background-image: var(--page-bg);
     background-repeat: no-repeat;
-    min-height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
   }
   
   /* Asegurar que el contenido de las páginas tenga el z-index correcto */
@@ -252,7 +253,7 @@ html, body {
   /* Asegurar que el main tenga el scroll correcto */
   main {
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: none;
   }
   
   /* Prevenir que elementos sticky causen scroll jump en iOS */
@@ -274,7 +275,7 @@ html, body {
 /* Mejorar scroll en móviles - diseño limpio y profesional */
 @media (max-width: 1024px) {
   /* Scroll nativo suave con momentum en iOS */
-  [class*="overflow-y-auto"] {
+  [class*="overflow-y-auto"]:not([data-main-scroll]) {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
     scroll-behavior: smooth;
@@ -432,6 +433,8 @@ select {
 [data-main-scroll] {
   overscroll-behavior: none !important;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  -ms-scroll-chaining: none;
 }
 
 /* Sin pull-to-refresh ni rebote del documento en Android/iOS */
