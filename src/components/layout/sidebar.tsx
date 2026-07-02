@@ -226,12 +226,10 @@ export function Sidebar({ userName, onCollapse, onMobileMenuChange, mobileMenuOp
           {/* Logo and User Info */}
           <div className="px-4 py-4 border-b border-border relative z-10">
             <div className={cn("flex items-center cursor-pointer transition-all duration-300", isCollapsed ? "justify-center pr-4" : "gap-3")} onClick={() => setIsMobileMenuOpen(false)}>
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-bold text-xl shrink-0 shadow-lg transition-transform hover:scale-110">
-                M
-              </div>
+              <img src="/logo.svg" alt="MarkeApp" className="w-10 h-10 rounded-lg shrink-0 shadow-lg transition-transform hover:scale-110" />
               <div className={cn("flex flex-col overflow-hidden transition-all duration-300 whitespace-nowrap", isCollapsed ? "opacity-0 w-0" : "opacity-100 w-[140px]")}>
                 <h1 className="font-bold text-lg bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                  MarketApp
+                  MarkeApp
                 </h1>
                 <p className="text-xs text-muted-foreground">Control de Gastos</p>
               </div>
