@@ -71,7 +71,7 @@ export function IncomeFormWrapper({
     return (
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerTrigger asChild>{trigger || defaultTrigger}</DrawerTrigger>
-        <DrawerContent className="rounded-t-[32px]">
+        <DrawerContent className="rounded-t-[32px]" onOpenAutoFocus={(e) => e.preventDefault()}>
           <div className={`no-ios-zoom max-h-[82vh] overflow-y-auto px-4 pb-8 ${scrollbarClasses}`}>
             <DrawerHeader className="px-0">
               <DrawerTitle className="text-xl font-black">{title}</DrawerTitle>
@@ -88,7 +88,7 @@ export function IncomeFormWrapper({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
       <DialogContent
-        className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-secondary hover:scrollbar-thumb-secondary/80"
+        className="w-[calc(100%-2rem)] sm:w-full max-w-md max-h-[90vh] overflow-y-auto px-4 pb-8 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-secondary hover:scrollbar-thumb-secondary/80"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <div className="no-ios-zoom">

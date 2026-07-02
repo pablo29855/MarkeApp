@@ -50,7 +50,7 @@ export function BigAmountInput({
           disabled={disabled}
           autoFocus={autoFocus}
           size={Math.max(value.length, 1)}
-          className="bg-transparent text-center text-[38px] font-black leading-tight text-foreground placeholder:text-muted-foreground outline-none border-none focus:ring-0 min-w-[2ch] max-w-full"
+          className="big-amount-input bg-transparent text-center text-[38px] font-black leading-tight text-foreground placeholder:text-muted-foreground outline-none border-none focus:ring-0 min-w-[2ch] max-w-full"
           style={{ width: `${Math.max(value.length, 1)}ch` }}
         />
       </div>
@@ -325,10 +325,12 @@ export function OptionalSection({
   )
 }
 
-/** Pie de formulario fijo al fondo del sheet/dialog, siempre visible sobre el teclado. */
+/** Pie de formulario fijo al fondo del sheet/dialog, siempre visible sobre el teclado.
+ *  Los márgenes negativos cancelan el padding del contenedor scrolleable (px-4 pb-8)
+ *  para que el fondo cubra de borde a borde y el contenido no se vea detrás al scrollear. */
 export function FormStickyFooter({ children }: { children: ReactNode }) {
   return (
-    <div className="sticky bottom-0 -mx-1 mt-2 border-t border-border bg-background px-1 pb-1 pt-3">
+    <div className="sticky bottom-0 z-10 -mx-4 -mb-8 mt-2 border-t border-border bg-background px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
       {children}
     </div>
   )

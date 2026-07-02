@@ -322,6 +322,11 @@ html, body {
   select {
     font-size: 16px !important;
   }
+
+  /* Excepción: el display grande de monto (>16px ya no dispara zoom) */
+  input.big-amount-input {
+    font-size: 38px !important;
+  }
   
   /* Alinear inputs de fecha a la izquierda en iOS */
   input[type="date"],
@@ -393,6 +398,46 @@ html, body {
     position: fixed !important;
     width: 100% !important;
   }
+}
+
+/* --- Formularios en sheets/dialogs: scroll y teclado móvil --- */
+
+/* Al enfocar un campo, el navegador lo trae a la vista: dejar margen para que
+   no quede oculto bajo el footer sticky ni pegado al borde superior */
+input[data-slot="input"],
+input[type="date"],
+textarea,
+select {
+  scroll-margin-top: 88px;
+  scroll-margin-bottom: 140px;
+}
+
+/* Scroller interno de drawers y dialogs: sin scroll encadenado hacia la página
+   de fondo y con momentum nativo en iOS */
+[data-slot="drawer-content"] [class*="overflow-y-auto"],
+[data-slot="dialog-content"][class*="overflow-y-auto"] {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+/* El drawer entero no debe rebotar contra el body */
+[data-slot="drawer-content"] {
+  overscroll-behavior: none;
+}
+
+/* Scroller principal del layout (Dashboard, Reportes, etc.): sin rebote en los
+   extremos ni encadenado al body. Va después de la regla genérica de
+   [class*="overflow-y-auto"] para ganarle en cascada. */
+[data-main-scroll] {
+  overscroll-behavior: none !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Sin pull-to-refresh ni rebote del documento en Android/iOS */
+html,
+body {
+  overscroll-behavior-y: none;
 }
 
 /* Corregir fondo gris de autofill en inputs (Chrome/Edge) usando variables de tema */
