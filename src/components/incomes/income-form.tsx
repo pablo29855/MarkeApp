@@ -3,21 +3,20 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { DateInput } from '@/components/ui/date-input'
 import { FormFieldError } from '@/components/ui/form-field-error'
+import {
+  BigAmountInput,
+  ChoiceChip,
+  DateChipPicker,
+  OptionalSection,
+  FormStickyFooter,
+} from '@/components/ui/form-chips'
 import { getValidationMessage } from '@/lib/validation-messages'
 import { createClient } from '@/lib/supabase/client'
 import { useNotification } from '@/hooks/use-notification'
 import { getTodayLocal, formatDateLocal, parseLocalDate } from '@/lib/utils'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Briefcase, Landmark, Banknote } from 'lucide-react'
 import type { Income } from '@/lib/types'
 
 interface IncomeFormProps {
@@ -189,17 +188,40 @@ export function IncomeForm({ onSuccess, income, onClose }: IncomeFormProps) {
   }
 
   const incomeTypeOptions = [
-    { value: 'nomina', label: 'Nómina', icon: '💼' },
-    { value: 'transferencia', label: 'Transferencia Bancaria', icon: '🏦' },
-    { value: 'efectivo', label: 'Efectivo', icon: '💵' },
+    { value: 'nomina', label: 'Nómina', icon: <Briefcase className="h-4 w-4 text-primary" /> },
+    { value: 'transferencia', label: 'Transferencia Bancaria', icon: <Landmark className="h-4 w-4 text-primary" /> },
+    { value: 'efectivo', label: 'Efectivo', icon: <Banknote className="h-4 w-4 text-primary" /> },
   ]
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-6">
-      <div className="space-y-1.5 sm:space-y-2">
+    <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+      {/* Monto protagonista */}
+      <div ref={amountRef} className="relative">
+        <FormFieldError
+          error={fieldErrors.amount}
+          show={showFieldError === 'amount'}
+          fieldRef={amountRef}
+          submitAttempt={submitAttempt}
+        />
+        <BigAmountInput
+          id="amount"
+          value={formData.amount}
+          onChange={(value) => {
+            setFormData({ ...formData, amount: formatAmount(value) })
+            if (fieldErrors.amount) {
+              setFieldErrors({ ...fieldErrors, amount: '' })
+              setShowFieldError(null)
+            }
+          }}
+          disabled={isLoading}
+        />
+      </div>
+
+      {/* Descripción */}
+      <div className="space-y-1.5">
         <Label htmlFor="description" className="text-xs sm:text-sm">Descripción *</Label>
         <div ref={descriptionRef} className="relative">
-          <FormFieldError 
+          <FormFieldError
             error={fieldErrors.description}
             show={showFieldError === 'description'}
             fieldRef={descriptionRef}
@@ -217,118 +239,84 @@ export function IncomeForm({ onSuccess, income, onClose }: IncomeFormProps) {
             }}
             placeholder="Ej: Pago de salario, Cliente XYZ..."
             disabled={isLoading}
-            className="text-sm sm:text-base h-9 sm:h-10"
+            className="text-sm sm:text-base h-10 sm:h-11 rounded-[14px]"
             autoFocus={showFieldError === 'description'}
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <div className="space-y-1.5 sm:space-y-2">
-          <Label htmlFor="amount" className="text-xs sm:text-sm">Monto *</Label>
-          <div ref={amountRef} className="relative">
-            <FormFieldError 
-              error={fieldErrors.amount}
-              show={showFieldError === 'amount'}
-              fieldRef={amountRef}
-              submitAttempt={submitAttempt}
-            />
-            <Input
-              id="amount"
-              type="text"
-              inputMode="numeric"
-              value={formData.amount}
-              onChange={(e) => {
-                setFormData({ ...formData, amount: formatAmount(e.target.value) })
-                if (fieldErrors.amount) {
-                  setFieldErrors({ ...fieldErrors, amount: '' })
-                  setShowFieldError(null)
-                }
-              }}
-              placeholder="0"
-              disabled={isLoading}
-              className="text-sm sm:text-base h-9 sm:h-10"
-              autoFocus={showFieldError === 'amount'}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-1.5 sm:space-y-2">
-          <Label htmlFor="income_date" className="text-xs sm:text-sm">Fecha *</Label>
-          <div ref={incomeDateRef} className="relative">
-            <FormFieldError 
-              error={fieldErrors.income_date}
-              show={showFieldError === 'income_date'}
-              fieldRef={incomeDateRef}
-              submitAttempt={submitAttempt}
-            />
-            <DateInput
-              id="income_date"
-              value={formData.income_date}
-              onChange={(e) => {
-                setFormData({ ...formData, income_date: e.target.value })
-                if (fieldErrors.income_date) {
-                  setFieldErrors({ ...fieldErrors, income_date: '' })
-                  setShowFieldError(null)
-                }
-              }}
-              disabled={isLoading}
-              className="text-sm sm:text-base h-9 sm:h-10"
-              autoFocus={showFieldError === 'income_date'}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-1.5 sm:space-y-2">
-        <Label htmlFor="income_type" className="text-xs sm:text-sm">Tipo de Ingreso *</Label>
+      {/* Tipo de ingreso: 3 chips, un tap */}
+      <div className="space-y-1.5">
+        <Label className="text-xs sm:text-sm">Tipo de Ingreso *</Label>
         <div ref={incomeTypeRef} className="relative">
-          <FormFieldError 
+          <FormFieldError
             error={fieldErrors.income_type}
             show={showFieldError === 'income_type'}
             fieldRef={incomeTypeRef}
             submitAttempt={submitAttempt}
           />
-          <Select
-            value={formData.income_type}
-            onValueChange={(value) => {
-              setFormData({ ...formData, income_type: value as 'nomina' | 'transferencia' | 'efectivo' })
-              if (fieldErrors.income_type) {
-                setFieldErrors({ ...fieldErrors, income_type: '' })
+          <div className="flex flex-wrap gap-2">
+            {incomeTypeOptions.map((option) => (
+              <ChoiceChip
+                key={option.value}
+                selected={formData.income_type === option.value}
+                onClick={() => {
+                  setFormData({ ...formData, income_type: option.value as 'nomina' | 'transferencia' | 'efectivo' })
+                  if (fieldErrors.income_type) {
+                    setFieldErrors({ ...fieldErrors, income_type: '' })
+                    setShowFieldError(null)
+                  }
+                }}
+                disabled={isLoading}
+              >
+                {option.icon}
+                {option.label}
+              </ChoiceChip>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Fecha: chips Hoy / Ayer / Otra */}
+      <div className="space-y-1.5">
+        <Label className="text-xs sm:text-sm">Fecha *</Label>
+        <div ref={incomeDateRef} className="relative">
+          <FormFieldError
+            error={fieldErrors.income_date}
+            show={showFieldError === 'income_date'}
+            fieldRef={incomeDateRef}
+            submitAttempt={submitAttempt}
+          />
+          <DateChipPicker
+            id="income_date"
+            value={formData.income_date}
+            onChange={(value) => {
+              setFormData({ ...formData, income_date: value })
+              if (fieldErrors.income_date) {
+                setFieldErrors({ ...fieldErrors, income_date: '' })
                 setShowFieldError(null)
               }
             }}
             disabled={isLoading}
-          >
-            <SelectTrigger id="income_type" className="h-9 sm:h-10 text-sm sm:text-base" autoFocus={showFieldError === 'income_type'}>
-              <SelectValue placeholder="Selecciona un tipo" />
-            </SelectTrigger>
-            <SelectContent position="popper" sideOffset={8} align="start">
-              {incomeTypeOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value} className="text-sm sm:text-base cursor-pointer">
-                  <span className="flex items-center gap-2">
-                    <span>{option.icon}</span>
-                    <span>{option.label}</span>
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
         </div>
       </div>
 
-      <div className="space-y-1.5 sm:space-y-2">
-        <Label htmlFor="notes" className="text-xs sm:text-sm">Notas (opcional)</Label>
-        <Textarea
-          id="notes"
-          value={formData.notes}
-          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-          placeholder="Información adicional..."
-          rows={3}
-          disabled={isLoading}
-          className="text-sm sm:text-base resize-none"
-        />
-      </div>
+      {/* Opcionales colapsados */}
+      <OptionalSection label="Notas" defaultOpen={!!income?.notes}>
+        <div className="space-y-1.5">
+          <Label htmlFor="notes" className="text-xs sm:text-sm">Notas</Label>
+          <Textarea
+            id="notes"
+            value={formData.notes}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            placeholder="Información adicional..."
+            rows={3}
+            disabled={isLoading}
+            className="text-sm sm:text-base resize-none rounded-[14px]"
+          />
+        </div>
+      </OptionalSection>
 
       {error && (
         <Alert variant="destructive" className="animate-in fade-in-50 slide-in-from-top-2 duration-300">
@@ -336,21 +324,23 @@ export function IncomeForm({ onSuccess, income, onClose }: IncomeFormProps) {
         </Alert>
       )}
 
-      <div className="flex gap-2 pt-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClose}
-          className="flex-1 h-9 sm:h-10 text-sm sm:text-base"
-          disabled={isLoading}
-        >
-          Cancelar
-        </Button>
-        <Button type="submit" className="flex-1 h-9 sm:h-10 text-sm sm:text-base" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />}
-          {isLoading ? "Guardando..." : "Guardar"}
-        </Button>
-      </div>
+      <FormStickyFooter>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="flex-1 h-12 rounded-[14px] text-sm sm:text-base"
+            disabled={isLoading}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" className="flex-[2] h-12 rounded-[14px] text-[15px] font-bold" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading ? "Guardando..." : income ? "Guardar cambios" : "Guardar ingreso"}
+          </Button>
+        </div>
+      </FormStickyFooter>
     </form>
   )
 }

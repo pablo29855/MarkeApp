@@ -7,7 +7,6 @@ import { useNotification } from "@/hooks/use-notification"
 import { getTodayLocal, cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { 
@@ -26,8 +25,14 @@ import {
 } from "@/components/ui/drawer"
 import { scrollbarClasses } from "@/lib/styles"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { DateInput } from "@/components/ui/date-input"
 import { FormFieldError } from "@/components/ui/form-field-error"
+import {
+  BigAmountInput,
+  ChoiceChip,
+  DateChipPicker,
+  OptionalSection,
+  FormStickyFooter,
+} from "@/components/ui/form-chips"
 import { getValidationMessage } from "@/lib/validation-messages"
 import { Loader2 } from "lucide-react"
 
@@ -179,78 +184,108 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate, isActive = fals
     </Button>
   )
 
+  const setQuickAmount = (fraction: number) => {
+    const quick = Math.round(remainingAmount * fraction)
+    setFormData({ ...formData, amount: formatAmount(String(quick)) })
+    if (fieldErrors.amount) {
+      setFieldErrors({ ...fieldErrors, amount: '' })
+      setShowFieldError(null)
+    }
+  }
+
   const formContent = (
-    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-      <div className="p-3 sm:p-4 bg-muted rounded-lg">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="p-3 sm:p-4 bg-muted rounded-[14px]">
         <p className="text-xs sm:text-sm text-muted-foreground">Saldo Pendiente</p>
         <p className="text-xl sm:text-2xl font-bold">${remainingAmount.toLocaleString()}</p>
       </div>
 
-      <div className="space-y-1.5 sm:space-y-2">
-        <Label htmlFor="amount" className="text-xs sm:text-sm">Monto a Abonar *</Label>
-        <div ref={amountRef} className="relative">
-          <FormFieldError 
-            error={fieldErrors.amount}
-            show={showFieldError === 'amount'}
-            fieldRef={amountRef}
-            submitAttempt={submitAttempt}
-          />
-          <Input
-            id="amount"
-            type="text"
-            inputMode="numeric"
-            value={formData.amount}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              setFormData({ ...formData, amount: formatAmount(e.target.value) })
-              if (fieldErrors.amount) {
-                setFieldErrors({ ...fieldErrors, amount: '' })
-                setShowFieldError(null)
-              }
-            }}
-            placeholder="0"
+      {/* Monto protagonista + montos rápidos */}
+      <div ref={amountRef} className="relative">
+        <FormFieldError
+          error={fieldErrors.amount}
+          show={showFieldError === 'amount'}
+          fieldRef={amountRef}
+          submitAttempt={submitAttempt}
+        />
+        <BigAmountInput
+          id="amount"
+          label="Monto a abonar"
+          value={formData.amount}
+          onChange={(value) => {
+            setFormData({ ...formData, amount: formatAmount(value) })
+            if (fieldErrors.amount) {
+              setFieldErrors({ ...fieldErrors, amount: '' })
+              setShowFieldError(null)
+            }
+          }}
+          disabled={isLoading}
+        />
+        <div className="mt-2 flex justify-center gap-2">
+          <ChoiceChip
+            selected={false}
+            onClick={() => setQuickAmount(0.25)}
             disabled={isLoading}
-            className="text-sm"
-          />
+          >
+            25%
+          </ChoiceChip>
+          <ChoiceChip
+            selected={false}
+            onClick={() => setQuickAmount(0.5)}
+            disabled={isLoading}
+          >
+            50%
+          </ChoiceChip>
+          <ChoiceChip
+            selected={false}
+            onClick={() => setQuickAmount(1)}
+            disabled={isLoading}
+          >
+            Todo
+          </ChoiceChip>
         </div>
       </div>
 
-      <div className="space-y-1.5 sm:space-y-2">
-        <Label htmlFor="payment_date" className="text-xs sm:text-sm">Fecha del Abono *</Label>
+      {/* Fecha del abono: chips Hoy / Ayer / Otra */}
+      <div className="space-y-1.5">
+        <Label className="text-xs sm:text-sm">Fecha del Abono *</Label>
         <div ref={paymentDateRef} className="relative">
-          <FormFieldError 
+          <FormFieldError
             error={fieldErrors.payment_date}
             show={showFieldError === 'payment_date'}
             fieldRef={paymentDateRef}
             submitAttempt={submitAttempt}
           />
-          <DateInput
+          <DateChipPicker
             id="payment_date"
             value={formData.payment_date}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              setFormData({ ...formData, payment_date: e.target.value })
+            onChange={(value) => {
+              setFormData({ ...formData, payment_date: value })
               if (fieldErrors.payment_date) {
                 setFieldErrors({ ...fieldErrors, payment_date: '' })
                 setShowFieldError(null)
               }
             }}
             disabled={isLoading}
-            className="text-sm"
           />
         </div>
       </div>
 
-      <div className="space-y-1.5 sm:space-y-2">
-        <Label htmlFor="notes" className="text-xs sm:text-sm">Notas (opcional)</Label>
-        <Textarea
-          id="notes"
-          value={formData.notes}
-          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, notes: e.target.value })}
-          placeholder="Agrega notas sobre este abono..."
-          rows={3}
-          disabled={isLoading}
-          className="text-sm resize-none"
-        />
-      </div>
+      {/* Notas colapsadas */}
+      <OptionalSection label="Notas">
+        <div className="space-y-1.5">
+          <Label htmlFor="notes" className="text-xs sm:text-sm">Notas</Label>
+          <Textarea
+            id="notes"
+            value={formData.notes}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, notes: e.target.value })}
+            placeholder="Agrega notas sobre este abono..."
+            rows={3}
+            disabled={isLoading}
+            className="text-sm resize-none rounded-[14px]"
+          />
+        </div>
+      </OptionalSection>
 
       {error && (
         <Alert variant="destructive" className="py-2">
@@ -258,21 +293,23 @@ export function PaymentForm({ debtId, remainingAmount, onUpdate, isActive = fals
         </Alert>
       )}
 
-      <div className="flex gap-2 pt-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setOpen(false)}
-          className="flex-1 text-xs sm:text-sm"
-          disabled={isLoading}
-        >
-          Cancelar
-        </Button>
-        <Button type="submit" className="flex-1 text-xs sm:text-sm" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />}
-          {isLoading ? "Guardando..." : "Abonar"}
-        </Button>
-      </div>
+      <FormStickyFooter>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOpen(false)}
+            className="flex-1 h-12 rounded-[14px] text-sm"
+            disabled={isLoading}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" className="flex-[2] h-12 rounded-[14px] text-[15px] font-bold" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading ? "Guardando..." : "Abonar"}
+          </Button>
+        </div>
+      </FormStickyFooter>
     </form>
   )
 

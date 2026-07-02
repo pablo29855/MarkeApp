@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import {
   Home,
   ShoppingCart,
@@ -12,6 +13,18 @@ import {
   Plane,
   Gift,
   Wallet,
+  Landmark,
+  Banknote,
+  PiggyBank,
+  Dumbbell,
+  Wifi,
+  Smartphone,
+  Tv,
+  Sparkles,
+  Receipt,
+  PawPrint,
+  Baby,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -64,6 +77,25 @@ const ICON_MAP: Record<string, LucideIcon> = {
   ropa: Shirt,
   viajes: Plane,
   regalos: Gift,
+  // Tipos de ingreso
+  transferencia: Landmark,
+  banco: Landmark,
+  efectivo: Banknote,
+  ahorro: PiggyBank,
+  ahorros: PiggyBank,
+  // Categorías adicionales frecuentes
+  gimnasio: Dumbbell,
+  deporte: Dumbbell,
+  internet: Wifi,
+  telefono: Smartphone,
+  celular: Smartphone,
+  streaming: Tv,
+  suscripciones: Tv,
+  belleza: Sparkles,
+  impuestos: Receipt,
+  mascotas: PawPrint,
+  bebes: Baby,
+  mantenimiento: Wrench,
 }
 
 function normalize(name: string): string {
@@ -78,4 +110,18 @@ function normalize(name: string): string {
 export function categoryIcon(name?: string | null): LucideIcon {
   if (!name) return Wallet
   return ICON_MAP[normalize(name)] || Wallet
+}
+
+/** Ícono lucide de categoría listo para renderizar (reemplaza los emojis de la DB). */
+export function CategoryGlyph({
+  name,
+  className = 'h-4 w-4',
+  style,
+}: {
+  name?: string | null
+  className?: string
+  style?: CSSProperties
+}) {
+  const Icon = categoryIcon(name)
+  return <Icon className={className} style={style} aria-hidden />
 }
